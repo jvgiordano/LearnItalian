@@ -1,0 +1,397 @@
+ITALIAN QUIZ DATABASE UPDATE REPORT
+================================================================================
+Updated: 2025-09-13 21:52:53
+================================================================================
+
+UPDATE STATISTICS
+----------------------------------------
+Files processed: 5
+New questions added: 0
+Questions updated: 0
+Questions unchanged: 5802
+Questions archived: 1
+Performance records archived: 1
+Answer history records archived: 1
+Duplicate questions skipped: 1
+Errors encountered: 0
+
+CURRENT QUESTION COUNTS BY LEVEL AND TOPIC
+----------------------------------------
+
+LEVEL A1
+--------------------
+  Abbigliamento (vocabolario): 31 questions
+  Aggettivi (accordo e uso): 36 questions
+  Aggettivi possessivi: 22 questions
+  Animali (vocabolario): 24 questions
+  Articoli (generale): 1 questions
+  Articoli determinativi: 18 questions
+  Articoli indeterminativi: 15 questions
+  Articoli partitivi: 3 questions
+  C'è / Ci sono: 21 questions
+  Casa (vocabolario): 27 questions
+  Cibo e bevande (vocabolario): 32 questions
+  Colori (vocabolario): 30 questions
+  Corpo (vocabolario): 18 questions
+  Cultura generale: 2 questions
+  Dimostrativi: 12 questions
+  Direzioni e luoghi in città: 19 questions
+  Espressioni comuni: 30 questions
+  Espressioni di tempo: 22 questions
+  Famiglia (vocabolario): 29 questions
+  Forme negative semplici: 24 questions
+  Geografia (paesi, città, nazionalità): 24 questions
+  Giorni della settimana (vocabolario): 18 questions
+  Mesi (vocabolario): 27 questions
+  Meteo (vocabolario): 25 questions
+  Nomi (genere e numero): 17 questions
+  Numeri e prezzi (0-100): 25 questions
+  Orario (telling time): 20 questions
+  Parole interrogative: 25 questions
+  Piacere (uso base: piace/piacciono): 24 questions
+  Preposizioni semplici: 34 questions
+  Presente indicativo: verbi regolari -are: 35 questions
+  Presente indicativo: verbi regolari -ere: 38 questions
+  Presente indicativo: verbi regolari -ire: 21 questions
+  Presente indicativo: verbi regolari -ire con -isc-: 23 questions
+  Professioni (vocabolario): 20 questions
+  Pronomi soggetto: 18 questions
+  Ristorante (frasi e vocabolario): 11 questions
+  Routine quotidiana: 19 questions
+  Saluti e presentazioni: 19 questions
+  Si impersonale: 1 questions
+  Stagioni (vocabolario): 22 questions
+  Trasporti (vocabolario): 14 questions
+  Verbi irregolari: 29 questions
+  Verbi modali (potere, dovere, volere): 21 questions
+  Verbi riflessivi: 6 questions
+  Verbo avere (to have): 34 questions
+  Verbo essere (to be): 23 questions
+  TOTAL FOR A1: 1009 questions
+
+LEVEL A2
+--------------------
+  Aggettivi Dimostrativi: 6 questions
+  Aggettivi Possessivi: 8 questions
+  Aggettivi e Pronomi Indefiniti: 47 questions
+  Articoli Partitivi: 40 questions
+  Avverbi di Frequenza/Tempo/Luogo: 38 questions
+  Casa e Quartiere (vocabolario): 49 questions
+  Comparativi e Superlativi: 60 questions
+  Condizionale Presente: 50 questions
+  Confronto Articoli: 38 questions
+  Descrizioni Fisiche e del Carattere (vocabolario): 55 questions
+  Espressioni di Tempo (fa, da, tra/fra): 45 questions
+  Famiglia (vocabolario): 6 questions
+  Futuro Semplice: 60 questions
+  Imperativo (tu/noi/voi): 51 questions
+  Imperativo Formale: 39 questions
+  Imperfetto: 49 questions
+  Imperfetto vs Passato Prossimo: 65 questions
+  Lavoro/Ufficio (vocabolario): 54 questions
+  Numeri Oltre 100 (vocabolario): 42 questions
+  Orario (vocabolario): 7 questions
+  Parole Interrogative: 13 questions
+  Particella Ci: 53 questions
+  Particella Ne: 42 questions
+  Participio Passato (irregolari frequenti): 74 questions
+  Passato Prossimo (essere/avere, accordo): 71 questions
+  Piacere (con pronomi, passato): 46 questions
+  Preposizioni Articolate: 46 questions
+  Preposizioni Semplici: 35 questions
+  Presente Indicativo: Verbi Regolari -are: 11 questions
+  Presente Indicativo: Verbi Regolari -ere: 1 questions
+  Presente Indicativo: Verbi Regolari -ire: 3 questions
+  Programmi (piani futuri, inviti): 63 questions
+  Pronomi Combinati: 55 questions
+  Pronomi Diretti: 53 questions
+  Pronomi Indiretti: 56 questions
+  Pronomi Relativi: 31 questions
+  Ricordi (narrazione semplice): 50 questions
+  Ristorante (menu/prenotare/conti) (vocabolario): 42 questions
+  Routine Quotidiana Dettagliata (vocabolario): 47 questions
+  Salute (vocabolario): 52 questions
+  Scuola e Università (vocabolario): 46 questions
+  Sentire (hear vs smell vs feel): 24 questions
+  Shopping (vocabolario): 55 questions
+  Si Impersonale: 48 questions
+  Sport e Hobby (vocabolario): 13 questions
+  Stare + Gerundio: 38 questions
+  Stare per + Infinito: 40 questions
+  Tempo/Meteo (vocabolario): 51 questions
+  Verbi Modali (+ infinito): 49 questions
+  Verbi Riflessivi (presente e passato prossimo): 43 questions
+  Verbo Essere e Presente Indicativo: 38 questions
+  Viaggi (trasporti, biglietti) (vocabolario): 47 questions
+  Volerci vs Metterci: 47 questions
+  TOTAL FOR A2: 2192 questions
+
+LEVEL B1
+--------------------
+  Accordo del participio passato: 29 questions
+  Ambiente (vocabolario e pratiche): 58 questions
+  Burocrazia: 7 questions
+  Business e e-commerce (vocabolario): 16 questions
+  Casa e quartiere (problemi/soluzioni): 48 questions
+  Ci e ne (avanzato): 37 questions
+  Cinema (vocabolario): 5 questions
+  Comparativi e superlativi (irregolarità): 41 questions
+  Condizionale presente: 55 questions
+  Congiuntivo presente: 65 questions
+  Connettivi (causa/effetto/concessione): 37 questions
+  Cucina (vocabolario): 6 questions
+  Cultura (vocabolario): 7 questions
+  Decisioni: 7 questions
+  Descrizioni (dettaglio): 44 questions
+  Discorso indiretto: 42 questions
+  Educazione (vocabolario): 7 questions
+  Futuro semplice: 52 questions
+  Gerundio (usi): 55 questions
+  Gusti (vocabolario): 7 questions
+  Hobby (vocabolario): 7 questions
+  Imperativo (pronomi atoni, negazione): 57 questions
+  Imperfetto vs Passato prossimo: 60 questions
+  Istruzione (esperienze scolastiche, esami): 19 questions
+  Lavoro (vocabolario e frasi): 65 questions
+  Media e attualità: 19 questions
+  Memoria e cambiamento: 14 questions
+  Musica (vocabolario): 7 questions
+  Orario (vocabolario): 7 questions
+  Particella ci: 2 questions
+  Particella ne: 13 questions
+  Participio passato: 6 questions
+  Passivo (con essere): 48 questions
+  Periodo ipotetico (I tipo): 50 questions
+  Preposizioni semplici: 5 questions
+  Professioni (vocabolario): 7 questions
+  Pronomi combinati (glielo, me ne): 50 questions
+  Pronomi diretti: 8 questions
+  Pronomi indefiniti: 50 questions
+  Pronomi indiretti: 5 questions
+  Pronomi relativi (che/cui): 56 questions
+  Relazioni: 58 questions
+  Ricordi (narrazione estesa): 52 questions
+  Ristorante (recensioni/preferenze): 40 questions
+  Salute e medicina (sintomi, consigli): 34 questions
+  Sentimenti (vocabolario): 10 questions
+  Servizi (banca, posta, reclami): 26 questions
+  Shopping (vocabolario): 7 questions
+  Si impersonale/si passivante: 41 questions
+  Società (vocabolario): 15 questions
+  Sport e hobby (vocabolario): 61 questions
+  Stare + gerundio (progressivo): 48 questions
+  Stare per + infinito: 19 questions
+  Tecnologia (uso quotidiano): 60 questions
+  Tempo/Meteo (vocabolario): 7 questions
+  Trapassato prossimo: 28 questions
+  Trasporti (vocabolario): 6 questions
+  Verbi causativi: 7 questions
+  Verbi impersonali: 4 questions
+  Verbi modali + pronomi clitici: 55 questions
+  Viaggi (reclami/imprevisti): 61 questions
+  TOTAL FOR B1: 1819 questions
+
+LEVEL B2
+--------------------
+  Ambiente: 20 questions
+  Ambiente (dibattito): 3 questions
+  Avverbi: 6 questions
+  Burocrazia (pratiche): 3 questions
+  Business: 4 questions
+  Business & e-commerce: 3 questions
+  Cittadinanza: 2 questions
+  Collocazioni: 3 questions
+  Concordanza dei tempi (casi tipici): 1 questions
+  Condizionale passato: 11 questions
+  Congiuntivo: 22 questions
+  Congiuntivo (Comparativo): 1 questions
+  Congiuntivo (Concessive): 1 questions
+  Congiuntivo (Condizionale): 3 questions
+  Congiuntivo (Desiderio): 1 questions
+  Congiuntivo (Domanda Indiretta): 1 questions
+  Congiuntivo (Espressioni Fisse): 1 questions
+  Congiuntivo (Indefinito): 3 questions
+  Congiuntivo (Verbi Impersonali): 1 questions
+  Congiuntivo imperfetto: 9 questions
+  Congiuntivo passato: 36 questions
+  Congiuntivo presente: 11 questions
+  Congiuntivo/Preposizioni: 1 questions
+  Connettivi: 5 questions
+  Costruzioni con gerundio/participio: 2 questions
+  Cultura: 9 questions
+  Demografia: 4 questions
+  Discorso Indiretto (Futuro nel Passato): 1 questions
+  Discorso indiretto: 16 questions
+  Discorso indiretto (avanzato): 1 questions
+  Economia e finanza (lessico generale): 16 questions
+  Educazione: 2 questions
+  Espressioni comuni: 5 questions
+  Espressioni di tempo basilari: 2 questions
+  Espressioni idiomatiche: 29 questions
+  Espressioni idiomatiche e proverbi: 12 questions
+  Forma Causativa (Fare + Infinito): 1 questions
+  Futuro Semplice (Forma Impersonale): 1 questions
+  Futuro anteriore: 11 questions
+  Futuro semplice: 2 questions
+  Gerundio (Costruzione Assoluta): 1 questions
+  Gerundio (Valore Concessivo): 1 questions
+  Gerundio Passato: 1 questions
+  Gerundio Presente: 3 questions
+  Indicativo (Futuro Implicito): 1 questions
+  Indicativo vs. Congiuntivo: 2 questions
+  Lavoro: 4 questions
+  Lessico: 12 questions
+  Lessico (Cucina): 1 questions
+  Lessico (Economia): 1 questions
+  Lessico (Lavoro): 2 questions
+  Lessico (Metaforico): 1 questions
+  Lessico formale: 1 questions
+  Lessico legale: 1 questions
+  Linguagio Academico: 2 questions
+  Linguagio Formale: 4 questions
+  Participio passato: 2 questions
+  Participio passato assoluto: 4 questions
+  Passato prossimo: 1 questions
+  Passivo: 10 questions
+  Passivo + Preposizioni: 1 questions
+  Passivo con 'Venire': 1 questions
+  Passivo con essere/venire; si passivante (avanzato): 3 questions
+  Periodo ipotetico: 25 questions
+  Periodo ipotetico II e III: 1 questions
+  Politica e diritto (lessico generale): 17 questions
+  Preposizioni: 9 questions
+  Preposizioni + Infinito Passato: 1 questions
+  Preposizioni complesse e locuzioni: 1 questions
+  Professioni (carriere): 5 questions
+  Pronomi Relativi + Preposizioni: 1 questions
+  Pronomi combinati: 10 questions
+  Pronomi relativi: 9 questions
+  Pubblica Amministrazione: 2 questions
+  Registro e toni (formale/informale): 4 questions
+  Ricerca: 1 questions
+  Sanità: 2 questions
+  Sanità e società: 3 questions
+  Si Impersonale (Verbi Riflessivi): 1 questions
+  Si Impersonale + Indicativo: 1 questions
+  Si impersonale: 5 questions
+  Si passivante: 2 questions
+  Società: 8 questions
+  Tecnologia: 8 questions
+  Tecnologia (privacy/AI/social): 3 questions
+  Trasporti: 1 questions
+  Trasporti (norme/sostenibilità): 1 questions
+  Urbanistica: 1 questions
+  Valori: 5 questions
+  Verbi Dichiarativi: 1 questions
+  Verbi Modali/Fraseologici: 1 questions
+  Verbi causativi (fare + infinito): 3 questions
+  Verbi modali: 1 questions
+  Verbi pronominali: 5 questions
+  Verbi pronominali (andarsene, cavarsela, farcela, ecc.): 3 questions
+  Verbi riflessivi (presente base): 1 questions
+  TOTAL FOR B2: 468 questions
+
+LEVEL C1
+--------------------
+  Academic Discussion: 5 questions
+  Advanced Argumentation: 6 questions
+  Advanced Conversation Management: 6 questions
+  Aggettivi possessivi (base): 1 questions
+  Ambiente (policy/dibattito): 3 questions
+  Andare + Participio: 1 questions
+  Avverbi: 1 questions
+  Business & e-commerce (strategie): 3 questions
+  Concordanza dei tempi: 5 questions
+  Condizionale (Desiderio): 1 questions
+  Congiuntivo: 5 questions
+  Congiuntivo (Concessivo): 3 questions
+  Congiuntivo (Finale): 1 questions
+  Congiuntivo (Formale): 1 questions
+  Congiuntivo (Forme Impersonali): 1 questions
+  Congiuntivo (Impersonale): 1 questions
+  Congiuntivo (Modale): 1 questions
+  Congiuntivo (Verbi di Volontà): 1 questions
+  Congiuntivo imperfetto: 1 questions
+  Congiuntivo passato: 1 questions
+  Congiunzioni (Comparative): 1 questions
+  Congiunzioni (Concessive): 1 questions
+  Congiunzioni (Formali): 5 questions
+  Congiunzioni + Congiuntivo: 1 questions
+  Connettivi: 2 questions
+  Connettivi di causa/effetto/concessione/ordine): 6 questions
+  Connettivi formali: 4 questions
+  Costruzioni Assolute: 1 questions
+  Discorso (Avverbi): 1 questions
+  Discorso (Costruzioni Verbali): 1 questions
+  Discorso (Espressioni): 1 questions
+  Discorso (Forme Impersonali): 1 questions
+  Discorso (Frasi Fatte): 2 questions
+  Discorso (Gestione della Conversazione): 1 questions
+  Discorso (Riportare Voci): 1 questions
+  Discorso (Strutturazione): 1 questions
+  Discorso (Uso Idiomatico): 1 questions
+  Discorso Indiretto (Futuro nel passato): 1 questions
+  Discorso indiretto: 8 questions
+  Economia e finanza (analisi): 3 questions
+  Espressioni Formali: 1 questions
+  Espressioni Gergali (Slang): 2 questions
+  Espressioni idiomatiche: 3 questions
+  Espressioni idiomatiche e proverbi: 26 questions
+  Forma Passiva: 1 questions
+  Forma Passiva (con venire): 2 questions
+  Formal Conversation Management: 6 questions
+  Forme Impersonali: 1 questions
+  Gerundio + Congiuntivo: 1 questions
+  Infinito: 2 questions
+  Lessico: 28 questions
+  Lessico (Aggettivi Descrittivi): 1 questions
+  Lessico (Aggettivi Precisi): 1 questions
+  Lessico (Culinario): 1 questions
+  Lessico (Nomi Astratti): 1 questions
+  Lessico (Paronimi): 1 questions
+  Lessico agricolo: 3 questions
+  Lessico business: 1 questions
+  Lessico formale: 26 questions
+  Lessico legale: 1 questions
+  Lessico tecnologico: 3 questions
+  Logical Development: 6 questions
+  Nominalizzazioni e densità informativa: 3 questions
+  Nuanced Expression: 6 questions
+  Participio passato assoluto; costruzioni assolute: 3 questions
+  Passato remoto: 20 questions
+  Periodo ipotetico: 17 questions
+  Preposizioni: 5 questions
+  Preposizioni (Figurativo): 1 questions
+  Preposizioni (Uso Idiomatico): 2 questions
+  Presentation Structure: 3 questions
+  Professional Consensus: 5 questions
+  Pronome (Ne Partitivo): 1 questions
+  Pronomi (Direct): 1 questions
+  Pronomi (Verbi Procomplementari): 1 questions
+  Pronomi Possessivi: 2 questions
+  Pronomi Relativi (Possessivi): 1 questions
+  Pronomi dimostrativi: 1 questions
+  Pronomi relativi: 12 questions
+  Si Impersonale + Riflessivi: 2 questions
+  Sophisticated Disagreement: 6 questions
+  Sophisticated Discourse Markers: 6 questions
+  Stile Formale: 1 questions
+  Stile Inverso: 2 questions
+  Tempi Verbali (Passato Prossimo): 1 questions
+  Trapassato remoto: 1 questions
+  Verbi (Riflessivi Idiomatici): 1 questions
+  Verbi (Uso Formale): 1 questions
+  Verbi Procomplementari (entrarci): 1 questions
+  TOTAL FOR C1: 315 questions
+
+================================================================================
+OVERALL SUMMARY
+----------------------------------------
+  A1: 1009 questions
+  A2: 2192 questions
+  B1: 1819 questions
+  B2: 468 questions
+  C1: 315 questions
+
+  GRAND TOTAL: 5803 active questions
+================================================================================
