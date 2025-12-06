@@ -1,8 +1,15 @@
 #!/usr/bin/env python3
 """
-Safe update of existing Italian Quiz database.
+Safe update of existing Italian Quiz database - COMPREHENSIVE VERSION
 Preserves all user progress while updating questions from CSV files.
-Handles the new CSV format with hint and alternate_correct_responses columns.
+Handles the comprehensive CSV format with all fields including complete_sentence.
+
+Compatible with comprehensive dataset generator (217 total topics):
+- A1: 46 topics
+- A2: 48 topics  
+- B1: 42 topics
+- B2: 43 topics
+- C1: 38 topics
 
 Usage: python update_existing_database.py
 """
@@ -26,8 +33,20 @@ CSV_FILES = [
 ]
 REPORT_FILE = "UPDATE_REPORT.txt"
 
+# Expected topic counts from comprehensive generator
+EXPECTED_TOPIC_COUNTS = {
+    'A1': 46,
+    'A2': 48,
+    'B1': 42,
+    'B2': 43,
+    'C1': 38
+}
+
 def generate_question_hash(question_text, english_translation, option_a, option_b, option_c, option_d, correct_option, cefr_level, topic):
-    """Generate a stable hash for a question based on its core content."""
+    """
+    Generate a stable hash for a question based on its core content.
+    Note: complete_sentence is NOT included in hash as it's derived from question_text + correct_option.
+    """
     content_parts = [
         question_text.strip().lower(),
         english_translation.strip().lower(),
@@ -93,23 +112,34 @@ def check_database_compatibility():
             return False
         
         # Add new columns if they don't exist
+        columns_added = False
+        
         if 'hint' not in columns:
             print("Adding missing 'hint' column to questions table...")
             cursor.execute("ALTER TABLE questions ADD COLUMN hint TEXT")
-            conn.commit()
+            columns_added = True
             print("Hint column added successfully.")
         
         if 'alternate_correct_responses' not in columns:
             print("Adding missing 'alternate_correct_responses' column to questions table...")
             cursor.execute("ALTER TABLE questions ADD COLUMN alternate_correct_responses TEXT")
-            conn.commit()
+            columns_added = True
             print("Alternate correct responses column added successfully.")
         
         if 'resource' not in columns:
             print("Adding missing 'resource' column to questions table...")
             cursor.execute("ALTER TABLE questions ADD COLUMN resource TEXT")
-            conn.commit()
+            columns_added = True
             print("Resource column added successfully.")
+        
+        if 'complete_sentence' not in columns:
+            print("Adding missing 'complete_sentence' column to questions table...")
+            cursor.execute("ALTER TABLE questions ADD COLUMN complete_sentence TEXT")
+            columns_added = True
+            print("Complete sentence column added successfully.")
+        
+        if columns_added:
+            conn.commit()
         
         return True
         
@@ -131,6 +161,7 @@ def create_archive_tables_if_needed():
             id INTEGER PRIMARY KEY,
             original_question_id INTEGER NOT NULL,
             question_hash TEXT NOT NULL,
+            complete_sentence TEXT,
             question_text TEXT NOT NULL,
             english_translation TEXT NOT NULL,
             hint TEXT,
@@ -227,14 +258,14 @@ def archive_removed_questions(csv_hashes):
         
         for question_hash, question_id in questions_to_archive:
             try:
-                # Archive the question itself
+                # Archive the question itself (with complete_sentence if it exists)
                 cursor.execute('''
                 INSERT INTO archived_questions 
-                (original_question_id, question_hash, question_text, english_translation, 
+                (original_question_id, question_hash, complete_sentence, question_text, english_translation, 
                  hint, alternate_correct_responses,
                  option_a, option_b, option_c, option_d, correct_option, cefr_level, 
                  topic, explanation, resource, created_at, updated_at, removal_reason)
-                SELECT id, question_hash, question_text, english_translation, 
+                SELECT id, question_hash, complete_sentence, question_text, english_translation, 
                        hint, alternate_correct_responses,
                        option_a, option_b, option_c, option_d, correct_option, cefr_level, 
                        topic, explanation, resource, created_at, updated_at, 'No longer in CSV files'
@@ -319,7 +350,12 @@ def safe_update_from_csv():
     topic_counts = {}  # For report generation
     
     # Get existing questions for comparison
-    cursor.execute('SELECT question_hash, id, question_text, english_translation, hint, alternate_correct_responses, option_a, option_b, option_c, option_d, correct_option, cefr_level, topic, explanation, resource FROM questions')
+    cursor.execute('''
+        SELECT question_hash, id, complete_sentence, question_text, english_translation, 
+               hint, alternate_correct_responses, option_a, option_b, option_c, option_d, 
+               correct_option, cefr_level, topic, explanation, resource 
+        FROM questions
+    ''')
     existing_questions = {row[0]: row for row in cursor.fetchall()}  # hash -> full_record
     
     print("Starting safe database update...")
@@ -340,23 +376,24 @@ def safe_update_from_csv():
             with open(filename, mode='r', encoding='utf-8') as file:
                 csv_reader = csv.DictReader(file)
                 
-                # Verify expected columns are present
+                # Verify expected columns are present (comprehensive format)
                 expected_columns = [
-                    'question_text', 'english_translation', 'hint', 'alternate_correct_responses',
-                    'option_a', 'option_b', 'option_c', 'option_d', 'correct_option', 
-                    'cefr_level', 'topic', 'explanation', 'resource'
+                    'complete_sentence', 'question_text', 'english_translation', 'hint', 
+                    'alternate_correct_responses', 'option_a', 'option_b', 'option_c', 
+                    'option_d', 'correct_option', 'cefr_level', 'topic', 'explanation', 'resource'
                 ]
                 
-                if not all(col in csv_reader.fieldnames for col in expected_columns):
-                    print(f"Error: '{filename}' missing required columns.")
+                missing_columns = [col for col in expected_columns if col not in csv_reader.fieldnames]
+                
+                if missing_columns:
+                    print(f"Warning: '{filename}' missing columns: {missing_columns}")
                     print(f"   Expected: {expected_columns}")
                     print(f"   Found: {csv_reader.fieldnames}")
-                    stats['errors'] += 1
-                    continue
+                    # Continue anyway - we'll handle missing columns gracefully
                 
                 for row_num, row in enumerate(csv_reader, start=2):  # Start at 2 for header
                     try:
-                        # Validate required fields
+                        # Validate required fields (core fields only)
                         required_fields = ['question_text', 'english_translation', 'option_a', 
                                          'option_b', 'option_c', 'option_d', 'correct_option', 
                                          'cefr_level', 'topic', 'explanation']
@@ -391,12 +428,14 @@ def safe_update_from_csv():
                             topic_counts[level][topic] = 0
                         topic_counts[level][topic] += 1
                         
-                        # Normalize values
+                        # Normalize values (handle optional fields gracefully)
+                        complete_sentence_value = row.get('complete_sentence', '').strip()
                         hint_value = row.get('hint', '').strip()
                         alternate_value = row.get('alternate_correct_responses', '').strip()
                         resource_value = row.get('resource', '').strip()
                         
                         values = (
+                            complete_sentence_value,
                             row['question_text'].strip(),
                             row['english_translation'].strip(),
                             hint_value,
@@ -424,9 +463,10 @@ def safe_update_from_csv():
                                 # Content changed - update existing record (preserving ID and progress)
                                 cursor.execute('''
                                 UPDATE questions 
-                                SET question_text=?, english_translation=?, hint=?, alternate_correct_responses=?,
-                                    option_a=?, option_b=?, option_c=?, option_d=?, correct_option=?, 
-                                    cefr_level=?, topic=?, explanation=?, resource=?, updated_at=?
+                                SET complete_sentence=?, question_text=?, english_translation=?, hint=?, 
+                                    alternate_correct_responses=?, option_a=?, option_b=?, option_c=?, 
+                                    option_d=?, correct_option=?, cefr_level=?, topic=?, explanation=?, 
+                                    resource=?, updated_at=?
                                 WHERE question_hash=?
                                 ''', values + (datetime.now().isoformat(), question_hash))
                                 
@@ -446,10 +486,10 @@ def safe_update_from_csv():
                                 current_time = datetime.now().isoformat()
                                 cursor.execute('''
                                 INSERT INTO questions 
-                                (question_hash, question_text, english_translation, hint, alternate_correct_responses,
-                                 option_a, option_b, option_c, option_d, correct_option, cefr_level, topic, 
-                                 explanation, resource, created_at, updated_at)
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                (question_hash, complete_sentence, question_text, english_translation, 
+                                 hint, alternate_correct_responses, option_a, option_b, option_c, option_d, 
+                                 correct_option, cefr_level, topic, explanation, resource, created_at, updated_at)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                                 ''', (question_hash,) + values + (current_time, current_time))
                                 
                                 new_id = cursor.lastrowid
@@ -494,9 +534,16 @@ def generate_update_report(stats, topic_counts):
     """Generate a report of the update process."""
     with open(REPORT_FILE, 'w', encoding='utf-8') as report:
         report.write("ITALIAN QUIZ DATABASE UPDATE REPORT\n")
+        report.write("COMPREHENSIVE DATASET (217 Total Topics)\n")
         report.write("=" * 80 + "\n")
         report.write(f"Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
         report.write("=" * 80 + "\n\n")
+        
+        report.write("EXPECTED TOPIC COVERAGE\n")
+        report.write("-" * 40 + "\n")
+        for level, count in EXPECTED_TOPIC_COUNTS.items():
+            report.write(f"  {level}: {count} topics expected\n")
+        report.write(f"  TOTAL: {sum(EXPECTED_TOPIC_COUNTS.values())} topics\n\n")
         
         report.write("UPDATE STATISTICS\n")
         report.write("-" * 40 + "\n")
@@ -519,17 +566,27 @@ def generate_update_report(stats, topic_counts):
         
         for level in level_order:
             if level in topic_counts:
-                report.write(f"\nLEVEL {level}\n")
+                report.write(f"\nLEVEL {level} (Expected: {EXPECTED_TOPIC_COUNTS.get(level, '?')} topics)\n")
                 report.write("-" * 20 + "\n")
                 
                 sorted_topics = sorted(topic_counts[level].items())
                 total_for_level = 0
+                unique_topics = len(sorted_topics)
                 
                 for topic, count in sorted_topics:
                     report.write(f"  {topic}: {count} questions\n")
                     total_for_level += count
                 
-                report.write(f"  TOTAL FOR {level}: {total_for_level} questions\n")
+                report.write(f"  TOTAL FOR {level}: {total_for_level} questions across {unique_topics} topics\n")
+                
+                # Show topic coverage vs expected
+                expected = EXPECTED_TOPIC_COUNTS.get(level, 0)
+                if unique_topics < expected:
+                    report.write(f"  ⚠️  WARNING: Only {unique_topics} topics found, expected {expected}\n")
+                elif unique_topics > expected:
+                    report.write(f"  ℹ️  INFO: {unique_topics} topics found, expected {expected} (may include new topics)\n")
+                else:
+                    report.write(f"  ✓ Complete topic coverage: {unique_topics}/{expected}\n")
         
         # Overall summary
         report.write("\n" + "=" * 80 + "\n")
@@ -537,20 +594,27 @@ def generate_update_report(stats, topic_counts):
         report.write("-" * 40 + "\n")
         
         grand_total = 0
+        total_topics = 0
         for level in level_order:
             if level in topic_counts:
                 level_total = sum(topic_counts[level].values())
-                report.write(f"  {level}: {level_total} questions\n")
+                level_topics = len(topic_counts[level])
+                report.write(f"  {level}: {level_total} questions across {level_topics} topics\n")
                 grand_total += level_total
+                total_topics += level_topics
         
-        report.write(f"\n  GRAND TOTAL: {grand_total} active questions\n")
+        report.write(f"\n  GRAND TOTAL: {grand_total} active questions across {total_topics} topics\n")
+        report.write(f"  Expected: 217 total topics across all levels\n")
         report.write("=" * 80 + "\n")
     
     print(f"\nUpdate report generated: {REPORT_FILE}")
 
 def main():
     """Main function to update an existing database."""
-    print("ITALIAN QUIZ - DATABASE UPDATE")
+    print("ITALIAN QUIZ - DATABASE UPDATE (COMPREHENSIVE)")
+    print("=" * 50)
+    print("Comprehensive Dataset: 217 topics total")
+    print("  A1: 46 | A2: 48 | B1: 42 | B2: 43 | C1: 38")
     print("=" * 50)
     print("This will safely update your database while preserving all progress.")
     print("Questions no longer in CSV files will be archived (not deleted).")
@@ -596,7 +660,7 @@ def main():
         
         # Print summary
         print("\n" + "="*70)
-        print("DATABASE UPDATE SUMMARY")
+        print("DATABASE UPDATE SUMMARY (COMPREHENSIVE DATASET)")
         print("="*70)
         print(f"Files processed: {combined_stats['files_processed']}")
         print(f"New questions added: {combined_stats['new_questions']}")
@@ -615,10 +679,31 @@ def main():
         active_questions = cursor.fetchone()[0]
         cursor.execute("SELECT COUNT(*) FROM archived_questions")
         archived_questions = cursor.fetchone()[0]
+        
+        # Count unique topics per level
+        cursor.execute("""
+            SELECT cefr_level, COUNT(DISTINCT topic) as topic_count
+            FROM questions
+            GROUP BY cefr_level
+            ORDER BY cefr_level
+        """)
+        topic_coverage = cursor.fetchall()
+        
         conn.close()
         
-        print(f"Active questions in database: {active_questions}")
+        print(f"\nActive questions in database: {active_questions}")
         print(f"Archived questions: {archived_questions}")
+        
+        print(f"\nTopic Coverage:")
+        total_topics_found = 0
+        for level, count in topic_coverage:
+            expected = EXPECTED_TOPIC_COUNTS.get(level, 0)
+            status = "✓" if count >= expected else "⚠️"
+            print(f"  {status} {level}: {count} topics (expected: {expected})")
+            total_topics_found += count
+        
+        print(f"\nTotal unique topics: {total_topics_found}/217")
+        
         print("\nUSER PROGRESS PRESERVED - All progress data has been maintained!")
         print("Removed questions are archived and can be recovered if needed.")
         print("="*70)
