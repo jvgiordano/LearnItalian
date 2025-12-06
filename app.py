@@ -1277,8 +1277,19 @@ class QuizApp(ctk.CTk):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.title(APP_NAME)
-        self.geometry(f"{WIDTH}x{HEIGHT}")
-        self.resizable(True, True)
+        
+        # 1. AUTO-MAXIMIZE WINDOW
+        # Instead of fixed width/height, we set it to screen size and maximize
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        self.geometry(f"{screen_width}x{screen_height}")
+        
+        # This triggers the "maximize" state (Windows/some Linux)
+        try:
+            self.after(0, lambda: self.state('zoomed'))
+        except:
+            # Fallback for systems that don't support 'zoomed' state
+            self.after(0, lambda: self.attributes('-fullscreen', True))
         
         self.adaptive_engine = ImprovedAdaptiveLearningEngine()
         self.current_user_level = None # To track level changes for pop-up
@@ -1326,6 +1337,10 @@ class QuizApp(ctk.CTk):
 
         ok_button = ctk.CTkButton(main_frame, text="Awesome!", command=dialog.destroy, width=120)
         ok_button.pack(pady=10)
+        
+    def change_scaling_event(self, new_scaling: str):
+        new_scaling_float = int(new_scaling.replace("%", "")) / 100
+        ctk.set_widget_scaling(new_scaling_float)
 
 
 class HomeScreen(ctk.CTkFrame):
@@ -1419,6 +1434,17 @@ class HomeScreen(ctk.CTkFrame):
 
         close_button_frame = ctk.CTkFrame(self, fg_color="transparent")
         close_button_frame.pack(side="bottom", fill="x", padx=20, pady=20)
+
+        # --- SCALING CONTROLS ---
+        scale_label = ctk.CTkLabel(close_button_frame, text="UI Zoom:", font=ctk.CTkFont(size=14, weight="bold"))
+        scale_label.pack(side="left", padx=(0, 10))
+
+        self.scaling_optionemenu = ctk.CTkOptionMenu(close_button_frame, 
+                                                     values=["80%", "90%", "100%", "110%", "120%", "130%", "140%"],
+                                                     command=self.controller.change_scaling_event)
+        self.scaling_optionemenu.set("100%") # Default
+        self.scaling_optionemenu.pack(side="left", padx=(0, 20))
+        # ------------------------
 
         close_button = ctk.CTkButton(close_button_frame, text="Close Application",
                                      command=self.controller.destroy,
@@ -2439,7 +2465,6 @@ class StatsScreen(ctk.CTkFrame):
         
         title_label = ctk.CTkLabel(header_frame, text="📈 Progress and Analytics", font=ctk.CTkFont(size=28, weight="bold"))
         title_label.pack(side="left", padx=(40, 0))
-        # NOTE: Clear button removed from header
 
         self.main_scroll = ctk.CTkScrollableFrame(self)
         self.main_scroll.pack(fill="both", expand=True, padx=20, pady=(0, 20))
@@ -2505,7 +2530,7 @@ class StatsScreen(ctk.CTkFrame):
         self.summary_label.configure(text=summary_text)
 
     def update_progress_timeline(self):
-        """Create the new Progress Timeline plot"""
+        """Create the new Progress Timeline plot with linear time-spaced ticks"""
         for widget in self.timeline_frame.winfo_children():
             widget.destroy()
         
@@ -2566,7 +2591,8 @@ class StatsScreen(ctk.CTkFrame):
             mastery_values.append(mastery * 100)
         
         # Create the plot
-        fig, ax = plt.subplots(figsize=(10, 5), facecolor="#F0F0F0")
+        # Increased DPI slightly for better text rendering on scaling
+        fig, ax = plt.subplots(figsize=(10, 5), facecolor="#F0F0F0", dpi=100)
         
         # Plot coverage line with blue fill
         ax.fill_between(dates, 0, coverage_values, alpha=0.5, color='#1F6AA5', zorder=1)
@@ -2602,10 +2628,27 @@ class StatsScreen(ctk.CTkFrame):
         
         ax.set_facecolor("#FFFFFF")
         
-        # Format x-axis dates
+        # --- CORRECTED X-AXIS LOGIC ---
+        # 1. Always set format first
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d'))
-        ax.xaxis.set_major_locator(mdates.DayLocator(interval=max(1, len(dates) // 10)))
+        
+        # 2. Logic: If <= 15 dates, show all. 
+        # If > 15, calculate 15 evenly spaced TIME points between Start and End.
+        if len(dates) > 15:
+            # Convert python datetimes to matplotlib floats (days since epoch)
+            start_num = mdates.date2num(dates[0])
+            end_num = mdates.date2num(dates[-1])
+            
+            # Generate 15 evenly spaced floats (time points)
+            ticks = np.linspace(start_num, end_num, 15)
+            
+            ax.set_xticks(ticks)
+        else:
+            # If few dates, just show exactly where the data is
+            ax.set_xticks(dates)
+            
         fig.autofmt_xdate()
+        # -------------------------------
         
         # Grid
         ax.grid(True, which='major', linestyle='--', linewidth=0.5, color='gray', alpha=0.3)
@@ -2630,7 +2673,6 @@ class StatsScreen(ctk.CTkFrame):
         canvas = FigureCanvasTkAgg(fig, master=self.timeline_frame)
         canvas.draw()
         canvas.get_tk_widget().pack(side="top", fill="both", expand=True, pady=10)
-
 
     def _calculate_mastery_for_level(self, level, cursor):
         """Helper method to calculate coverage and new mastery with updated scoring."""
@@ -2760,7 +2802,7 @@ class StatsScreen(ctk.CTkFrame):
             
             recent_average = sum(scores) / len(scores) if scores else 0
             
-            fig1, ax1 = plt.subplots(figsize=(10, 4), facecolor="#F0F0F0")
+            fig1, ax1 = plt.subplots(figsize=(10, 4), facecolor="#F0F0F0", dpi=100)
             ax1.plot(quiz_numbers, scores, marker='o', linestyle='-', color='#1F6AA5', linewidth=2, markersize=6)
             
             ax1.set_xlabel("Quiz Session", color="black", fontsize=11)
@@ -2804,7 +2846,7 @@ class StatsScreen(ctk.CTkFrame):
         
         conn.close()
         
-        fig2, ax2 = plt.subplots(figsize=(6, 4), facecolor="#F0F0F0")
+        fig2, ax2 = plt.subplots(figsize=(6, 4), facecolor="#F0F0F0", dpi=100)
         
         x_pos = range(len(levels))
         bar_width = 0.6
@@ -3014,7 +3056,338 @@ class StatsScreen(ctk.CTkFrame):
         
         self.refresh_data()
         self.controller.frames[HomeScreen].refresh_data()
+    def __init__(self, parent, controller):
+        super().__init__(parent)
+        self.controller = controller
+        
+        header_frame = ctk.CTkFrame(self, fg_color="transparent")
+        header_frame.pack(fill="x", padx=20, pady=20)
+        
+        back_button = ctk.CTkButton(header_frame, text="← Back to Home", 
+                                    command=lambda: controller.show_frame(HomeScreen),
+                                    width=120, height=32)
+        back_button.pack(side="left")
+        
+        title_label = ctk.CTkLabel(header_frame, text="📈 Progress and Analytics", font=ctk.CTkFont(size=28, weight="bold"))
+        title_label.pack(side="left", padx=(40, 0))
+        # NOTE: Clear button removed from header
 
+        self.main_scroll = ctk.CTkScrollableFrame(self)
+        self.main_scroll.pack(fill="both", expand=True, padx=20, pady=(0, 20))
+        
+        # New progress summary frame
+        self.summary_frame = ctk.CTkFrame(self.main_scroll, fg_color="transparent")
+        self.summary_frame.pack(fill="x", pady=(0, 20), padx=50)
+        self.summary_label = ctk.CTkLabel(self.summary_frame, text="", font=ctk.CTkFont(size=18))
+        self.summary_label.pack(pady=15, padx=10)
+
+        # Progress Timeline (new top graph)
+        self.timeline_frame = ctk.CTkFrame(self.main_scroll)
+        self.timeline_frame.pack(pady=(0, 20), padx=50)
+        
+        # CEFR Level Completion and Level Progress table
+        self.stats_frame = ctk.CTkFrame(self.main_scroll)
+        self.stats_frame.pack(pady=(0, 20), padx=50)
+        
+        # NEW: Detailed level-by-level progress metrics
+        self.level_details_frame = ctk.CTkFrame(self.main_scroll)
+        self.level_details_frame.pack(fill="x", pady=(0, 20), padx=50)
+        
+        # Recent Quiz Performance (moved down)
+        self.graph_frame = ctk.CTkFrame(self.main_scroll)
+        self.graph_frame.pack(pady=(0, 20), padx=50)
+        
+        self.weaknesses_frame = ctk.CTkFrame(self.main_scroll)
+        self.weaknesses_frame.pack(fill="x", pady=(0, 20), padx=50)
+        
+        self.explanation_frame = ctk.CTkFrame(self.main_scroll)
+        self.explanation_frame.pack(fill="x", pady=(0, 20), padx=50)
+        
+        # Clear Progress button at the very bottom
+        clear_button_frame = ctk.CTkFrame(self.main_scroll, fg_color="transparent")
+        clear_button_frame.pack(fill="x", pady=(40, 40), padx=50)
+        
+        clear_button = ctk.CTkButton(clear_button_frame, text="Clear All Progress",
+                                     command=self.confirm_clear_progress,
+                                     fg_color="#D22B2B", hover_color="#AA2222",
+                                     width=200, height=40)
+        clear_button.pack()
+
+    def refresh_data(self):
+        self.update_summary()
+        self.update_progress_timeline()
+        self.update_stats_table()
+        self.update_level_details()
+        self.update_graph()
+        self.update_weaknesses()
+        self.update_explanations()
+        # Scroll to top after refreshing all data
+        self.main_scroll._parent_canvas.yview_moveto(0)
+
+    def update_summary(self):
+        """Updates the new summary text at the top of the stats page."""
+        current_level = self.controller.adaptive_engine.calculate_estimated_level()
+        next_level = self.controller.adaptive_engine.get_next_level(current_level)
+        
+        summary_text = f"Estimated CEFR Level: {current_level}    |    You are working towards: {next_level}"
+        if current_level == next_level: # Max level reached
+            summary_text = f"Estimated CEFR Level: {current_level}    |    Congratulations, you've reached the highest level!"
+
+        self.summary_label.configure(text=summary_text)
+
+    def update_progress_timeline(self):
+        """Create the new Progress Timeline plot"""
+        for widget in self.timeline_frame.winfo_children():
+            widget.destroy()
+        
+        title_label = ctk.CTkLabel(self.timeline_frame, text="Progress Timeline", 
+                                   font=ctk.CTkFont(size=18, weight="bold"))
+        title_label.pack(pady=(15, 10))
+        
+        conn = sqlite3.connect('italian_quiz.db')
+        cursor = conn.cursor()
+        
+        # Get all daily stats
+        cursor.execute('''
+            SELECT date, total_coverage, total_mastery 
+            FROM daily_stats 
+            ORDER BY date
+        ''')
+        daily_data = cursor.fetchall()
+        
+        # Get the first quiz date if no daily stats exist yet
+        if not daily_data:
+            cursor.execute('''
+                SELECT MIN(DATE(timestamp)) as first_date 
+                FROM quiz_history
+            ''')
+            first_quiz = cursor.fetchone()
+            if first_quiz and first_quiz[0]:
+                # Temporarily get a row_factory cursor to calculate current stats
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
+                coverage, mastery = self.controller.adaptive_engine.get_total_coverage_and_mastery(cursor)
+                daily_data = [(datetime.now().date().isoformat(), coverage, mastery)]
+        
+        conn.close()
+        
+        if not daily_data:
+            no_data_label = ctk.CTkLabel(self.timeline_frame, 
+                                         text="No progress data yet.\nComplete a quiz to start tracking your progress!", 
+                                         font=ctk.CTkFont(size=14))
+            no_data_label.pack(expand=True, pady=30)
+            return
+        
+        # Parse dates and values
+        dates = []
+        coverage_values = []
+        mastery_values = []
+        
+        # Add a starting point (day before first data)
+        first_date = datetime.fromisoformat(daily_data[0][0])
+        start_date = first_date - timedelta(days=1)
+        dates.append(start_date)
+        coverage_values.append(0)
+        mastery_values.append(0)
+        
+        # Add actual data
+        for date_str, coverage, mastery in daily_data:
+            dates.append(datetime.fromisoformat(date_str))
+            coverage_values.append(coverage * 100)  # Convert to percentage
+            mastery_values.append(mastery * 100)
+        
+        # Create the plot
+        fig, ax = plt.subplots(figsize=(10, 5), facecolor="#F0F0F0")
+        
+        # Plot coverage line with blue fill
+        ax.fill_between(dates, 0, coverage_values, alpha=0.5, color='#1F6AA5', zorder=1)
+        ax.plot(dates, coverage_values, color='#1F6AA5', linewidth=2, zorder=2)
+        
+        # Plot mastery line with gold fill (on top)
+        ax.fill_between(dates, 0, mastery_values, alpha=0.7, color='#FFD700', zorder=3)
+        ax.plot(dates, mastery_values, color='#FFD700', linewidth=2, zorder=4)
+        
+        # Format the plot
+        ax.set_xlabel("Date", color="black", fontsize=11)
+        ax.set_ylabel("Percentage (%)", color="black", fontsize=11)
+        
+        # Autoscale y-axis with some padding
+        if coverage_values or mastery_values:
+            max_value = max(max(coverage_values) if coverage_values else 0, 
+                           max(mastery_values) if mastery_values else 0)
+            min_value = min(min(coverage_values) if coverage_values else 0,
+                           min(mastery_values) if mastery_values else 0)
+            
+            # Add 10% padding above and below, but keep 0 as minimum if data starts from 0
+            padding = (max_value - min_value) * 0.1 if max_value > min_value else 5
+            y_min = max(0, min_value - padding)  # Don't go below 0
+            y_max = min(105, max_value + padding)  # Don't exceed 105% (since it's percentage)
+            
+            # If values are very small, ensure we have a reasonable scale
+            if y_max < 10:
+                y_max = 10
+                
+            ax.set_ylim(y_min, y_max)
+        else:
+            ax.set_ylim(0, 10)  # Default for no data
+        
+        ax.set_facecolor("#FFFFFF")
+        
+        # Format x-axis dates
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d'))
+        ax.xaxis.set_major_locator(mdates.DayLocator(interval=max(1, len(dates) // 10)))
+        fig.autofmt_xdate()
+        
+        # Grid
+        ax.grid(True, which='major', linestyle='--', linewidth=0.5, color='gray', alpha=0.3)
+        
+        # Spines
+        for spine in ax.spines.values():
+            spine.set_color('black')
+            spine.set_linewidth(1)
+        
+        ax.tick_params(axis='x', colors='black')
+        ax.tick_params(axis='y', colors='black')
+        
+        # Create horizontal legend above the plot
+        from matplotlib.patches import Patch
+        legend_elements = [
+            Patch(facecolor='#1F6AA5', alpha=0.7, label='Coverage'),
+            Patch(facecolor='#FFD700', alpha=0.7, label='Mastery')
+        ]
+        ax.legend(handles=legend_elements, loc='upper center', bbox_to_anchor=(0.5, 1.15),
+                  ncol=2, frameon=False)
+        
+        canvas = FigureCanvasTkAgg(fig, master=self.timeline_frame)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side="top", fill="both", expand=True, pady=10)
+
+    def update_progress_timeline(self):
+        """Create the new Progress Timeline plot with linear time-spaced ticks"""
+        for widget in self.timeline_frame.winfo_children():
+            widget.destroy()
+        
+        title_label = ctk.CTkLabel(self.timeline_frame, text="Progress Timeline", 
+                                   font=ctk.CTkFont(size=18, weight="bold"))
+        title_label.pack(pady=(15, 10))
+        
+        conn = sqlite3.connect('italian_quiz.db')
+        cursor = conn.cursor()
+        
+        # Get all daily stats
+        cursor.execute('''
+            SELECT date, total_coverage, total_mastery 
+            FROM daily_stats 
+            ORDER BY date
+        ''')
+        daily_data = cursor.fetchall()
+        
+        # Get the first quiz date if no daily stats exist yet
+        if not daily_data:
+            cursor.execute('''
+                SELECT MIN(DATE(timestamp)) as first_date 
+                FROM quiz_history
+            ''')
+            first_quiz = cursor.fetchone()
+            if first_quiz and first_quiz[0]:
+                # Temporarily get a row_factory cursor to calculate current stats
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
+                coverage, mastery = self.controller.adaptive_engine.get_total_coverage_and_mastery(cursor)
+                daily_data = [(datetime.now().date().isoformat(), coverage, mastery)]
+        
+        conn.close()
+        
+        if not daily_data:
+            no_data_label = ctk.CTkLabel(self.timeline_frame, 
+                                         text="No progress data yet.\nComplete a quiz to start tracking your progress!", 
+                                         font=ctk.CTkFont(size=14))
+            no_data_label.pack(expand=True, pady=30)
+            return
+        
+        # Parse dates and values
+        dates = []
+        coverage_values = []
+        mastery_values = []
+        
+        # Add a starting point (day before first data) to make the graph look nicer
+        first_date = datetime.fromisoformat(daily_data[0][0])
+        start_date = first_date - timedelta(days=1)
+        dates.append(start_date)
+        coverage_values.append(0)
+        mastery_values.append(0)
+        
+        # Add actual data
+        for date_str, coverage, mastery in daily_data:
+            dates.append(datetime.fromisoformat(date_str))
+            coverage_values.append(coverage * 100)  # Convert to percentage
+            mastery_values.append(mastery * 100)
+        
+        # Create the plot
+        # Increased DPI slightly for better text rendering on scaling
+        fig, ax = plt.subplots(figsize=(10, 5), facecolor="#F0F0F0", dpi=100)
+        
+        # Plot coverage line with blue fill
+        ax.fill_between(dates, 0, coverage_values, alpha=0.5, color='#1F6AA5', zorder=1)
+        ax.plot(dates, coverage_values, color='#1F6AA5', linewidth=2, zorder=2)
+        
+        # Plot mastery line with gold fill (on top)
+        ax.fill_between(dates, 0, mastery_values, alpha=0.7, color='#FFD700', zorder=3)
+        ax.plot(dates, mastery_values, color='#FFD700', linewidth=2, zorder=4)
+        
+        # Format the plot
+        ax.set_xlabel("Date", color="black", fontsize=11)
+        ax.set_ylabel("Percentage (%)", color="black", fontsize=11)
+        
+        # Autoscale y-axis with some padding
+        if coverage_values or mastery_values:
+            max_value = max(max(coverage_values) if coverage_values else 0, 
+                           max(mastery_values) if mastery_values else 0)
+            
+            # Always show at least 0-10, but scale up if user progresses
+            y_max = max(10, min(105, max_value * 1.2))
+            ax.set_ylim(0, y_max)
+        else:
+            ax.set_ylim(0, 10)
+        
+        ax.set_facecolor("#FFFFFF")
+        
+        # --- FIXED X-AXIS LOGIC ---
+        # 1. Use AutoDateLocator: This automatically finds the best "Even" spacing 
+        # (e.g., every 3 days, every week) regardless of gaps in your data.
+        locator = mdates.AutoDateLocator(minticks=5, maxticks=12)
+        ax.xaxis.set_major_locator(locator)
+        
+        # 2. Format the date text
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d'))
+        
+        # 3. Rotate dates slightly to prevent overlap
+        fig.autofmt_xdate()
+        # -------------------------------
+        
+        # Grid
+        ax.grid(True, which='major', linestyle='--', linewidth=0.5, color='gray', alpha=0.3)
+        
+        # Spines
+        for spine in ax.spines.values():
+            spine.set_color('black')
+            spine.set_linewidth(1)
+        
+        ax.tick_params(axis='x', colors='black')
+        ax.tick_params(axis='y', colors='black')
+        
+        # Create horizontal legend above the plot
+        from matplotlib.patches import Patch
+        legend_elements = [
+            Patch(facecolor='#1F6AA5', alpha=0.7, label='Coverage'),
+            Patch(facecolor='#FFD700', alpha=0.7, label='Mastery')
+        ]
+        ax.legend(handles=legend_elements, loc='upper center', bbox_to_anchor=(0.5, 1.15),
+                  ncol=2, frameon=False)
+        
+        canvas = FigureCanvasTkAgg(fig, master=self.timeline_frame)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side="top", fill="both", expand=True, pady=10)
 
 if __name__ == "__main__":
     app = QuizApp()
