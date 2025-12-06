@@ -1,0 +1,193 @@
+You are an expert Italian language educator creating questions for CEFR level A2.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 8 questions with perfect accuracy. Quality over quantity - every question must be 100% correct.
+
+Question distribution:
+- 8 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "A2",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+Good hints:
+- "feminine speaker" (for agreement)
+- "formal" (for Lei forms)
+- "herbal tea, not tè" (for word choice)
+- "motion verb" (for auxiliary selection)
+
+Bad hints:
+- Hints that just repeat grammar rules
+- Hints that reveal the answer
+- Unnecessary hints when context is clear
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Congiunzioni e connettivi (base)
+
+    Basic conjunctions and connectors:
+    - Coordination: e (and), o (or), ma (but), però (however)
+    - Cause: perché (because), siccome (since)
+    - Effect: quindi (therefore), allora (so/then), perciò (therefore)
+    - Addition: anche (also), inoltre (moreover)
+    - Contrast: ma (but), però (however/but), invece (instead)
+    - Time: quando (when), mentre (while), prima di (before), dopo (after)
+    Examples:
+      • "Sono stanco, quindi vado a casa"
+      • "Mi piace l'Italia ma è cara"
+      • "Studio perché voglio imparare"
+    
+
+### Si Impersonale
+
+    Cover impersonal constructions:
+    - Si + third person verb for "one/we/people" in general
+    - Si mangia bene qui (One eats well here)
+    - Si dice che... (It is said that... / People say that...)
+    - Agreement with plural nouns: Si vendono case (Houses are sold)
+    - Difference from passive: active meaning, no agent
+    Examples:
+      • "In Italia si beve molto caffè" (In Italy people drink a lot of coffee)
+      • "Come si dice in italiano?" (How do you say it in Italian?)
+    
+
+### Imperativo Formale
+
+    Focus on formal imperative (Lei form):
+    - Uses congiuntivo presente for Lei: Venga! Faccia! Sia!
+    - Negative: Non venga! Non faccia!
+    - With pronouns: Me lo dia! (Give it to me!)
+    - Common irregular forms: vada, venga, faccia, dica, abbia, sia
+    - Always formal register for commands to strangers, elders, customers
+    
+
+### Imperfetto vs. Passato Prossimo
+
+    MUST cover these contrasts:
+    - Completed Action vs. Ongoing Action
+    - Specific Event vs. Habitual Action  
+    - Background Description vs. Main Event
+    - Modal Verbs (usage with imperfetto vs. passato prossimo)
+    - Time expressions: sempre, spesso, di solito (→ imperfetto) vs. ieri, lunedì scorso (→ passato prossimo)
+    Examples: 
+      • "Mentre mangiavo, è arrivato" (background vs. event)
+      • "Da bambino andavo sempre al mare" (habitual) vs. "Ieri sono andato al mare" (specific)
+      • "Volevo uscire" (ongoing desire) vs. "Ho voluto uscire" (decided to go out)
+    
+
+### Preposizioni articolate
+
+    Contracted prepositions with articles (mandatory, not optional):
+    - di + il/lo/la/i/gli/le → del/dello/della/dei/degli/delle
+    - a + il/lo/la/i/gli/le → al/allo/alla/ai/agli/alle
+    - da + il/lo/la/i/gli/le → dal/dallo/dalla/dai/dagli/dalle
+    - in + il/lo/la/i/gli/le → nel/nello/nella/nei/negli/nelle
+    - su + il/lo/la/i/gli/le → sul/sullo/sulla/sui/sugli/sulle
+    Note: NEVER say "di il" - always use contraction
+    Examples: Vado al cinema, Vengo dalla stazione, Il libro del professore
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- Focus on: common phrases, idiomatic expressions, grammar patterns
+- "complete_sentence" contains the perfect Italian translation
+- "alternate_correct_responses" lists other acceptable versions
+- All options should attempt the translation (even if wrong)
+
+## TOPICS TO COVER
+
+Create AT LEAST the specified number for each topic:
+- Imperativo Formale: minimum 1 question(s)
+- Congiunzioni e connettivi (base): minimum 1 question(s)
+- Preposizioni articolate: minimum 3 question(s)
+- Imperfetto vs. Passato Prossimo: minimum 1 question(s)
+- Si Impersonale: minimum 1 question(s)
+- Salute (base): minimum 1 question(s)
+
+Note: Some topics are marked as challenging and may receive bonus questions.
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Fate silenzio, lo spettacolo sta ___ cominciare!
+- Signor Rossi, ___ pure, l'avvocato La aspetta.
+- Quanti libri hai letto? ___ ho letti tre.
+- Da giovane mio nonno ___ a calcio ogni domenica.
+- In Italia ___ parla italiano.
+- Possiamo dividere il ___ o preferite pagare separatamente?
+- Paolo è vegetariano, quindi non mangia ___ la carne.
+- Abito in questa città ___ cinque anni.
+- In questo stadio ci sono ___ persone oggi.
+- Domani ho un ___ importante di matematica.
+- Vorrei comprare quella giacca, ___ costa troppo.
+- Gli studenti studiano in ___ per l'esame.
+- Non ho ___ visitato la Sicilia.
+- Vorrei ___ una bistecca ben cotta, per favore.
+- Vuoi ___ zucchero nel caffè?
+
+## QUALITY CHECKLIST
+
+Before including each question, verify:
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level A2 appropriate vocabulary and grammar
+
+Generate the 8 questions now. Return ONLY valid JSON.

@@ -1,0 +1,167 @@
+You are an expert Italian language educator creating questions for CEFR level B1.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 7 questions with perfect accuracy. Quality over quantity - every question must be 100% correct.
+
+Question distribution:
+- 7 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "B1",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+Good hints:
+- "feminine speaker" (for agreement)
+- "formal" (for Lei forms)
+- "herbal tea, not tè" (for word choice)
+- "motion verb" (for auxiliary selection)
+
+Bad hints:
+- Hints that just repeat grammar rules
+- Hints that reveal the answer
+- Unnecessary hints when context is clear
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Discorso indiretto (base)
+
+    Reported speech (indirect discourse) - basic transformations:
+    
+    1. Tense changes (when reporting verb is past):
+       • Presente → Imperfetto: "Sono stanco" → Ha detto che era stanco
+       • Passato prossimo → Trapassato prossimo: "Ho mangiato" → Ha detto che aveva mangiato
+       • Futuro → Condizionale passato: "Verrò" → Ha detto che sarebbe venuto
+    
+    2. Time expression changes:
+       • oggi → quel giorno, domani → il giorno dopo, ieri → il giorno prima
+       • ora → allora, fa → prima
+    
+    3. Pronoun changes:
+       • Direct: "Io sono stanco" → Marco ha detto che lui era stanco
+       • Possessive: "il mio libro" → "il suo libro"
+    
+    Examples:
+      • Direct: Maria dice: "Vado al cinema"
+      • Indirect: Maria dice che va al cinema (present reporting → no change)
+      • Indirect: Maria ha detto che andava al cinema (past reporting → imperfetto)
+    
+
+### Congiuntivo presente (introduzione: opinioni, emozioni base)
+
+    Subjunctive present - expressing opinions, emotions, doubt:
+    - After verbs of opinion: penso che, credo che, mi sembra che, dubito che
+    - After expressions of emotion: sono felice che, mi dispiace che, ho paura che
+    - After impersonal expressions: è importante che, bisogna che, è necessario che
+    - When NOT to use it: so che + indicativo (certainty), è vero che + indicativo
+    - Most common irregular forms: sia/siano (essere), abbia/abbiano (avere), faccia/facciano (fare), vada/vadano (andare)
+    - Formation regular: -are → -i/-iamo/-iate/-ino, -ere/-ire → -a/-iamo/-iate/-ano
+    Examples:
+      • "Penso che sia importante" (I think it's important)
+      • "Sono felice che tu venga" (I'm happy you're coming)
+      • "Dubito che lo sappia" (I doubt he knows it)
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- Focus on: common phrases, idiomatic expressions, grammar patterns
+- "complete_sentence" contains the perfect Italian translation
+- "alternate_correct_responses" lists other acceptable versions
+- All options should attempt the translation (even if wrong)
+
+## TOPICS TO COVER
+
+Create AT LEAST the specified number for each topic:
+- Ricordi (narrazione estesa): minimum 1 question(s)
+- Discorso indiretto (base): minimum 1 question(s)
+- Salute e medicina (sintomi, consigli, visite mediche): minimum 1 question(s)
+- Connettivi di causa/effetto/concessione/ordine): minimum 1 question(s)
+- Congiuntivo presente (introduzione: opinioni, emozioni base): minimum 2 question(s)
+- Istruzione (esperienze scolastiche, esami): minimum 1 question(s)
+
+Note: Some topics are marked as challenging and may receive bonus questions.
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Non fare rumore, papà ___ dormendo in camera da letto.
+- È una sorpresa, non ___ niente!
+- Ho preso un ___ dal medico per una visita di controllo.
+- Aggiungi un po' di ___.
+- Hai pensato al regalo per Marco? No, non ___ ho ancora pensato.
+- Il ponte ___ chiuso per lavori di manutenzione.
+- Per tenersi in forma, va in palestra a ___ pesi.
+- Ha inviato il suo ___ per quella posizione di lavoro.
+- Ho dimenticato di ___ il telefono e ora la batteria è scarica.
+- Per la mia nuova posizione, dovrò ___ un team di dieci persone.
+- Da bambina ___ sempre le verdure, ma oggi ha rifiutato l'insalata.
+- Dopo tanti anni di fidanzamento, finalmente si sono ___.
+- Il progetto ___ completato entro la fine dell'anno.
+- ___ leggendo un libro molto interessante sulla storia d'Italia.
+- Mia figlia gioca a ___ ogni martedì sera.
+
+## QUALITY CHECKLIST
+
+Before including each question, verify:
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level B1 appropriate vocabulary and grammar
+
+Generate the 7 questions now. Return ONLY valid JSON.

@@ -1,0 +1,224 @@
+You are an expert Italian language educator creating questions for CEFR level B1.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 7 questions with perfect accuracy. Quality over quantity - every question must be 100% correct.
+
+Question distribution:
+- 7 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "B1",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+Good hints:
+- "feminine speaker" (for agreement)
+- "formal" (for Lei forms)
+- "herbal tea, not tè" (for word choice)
+- "motion verb" (for auxiliary selection)
+
+Bad hints:
+- Hints that just repeat grammar rules
+- Hints that reveal the answer
+- Unnecessary hints when context is clear
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Trapassato prossimo
+
+    Past perfect (pluperfect) - action completed before another past action:
+    - Formation: imperfetto of essere/avere + past participle
+    - Aveva mangiato (he/she had eaten), Era andato/a (he/she had gone)
+    - Time sequence: "Quando sono arrivato, Maria era già partita" (When I arrived, Maria had already left)
+    - With "dopo che": "Dopo che aveva finito, è uscito" (After he had finished, he went out)
+    - vs imperfetto: trapassato = completed before, imperfetto = ongoing in past
+    - Agreement rules same as passato prossimo
+    
+
+### Comparativi e superlativi (irregolarità)
+
+    Irregular comparatives and superlatives:
+    
+    Irregular forms:
+    • buono → migliore (better), il migliore / ottimo (the best)
+    • cattivo → peggiore (worse), il peggiore / pessimo (the worst)
+    • grande → maggiore (bigger/greater/older), il maggiore / massimo (the biggest/greatest)
+    • piccolo → minore (smaller/younger), il minore / minimo (the smallest)
+    
+    When to use:
+    • "più buono" vs "migliore": both correct, migliore more common for quality
+    • "più cattivo" vs "peggiore": similar, peggiore for quality
+    • "più grande" vs "maggiore": maggiore often for age (fratello maggiore = older brother)
+    
+    Comparisons with "di" vs "che":
+    • "di + article": "Maria è più alta di Luca" (comparing two people/things)
+    • "che": "È più facile che difficile" (comparing two qualities)
+    • "che": "Lavoro più a Roma che a Milano" (comparing two prepositions)
+    
+    Superlatives:
+    • Relative: "il più alto" (the tallest), "la più bella" (the most beautiful)
+    • Absolute: "altissimo" (very tall), "bellissima" (very beautiful)
+    • With irregular: "il migliore di tutti" (the best of all)
+    
+
+### Pronomi possessivi (vs aggettivi possessivi)
+
+    Possessive pronouns (standing alone) vs possessive adjectives (with noun):
+    
+    POSSESSIVE ADJECTIVES (with noun):
+    • il mio libro (my book), la mia casa (my house)
+    • Always with article (except: mio padre, mia madre, mio fratello, mia sorella when singular)
+    • Agreement: with the thing possessed, not the possessor
+    
+    POSSESSIVE PRONOUNS (standalone - replace noun):
+    • il mio (mine), la mia (mine-fem), i miei (mine-pl-masc), le mie (mine-pl-fem)
+    • Must keep the article
+    • Agreement: with the thing being replaced
+    
+    Examples:
+    • "Questo è il mio libro" (adjective - This is my book)
+    • "Questo libro è il mio" (pronoun - This book is mine)
+    • "La mia macchina è rossa, la tua è blu" (Mine is red, yours is blue)
+    
+    Special cases:
+    • With essere: article optional
+      "È mio" or "È il mio" (It's mine) - both correct
+      "Sono miei" or "Sono i miei" (They're mine)
+    
+    All forms:
+    • il mio/la mia/i miei/le mie (mine)
+    • il tuo/la tua/i tuoi/le tue (yours-informal)
+    • il suo/la sua/i suoi/le sue (his/hers/its)
+    • il nostro/la nostra/i nostri/le nostre (ours)
+    • il vostro/la vostra/i vostri/le vostre (yours-plural)
+    • il loro/la loro/i loro/le loro (theirs - no agreement!)
+    
+    Common errors:
+    • *"È il mio" when you mean the adjective (should be "il mio libro")
+    • Forgetting article with pronoun: *"È mio libro" (wrong) → "È il mio libro" or "È mio" (correct)
+    
+
+### Ci e ne (avanzato)
+
+    Advanced uses beyond A2 basics:
+    
+    CI:
+    1. Place (there): "Ci vado domani" (I'm going there tomorrow)
+    2. About it/to it: "Ci penso" (I'm thinking about it), "Ci credo" (I believe in it)
+    3. With verbs: volerci, metterci, crederci, pensarci, contarci
+    4. Replaces "a + something": "Penso a Maria" → "Ci penso"
+    
+    NE:
+    1. Quantity: "Ne voglio tre" (I want three of them)
+    2. About it/of it: "Ne parliamo?" (Shall we talk about it?)
+    3. Replaces "di + something": "Parlo di Maria" → "Ne parlo"
+    4. Partitive: "Vuoi del pane?" → "Sì, ne voglio"
+    
+    Combined with other pronouns:
+    • me ne, te ne, se ne, ce ne, ve ne
+    • "Me ne vado" (I'm leaving), "Te ne do tre" (I'll give you three)
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- Focus on: common phrases, idiomatic expressions, grammar patterns
+- "complete_sentence" contains the perfect Italian translation
+- "alternate_correct_responses" lists other acceptable versions
+- All options should attempt the translation (even if wrong)
+
+## TOPICS TO COVER
+
+Create AT LEAST the specified number for each topic:
+- Tecnologia (uso quotidiano): minimum 1 question(s)
+- Pronomi possessivi (vs aggettivi possessivi): minimum 1 question(s)
+- Comparativi e superlativi (irregolarità): minimum 1 question(s)
+- Ci e ne (avanzato): minimum 1 question(s)
+- Trapassato prossimo: minimum 2 question(s)
+- Casa e quartiere (problemi/soluzioni): minimum 1 question(s)
+
+Note: Some topics are marked as challenging and may receive bonus questions.
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- La casa dove vivevano i miei nonni ___ un grande giardino pieno di fiori.
+- L'___ del nostro palazzo è rotto da una settimana, quindi dobbiamo fare le scale.
+- La casa in ___ abito ha un bellissimo giardino.
+- Ho apprezzato molto il primo piatto, ma il secondo non mi è ___ per niente.
+- Se il tempo sarà bello, domenica prossima ___ una gita in montagna.
+- Al posto tuo, ___ con l'insegnante per chiarire la situazione.
+- La sua performance è stata eccellente, ha ottenuto il ___ punteggio.
+- ___ guardando un film divertente con i miei amici.
+- Scusami, non posso uscire stasera perché ho molte cose ___ fare.
+- Devo prenotare ___ dal dentista.
+- L'ufficio è ___ dal lunedì al venerdì.
+- I ___ pubblici funzionano bene qui.
+- Il servizio era un po' lento, ma il cibo era ottimo e l'atmosfera molto ___.
+- Siamo usciti ___ piovesse molto.
+- Quando ero bambino, ___ sempre nel parco dietro casa.
+
+## QUALITY CHECKLIST
+
+Before including each question, verify:
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level B1 appropriate vocabulary and grammar
+
+Generate the 7 questions now. Return ONLY valid JSON.

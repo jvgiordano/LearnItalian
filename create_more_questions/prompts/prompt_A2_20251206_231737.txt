@@ -1,0 +1,171 @@
+You are an expert Italian language educator creating questions for CEFR level A2.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 6 questions with perfect accuracy. Quality over quantity - every question must be 100% correct.
+
+Question distribution:
+- 6 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "A2",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+Good hints:
+- "feminine speaker" (for agreement)
+- "formal" (for Lei forms)
+- "herbal tea, not tè" (for word choice)
+- "motion verb" (for auxiliary selection)
+
+Bad hints:
+- Hints that just repeat grammar rules
+- Hints that reveal the answer
+- Unnecessary hints when context is clear
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Prestare e chiedere in prestito
+
+    Borrowing and lending - essential everyday interactions:
+    
+    PRESTARE (to lend - you give):
+    • "Mi presti la macchina?" (Will you lend me the car?)
+    • "Ti presto 10 euro" (I'll lend you 10 euros)
+    • "Posso prestarti il libro" (I can lend you the book)
+    
+    PRENDERE IN PRESTITO (to borrow - you receive):
+    • "Posso prendere in prestito il tuo telefono?" (Can I borrow your phone?)
+    • "Ho preso in prestito dello zucchero" (I borrowed some sugar)
+    
+    RESTITUIRE (to return/give back):
+    • "Ti restituisco il libro domani" (I'll return the book to you tomorrow)
+    • "Quando me lo restituisci?" (When will you return it to me?)
+    
+    Common situations:
+    • Household items: zucchero, sale, uova (sugar, salt, eggs)
+    • Tools: trapano, martello, cacciavite (drill, hammer, screwdriver)
+    • Money: "Mi presti 5 euro?" (Can you lend me 5 euros?)
+    • Books, movies, clothes
+    
+    Polite forms:
+    • "Potresti prestarmi...?" (Could you lend me...?)
+    • "Ti dispiace se prendo in prestito...?" (Do you mind if I borrow...?)
+    
+
+### Numeri ordinali
+
+    Ordinal numbers for dates, rankings, floors:
+    - Formation: primo, secondo, terzo, quarto, quinto, sesto, settimo, ottavo, nono, decimo
+    - From 11th: add -esimo to cardinal (undici → undicesimo, venti → ventesimo)
+    - Agreement: il primo piano, la prima volta, i primi giorni
+    - Abbreviations: 1º (primo), 2º (secondo), 3ª (terza)
+    - Common uses:
+      • Dates: il primo maggio (May 1st) - note: only "primo" for 1st, rest use cardinals
+      • Floors: il terzo piano (3rd floor)
+      • Centuries: il ventesimo secolo (20th century)
+      • Rankings: il secondo posto (2nd place)
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- Focus on: common phrases, idiomatic expressions, grammar patterns
+- "complete_sentence" contains the perfect Italian translation
+- "alternate_correct_responses" lists other acceptable versions
+- All options should attempt the translation (even if wrong)
+
+## TOPICS TO COVER
+
+Create AT LEAST the specified number for each topic:
+- Prestare e chiedere in prestito: minimum 1 question(s)
+- Routine quotidiana dettagliata: minimum 1 question(s)
+- Verbi riflessivi (presente e passato prossimo): minimum 1 question(s)
+- Numeri ordinali: minimum 1 question(s)
+- Salute (base): minimum 1 question(s)
+- Ricordi (narrazione semplice): minimum 1 question(s)
+
+
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Hai la febbre, ___ andare dal dottore.
+- Vado ___ in palestra la sera.
+- Hai spedito il pacco a Luca? Sì, ___ ho spedito stamattina.
+- Quanto ___ questo maglione?
+- Marta abita ___ Milano da tre anni.
+- Ho dimenticato gli occhiali ___ scrivania.
+- In questa biglietteria ___ i biglietti per il concerto.
+- Quando abitavo a Roma, ___ l'autobus tutti i giorni.
+- Purtroppo non ___ venire alla festa stasera, devo studiare.
+- Non c'è ___ in ufficio oggi.
+- Mi puoi ___ il tuo ombrello?
+- Marco è l'amico con ___ vado spesso al cinema.
+- Quando mi ___ il libro che ti ho prestato?
+- Non ho ___ visitato la Sicilia.
+- Mi piace il caffè, ___ preferisco il tè.
+
+## QUALITY CHECKLIST
+
+Before including each question, verify:
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level A2 appropriate vocabulary and grammar
+
+Generate the 6 questions now. Return ONLY valid JSON.

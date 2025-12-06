@@ -1,76 +1,72 @@
-#!/usr/bin/env python3
-"""
-Complete setup for a new Italian Quiz database - COMPREHENSIVE VERSION
-Creates database structure and populates it with questions from CSV files.
-Handles the comprehensive CSV format with complete_sentence field.
-
-Compatible with comprehensive dataset generator (217 total topics):
-- A1: 46 topics
-- A2: 48 topics  
-- B1: 42 topics
-- B2: 43 topics
-- C1: 38 topics
-
-Usage: python setup_database.py
-"""
-
 import sqlite3
 import csv
 import os
 import hashlib
+import sys
+import difflib
 from datetime import datetime
+from pathlib import Path
+from collections import defaultdict
+
+# --- IMPORT OFFICIAL TOPICS ---
+try:
+    # Requires make_italian_datasets.py to be in the same directory
+    from make_italian_datasets import TOPICS_BY_LEVEL
+except ImportError:
+    print("❌ Error: Could not import 'make_italian_datasets.py'.")
+    print("Please ensure this script is in the same folder as your generator.")
+    sys.exit(1)
 
 # Configuration
-DB_FILE = "italian_quiz.db"
-CSV_FILES = [
-    "data/italian_A1.csv",
-    "data/italian_A2.csv", 
-    "data/italian_B1.csv",
-    "data/italian_B2.csv",
-    "data/italian_C1.csv"
-]
+DB_NAME = "italian_quiz.db"
+DATA_DIR = Path("data")
+LEVELS = ["A1", "A2", "B1", "B2", "C1"]
 REPORT_FILE = "SETUP_REPORT.txt"
 
-# Expected topic counts from comprehensive generator
-EXPECTED_TOPIC_COUNTS = {
-    'A1': 46,
-    'A2': 48,
-    'B1': 42,
-    'B2': 43,
-    'C1': 38
-}
+def get_db_connection():
+    conn = sqlite3.connect(DB_NAME)
+    conn.row_factory = sqlite3.Row
+    return conn
 
-def generate_question_hash(question_text, english_translation, option_a, option_b, option_c, option_d, correct_option, cefr_level, topic):
+def normalize_topic(dirty_topic, level):
     """
-    Generate a stable hash for a question based on its core content.
-    Note: complete_sentence is NOT included in hash as it's derived from question_text + correct_option.
+    Maps a messy CSV topic to the official canonical list using fuzzy matching.
     """
-    content_parts = [
-        question_text.strip().lower(),
-        english_translation.strip().lower(),
-        option_a.strip().lower(),
-        option_b.strip().lower(), 
-        option_c.strip().lower(),
-        option_d.strip().lower(),
-        correct_option.strip().upper(),
-        cefr_level.strip().upper(),
-        topic.strip().lower()
-    ]
+    if not dirty_topic:
+        return None
+
+    dirty_topic = dirty_topic.strip()
+    official_list = TOPICS_BY_LEVEL.get(level, [])
     
-    content_string = "|".join(content_parts)
-    return hashlib.sha256(content_string.encode('utf-8')).hexdigest()[:16]
+    # 1. Exact match
+    if dirty_topic in official_list:
+        return dirty_topic
+        
+    # 2. Fuzzy match
+    matches = difflib.get_close_matches(dirty_topic, official_list, n=1, cutoff=0.4)
+    if matches:
+        return matches[0]
+    
+    return None # Returns None if no plausible official topic is found
 
-def create_database_structure():
-    """Create the complete database structure with all fields including complete_sentence."""
-    conn = sqlite3.connect(DB_FILE)
+def create_schema():
+    print("1. Creating database structure (9 tables)...")
+    
+    # WARNING: This deletes the existing database file!
+    try:
+        os.remove(DB_NAME)
+    except OSError:
+        pass
+
+    conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Table 1: Questions - Enhanced with complete_sentence, hint, and alternate_correct_responses
+    # --- TABLE 1: QUESTIONS (Content) ---
+    # Kept your new schema's columns: hash_id, complete_sentence, etc.
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS questions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        question_hash TEXT UNIQUE NOT NULL,
-        complete_sentence TEXT,
+        complete_sentence TEXT NOT NULL,
         question_text TEXT NOT NULL,
         english_translation TEXT NOT NULL,
         hint TEXT,
@@ -84,29 +80,33 @@ def create_database_structure():
         topic TEXT NOT NULL,
         explanation TEXT,
         resource TEXT,
-        created_at TIMESTAMP,
-        updated_at TIMESTAMP,
-        UNIQUE(question_text, cefr_level, topic)
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        hash_id TEXT UNIQUE
     )
     ''')
-
-    # Table 2: Enhanced Performance Tracking
+    
+    # --- TABLE 2: ENHANCED PERFORMANCE (User Stats) ---
+    # Kept your new schema's performance tracking columns
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS enhanced_performance (
         question_id INTEGER PRIMARY KEY,
         correct_count INTEGER DEFAULT 0,
         incorrect_count INTEGER DEFAULT 0,
-        last_seen TIMESTAMP,
-        next_review TIMESTAMP,
-        mastery_level INTEGER DEFAULT 0,
-        freeform_correct_count INTEGER DEFAULT 0,
-        freeform_incorrect_count INTEGER DEFAULT 0,
         partial_correct_count INTEGER DEFAULT 0,
+        freeform_correct_count INTEGER DEFAULT 0,
+        
+        last_seen TIMESTAMP, 
+        
+        last_answered_at TIMESTAMP,
+        next_review_at TIMESTAMP,
+        mastery_level REAL DEFAULT 0.0,
+        history_string TEXT DEFAULT '',
         FOREIGN KEY (question_id) REFERENCES questions (id)
     )
     ''')
-
-    # Table 3: Topic-specific performance tracking
+    
+    # --- TABLE 3: TOPIC PERFORMANCE (CRITICAL FIX) ---
+    # Copied from the old script to fix 'no such table' error
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS topic_performance (
         topic TEXT,
@@ -118,7 +118,8 @@ def create_database_structure():
     )
     ''')
 
-    # Table 4: User's overall progress tracking
+    # --- TABLE 4: USER PROGRESS (CRITICAL FIX) ---
+    # Copied from the old script
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS user_progress (
         id INTEGER PRIMARY KEY,
@@ -129,7 +130,8 @@ def create_database_structure():
     )
     ''')
 
-    # Table 5: Mastery Statistics per Level
+    # --- TABLE 5: LEVEL STATS (CRITICAL FIX) ---
+    # Copied from the old script
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS level_stats (
         level TEXT PRIMARY KEY,
@@ -137,7 +139,8 @@ def create_database_structure():
     )
     ''')
 
-    # Table 6: Quiz History for the Graph
+    # --- TABLE 6: QUIZ HISTORY (CRITICAL FIX) ---
+    # Copied from the old script
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS quiz_history (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -148,7 +151,8 @@ def create_database_structure():
     )
     ''')
 
-    # Table 7: Detailed Answer History
+    # --- TABLE 7: DETAILED ANSWER HISTORY (CRITICAL FIX) ---
+    # Copied from the old script
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS answer_history (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -163,7 +167,8 @@ def create_database_structure():
     )
     ''')
 
-    # Table 8: Daily stats
+    # --- TABLE 8: DAILY STATS (CRITICAL FIX) ---
+    # Copied from the old script
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS daily_stats (
         date DATE PRIMARY KEY,
@@ -173,7 +178,8 @@ def create_database_structure():
     )
     ''')
 
-    # Table 9: Question Update Log
+    # --- TABLE 9: QUESTION UPDATE LOG (CRITICAL FIX) ---
+    # Copied from the old script
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS question_update_log (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -185,383 +191,228 @@ def create_database_structure():
         notes TEXT
     )
     ''')
+    
+    # Create indices for performance
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_level_topic ON questions(cefr_level, topic)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_perf_question_id ON enhanced_performance(question_id)')
+    # Index from old script
+    cursor.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_question_hash ON questions(hash_id)')
 
-    # Create indexes
-    cursor.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_question_hash ON questions(question_hash)')
-
+    
     conn.commit()
     conn.close()
-    print("Database structure created successfully.")
+    print("Database structure created successfully (Questions + 8 support tables).\n")
 
-def populate_from_csv_files():
-    """Populate the database with questions from CSV files and generate topic statistics."""
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-
-    total_inserted = 0
-    total_errors = 0
-    total_skipped = 0
-    topic_counts = {}  # Dictionary to store topic counts by level
+def find_csv_file(level):
+    """
+    Searches for the CSV file by checking both capitalized and lowercase filenames,
+    and also checks the current folder if the 'data' folder isn't found/used.
+    """
+    search_filename_cap = f"Italian_{level}.csv"
+    search_filename_low = f"italian_{level}.csv"
     
-    for filename in CSV_FILES:
-        if not os.path.exists(filename):
-            print(f"Warning: '{filename}' not found. Skipping.")
+    # Search paths: 1. data/ subfolder, 2. Current folder
+    search_dirs = [Path("data"), Path(".")]
+    
+    for folder in search_dirs:
+        if not folder.exists():
             continue
+        
+        # Check capitalized version first (Italian_A1.csv)
+        path_cap = folder / search_filename_cap
+        if path_cap.exists():
+            return path_cap
+            
+        # Check lowercase version (italian_A1.csv)
+        path_low = folder / search_filename_low
+        if path_low.exists():
+            return path_low
+            
+    return None
 
-        print(f"Processing '{filename}'...")
+def populate_database():
+    print("2. Populating with questions from CSV files...")
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    total_added = 0
+    total_skipped_dupe = 0
+    total_errors = 0
+    topics_normalized_count = 0
+    
+    seen_hashes = set()
+    
+    for level in LEVELS:
+        csv_path = find_csv_file(level)
+        
+        if not csv_path:
+            print(f"Skipping {level}: CSV file not found.")
+            continue
+            
+        print(f"Processing '{csv_path}'...")
+        
+        added_this_level = 0
+        errors_this_level = 0
+        dupes_this_level = 0
         
         try:
-            with open(filename, mode='r', encoding='utf-8') as file:
-                csv_reader = csv.DictReader(file)
+            with open(csv_path, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
                 
-                # Verify expected columns are present (complete_sentence should be included)
-                expected_columns = [
-                    'complete_sentence', 'question_text', 'english_translation', 
-                    'hint', 'alternate_correct_responses',
-                    'option_a', 'option_b', 'option_c', 'option_d', 'correct_option', 
-                    'cefr_level', 'topic', 'explanation', 'resource'
-                ]
-                
-                missing_columns = [col for col in expected_columns if col not in csv_reader.fieldnames]
-                
-                if missing_columns:
-                    print(f"Warning: '{filename}' missing columns: {missing_columns}")
-                    print(f"   Expected: {expected_columns}")
-                    print(f"   Found: {csv_reader.fieldnames}")
-                    print(f"   Continuing with available columns...")
-                
-                file_inserted = 0
-                file_errors = 0
-                file_skipped = 0
-                
-                for row_num, row in enumerate(csv_reader, start=2):  # Start at 2 for header
+                for row_num, row in enumerate(reader, 1):
+                    # 1. Basic Validation
+                    required = ['question_text', 'correct_option', 'option_a', 'topic']
+                    if any(not row.get(field) for field in required):
+                        errors_this_level += 1
+                        continue
+
+                    # 2. Validate Correct Option
+                    correct = row['correct_option'].strip().upper()
+                    if correct not in ['A', 'B', 'C', 'D']:
+                        errors_this_level += 1
+                        continue
+
+                    # 3. Generate Hash (Prevent Duplicates) - Using your new script's simpler hash
+                    q_text = row['question_text'].strip()
+                    content_hash = hashlib.md5(f"{level}:{q_text}".encode()).hexdigest()[:16]
+                    
+                    if content_hash in seen_hashes:
+                        dupes_this_level += 1
+                        continue
+                    seen_hashes.add(content_hash)
+
+                    # 4. NORMALIZE TOPIC
+                    original_topic = row['topic'].strip()
+                    clean_topic = normalize_topic(original_topic, level)
+                    
+                    if original_topic != clean_topic:
+                        topics_normalized_count += 1
+
+                    if not clean_topic: # Skip if the topic could not be normalized (unrecognized)
+                        errors_this_level += 1
+                        continue
+
+                    # 5. Insert Question
                     try:
-                        # Validate core required fields (hint, alternate_correct_responses, complete_sentence, and resource can be empty)
-                        required_fields = ['question_text', 'english_translation', 'option_a', 
-                                         'option_b', 'option_c', 'option_d', 'correct_option', 
-                                         'cefr_level', 'topic', 'explanation']
-                        
-                        if not all(row.get(col, '').strip() for col in required_fields):
-                            print(f"Warning: Row {row_num} in '{filename}' has empty required fields. Skipping.")
-                            file_errors += 1
-                            continue
-                        
-                        # Validate correct_option is one of A, B, C, D
-                        if row['correct_option'].upper() not in ['A', 'B', 'C', 'D']:
-                            print(f"Warning: Row {row_num} in '{filename}' has invalid correct_option '{row['correct_option']}'. Skipping.")
-                            file_errors += 1
-                            continue
-                        
-                        # Generate hash for this question
-                        question_hash = generate_question_hash(
-                            row['question_text'], row['english_translation'], 
-                            row['option_a'], row['option_b'], row['option_c'], row['option_d'],
-                            row['correct_option'], row['cefr_level'], row['topic']
-                        )
-                        
                         current_time = datetime.now().isoformat()
                         
-                        # Handle optional columns gracefully
-                        complete_sentence_value = row.get('complete_sentence', '').strip()
-                        hint_value = row.get('hint', '').strip()
-                        alternate_value = row.get('alternate_correct_responses', '').strip()
-                        resource_value = row.get('resource', '').strip()
-                        
                         cursor.execute('''
-                        INSERT OR IGNORE INTO questions 
-                        (question_hash, complete_sentence, question_text, english_translation, 
-                         hint, alternate_correct_responses,
-                         option_a, option_b, option_c, option_d, correct_option, cefr_level, topic, 
-                         explanation, resource, created_at, updated_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            INSERT INTO questions (
+                                complete_sentence, question_text, english_translation,
+                                hint, alternate_correct_responses,
+                                option_a, option_b, option_c, option_d,
+                                correct_option, cefr_level, topic,
+                                explanation, resource, hash_id
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         ''', (
-                            question_hash,
-                            complete_sentence_value,
-                            row['question_text'].strip(),
-                            row['english_translation'].strip(),
-                            hint_value,
-                            alternate_value,
-                            row['option_a'].strip(),
-                            row['option_b'].strip(),
-                            row['option_c'].strip(),
-                            row['option_d'].strip(),
-                            row['correct_option'].upper().strip(),
-                            row['cefr_level'].strip(),
-                            row['topic'].strip(),
-                            row['explanation'].strip(),
-                            resource_value,
-                            current_time,
-                            current_time
+                            row.get('complete_sentence', '').strip(),
+                            q_text,
+                            row.get('english_translation', '').strip(),
+                            row.get('hint', '').strip(),
+                            row.get('alternate_correct_responses', '').strip(),
+                            row.get('option_a', '').strip(),
+                            row.get('option_b', '').strip(),
+                            row.get('option_c', '').strip(),
+                            row.get('option_d', '').strip(),
+                            correct,
+                            level,
+                            clean_topic,
+                            row.get('explanation', '').strip(),
+                            row.get('resource', '').strip(),
+                            content_hash
                         ))
                         
-                        if cursor.rowcount > 0:
-                            file_inserted += 1
-                            
-                            # Track topic counts for report
-                            level = row['cefr_level'].strip()
-                            topic = row['topic'].strip()
-                            
-                            if level not in topic_counts:
-                                topic_counts[level] = {}
-                            if topic not in topic_counts[level]:
-                                topic_counts[level][topic] = 0
-                            topic_counts[level][topic] += 1
-                            
-                            # Log the creation
-                            cursor.execute('''
-                            INSERT INTO question_update_log 
-                            (question_hash, old_question_id, new_question_id, update_type, timestamp, notes)
-                            VALUES (?, ?, ?, ?, ?, ?)
-                            ''', (question_hash, None, cursor.lastrowid, 'created', 
-                                 current_time, f'Initial load from {filename} row {row_num}'))
-                        else:
-                            # Question was skipped due to duplicate constraint
-                            file_skipped += 1
+                        # 6. Initialize Performance Record (Empty)
+                        question_id = cursor.lastrowid
+                        # Only insert question_id, all other columns use their default (0/NULL)
+                        cursor.execute('''
+                            INSERT INTO enhanced_performance (question_id) VALUES (?)
+                        ''', (question_id,))
                         
+                        # Initialize User Progress (if not done already - safe to ignore if running multiple times)
+                        cursor.execute("INSERT OR IGNORE INTO user_progress (id) VALUES (1)")
+                        
+                        # Initialize Topic Performance (Optional, but safe to do here)
+                        cursor.execute('''
+                            INSERT OR IGNORE INTO topic_performance (topic, cefr_level) VALUES (?, ?)
+                        ''', (clean_topic, level))
+                        
+                        # Log the creation
+                        cursor.execute('''
+                        INSERT INTO question_update_log 
+                        (question_hash, new_question_id, update_type, timestamp, notes)
+                        VALUES (?, ?, ?, ?, ?)
+                        ''', (content_hash, question_id, 'created', 
+                             current_time, f'Initial load from {csv_path} row {row_num}'))
+                        
+                        added_this_level += 1
                     except Exception as e:
-                        print(f"Error processing row {row_num} in '{filename}': {e}")
-                        file_errors += 1
-                        continue
-                
-                total_inserted += file_inserted
-                total_errors += file_errors
-                total_skipped += file_skipped
-                print(f"  Added {file_inserted} questions from '{filename}' ({file_errors} errors, {file_skipped} duplicates skipped)")
-                
+                        print(f"Error inserting row {row_num}: {e}")
+                        errors_this_level += 1
+        
         except Exception as e:
-            print(f"Error reading '{filename}': {e}")
-            continue
+             print(f"Fatal error during processing '{csv_path}': {e}")
+             errors_this_level = 999 # Indicate major failure
+             
+        print(f"  Added {added_this_level} questions from '{csv_path}' ({errors_this_level} errors, {dupes_this_level} duplicates skipped)")
+        
+        total_added += added_this_level
+        total_errors += errors_this_level
+        total_skipped_dupe += dupes_this_level
 
     conn.commit()
-    final_count = cursor.execute("SELECT COUNT(*) FROM questions").fetchone()[0]
     conn.close()
-
-    print(f"\nDatabase population complete!")
-    print(f"Total questions added: {total_inserted}")
-    print(f"Total duplicates skipped: {total_skipped}")
-    print(f"Total errors encountered: {total_errors}")
-    print(f"Final question count: {final_count}")
     
-    return topic_counts
+    print("\nDatabase population complete!")
+    print(f"Total questions added: {total_added}")
+    print(f"Topics auto-corrected: {topics_normalized_count}")
 
-def generate_report(topic_counts):
-    """Generate a detailed report showing question counts by topic and level."""
-    with open(REPORT_FILE, 'w', encoding='utf-8') as report:
-        report.write("ITALIAN QUIZ DATABASE SETUP REPORT\n")
-        report.write("COMPREHENSIVE DATASET (217 Total Topics)\n")
-        report.write("=" * 80 + "\n")
-        report.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-        report.write("=" * 80 + "\n\n")
-        
-        report.write("EXPECTED TOPIC COVERAGE\n")
-        report.write("-" * 40 + "\n")
-        for level, count in EXPECTED_TOPIC_COUNTS.items():
-            report.write(f"  {level}: {count} topics expected\n")
-        report.write(f"  TOTAL: {sum(EXPECTED_TOPIC_COUNTS.values())} topics\n\n")
-        
-        # Sort levels in order
-        level_order = ['A1', 'A2', 'B1', 'B2', 'C1']
-        
-        for level in level_order:
-            if level in topic_counts:
-                unique_topics = len(topic_counts[level])
-                expected_topics = EXPECTED_TOPIC_COUNTS.get(level, 0)
-                
-                report.write(f"\nLEVEL {level} (Found: {unique_topics} topics, Expected: {expected_topics})\n")
-                report.write("-" * 40 + "\n")
-                
-                # Sort topics alphabetically
-                sorted_topics = sorted(topic_counts[level].items())
-                total_for_level = 0
-                
-                for topic, count in sorted_topics:
-                    report.write(f"  {topic}: {count} questions\n")
-                    total_for_level += count
-                
-                report.write(f"  TOTAL FOR {level}: {total_for_level} questions\n")
-                
-                # Coverage analysis
-                if unique_topics < expected_topics:
-                    report.write(f"  ⚠️  WARNING: Only {unique_topics} topics found, expected {expected_topics}\n")
-                elif unique_topics > expected_topics:
-                    report.write(f"  ℹ️  INFO: {unique_topics} topics found, expected {expected_topics} (may include new topics)\n")
-                else:
-                    report.write(f"  ✓ Complete topic coverage: {unique_topics}/{expected_topics}\n")
-        
-        # Overall summary
-        report.write("\n" + "=" * 80 + "\n")
-        report.write("OVERALL SUMMARY\n")
-        report.write("-" * 40 + "\n")
-        
-        grand_total = 0
-        total_unique_topics = 0
-        for level in level_order:
-            if level in topic_counts:
-                level_total = sum(topic_counts[level].values())
-                level_topics = len(topic_counts[level])
-                report.write(f"  {level}: {level_total} questions across {level_topics} topics\n")
-                grand_total += level_total
-                total_unique_topics += level_topics
-        
-        report.write(f"\n  GRAND TOTAL: {grand_total} questions across {total_unique_topics} topics\n")
-        report.write(f"  Expected: 217 total topics across all levels\n")
-        
-        if total_unique_topics < sum(EXPECTED_TOPIC_COUNTS.values()):
-            missing = sum(EXPECTED_TOPIC_COUNTS.values()) - total_unique_topics
-            report.write(f"  ⚠️  WARNING: {missing} topics appear to be missing from dataset\n")
-        
-        report.write("=" * 80 + "\n")
-    
-    print(f"\nReport generated: {REPORT_FILE}")
-
-def verify_database():
-    """Verify the database was created correctly with comprehensive checks."""
-    conn = sqlite3.connect(DB_FILE)
-    conn.row_factory = sqlite3.Row
+def verify_and_report():
+    print("3. Verifying database and generating report...")
+    conn = get_db_connection()
     cursor = conn.cursor()
     
-    print(f"\n" + "="*60)
-    print("DATABASE VERIFICATION")
-    print("="*60)
+    report_lines = []
     
-    # Get overview statistics
-    cursor.execute("SELECT cefr_level, COUNT(*) as count FROM questions GROUP BY cefr_level ORDER BY cefr_level")
-    level_counts = cursor.fetchall()
+    # Verify Performance Table Count
+    cursor.execute("SELECT COUNT(*) as count FROM enhanced_performance")
+    perf_count = cursor.fetchone()['count']
+    print(f"Performance Records Initialized: {perf_count}")
     
-    print(f"\nQuestions by CEFR Level:")
-    for row in level_counts:
-        print(f"  {row['cefr_level']}: {row['count']} questions")
+    # Topic Consistency Check (Proof that normalization worked)
+    print("\nTopic Coverage (Comparing against official list):")
+    total_unique_db_topics = 0
     
-    # Check for questions without hashes (should be zero)
-    cursor.execute("SELECT COUNT(*) FROM questions WHERE question_hash IS NULL OR question_hash = ''")
-    missing_hashes = cursor.fetchone()[0]
+    for level in LEVELS:
+        official_topics = set(TOPICS_BY_LEVEL.get(level, []))
+        cursor.execute("SELECT DISTINCT topic FROM questions WHERE cefr_level = ?", (level,))
+        db_topics = set(row['topic'] for row in cursor.fetchall())
+        
+        total_unique_db_topics += len(db_topics)
+        
+        extra_topics = db_topics - official_topics
+        status = "✓" if not extra_topics else "!"
+        msg = f"  {status} {level}: {len(db_topics)} topics found (Expected: {len(official_topics)})"
+        print(msg)
+        report_lines.append(msg)
+        
+    print(f"\nTotal unique topics in DB: {total_unique_db_topics}")
     
-    if missing_hashes == 0:
-        print("✓ All questions have stable identifiers (hashes).")
-    else:
-        print(f"⚠️  Warning: {missing_hashes} questions missing hashes!")
+    # Save Report
+    with open(REPORT_FILE, 'w', encoding='utf-8') as f:
+        f.write('\n'.join(report_lines))
     
-    # Check complete_sentence, hint, alternate response, and resource statistics
-    cursor.execute("SELECT COUNT(*) FROM questions WHERE complete_sentence IS NOT NULL AND complete_sentence != ''")
-    questions_with_complete = cursor.fetchone()[0]
-    
-    cursor.execute("SELECT COUNT(*) FROM questions WHERE hint IS NOT NULL AND hint != ''")
-    questions_with_hints = cursor.fetchone()[0]
-    
-    cursor.execute("SELECT COUNT(*) FROM questions WHERE alternate_correct_responses IS NOT NULL AND alternate_correct_responses != ''")
-    questions_with_alternates = cursor.fetchone()[0]
-    
-    cursor.execute("SELECT COUNT(*) FROM questions WHERE resource IS NOT NULL AND resource != ''")
-    questions_with_resources = cursor.fetchone()[0]
-    
-    cursor.execute("SELECT COUNT(*) FROM questions")
-    total_questions = cursor.fetchone()[0]
-    
-    print(f"\nField Coverage:")
-    print(f"  Complete sentences: {questions_with_complete}/{total_questions} ({questions_with_complete*100//total_questions if total_questions > 0 else 0}%)")
-    print(f"  Hints: {questions_with_hints}/{total_questions} ({questions_with_hints*100//total_questions if total_questions > 0 else 0}%)")
-    print(f"  Alternate responses: {questions_with_alternates}/{total_questions} ({questions_with_alternates*100//total_questions if total_questions > 0 else 0}%)")
-    print(f"  Resource links: {questions_with_resources}/{total_questions} ({questions_with_resources*100//total_questions if total_questions > 0 else 0}%)")
-    
-    # Check topic coverage vs expected
-    cursor.execute("""
-        SELECT cefr_level, COUNT(DISTINCT topic) as topic_count
-        FROM questions
-        GROUP BY cefr_level
-        ORDER BY cefr_level
-    """)
-    topic_coverage = cursor.fetchall()
-    
-    print(f"\nTopic Coverage:")
-    total_topics_found = 0
-    for row in topic_coverage:
-        level = row['cefr_level']
-        count = row['topic_count']
-        expected = EXPECTED_TOPIC_COUNTS.get(level, 0)
-        status = "✓" if count >= expected else "⚠️"
-        print(f"  {status} {level}: {count} topics (expected: {expected})")
-        total_topics_found += count
-    
-    print(f"\n  Total unique topics: {total_topics_found}/217")
-    
-    if total_topics_found < 217:
-        print(f"  ⚠️  Warning: {217 - total_topics_found} topics may be missing from dataset")
-    elif total_topics_found > 217:
-        print(f"  ℹ️  Info: More topics than expected - may include new additions")
-    else:
-        print(f"  ✓ Complete comprehensive coverage!")
-    
-    # Show sample question
-    cursor.execute("SELECT * FROM questions LIMIT 1")
-    sample = cursor.fetchone()
-    
-    if sample:
-        print(f"\n" + "="*60)
-        print(f"Sample Question (ID: {sample['id']}):")
-        print("="*60)
-        print(f"Complete Sentence: {sample['complete_sentence'] or 'N/A'}")
-        print(f"Question: {sample['question_text']}")
-        print(f"English: {sample['english_translation']}")
-        print(f"Hint: {sample['hint'] or 'None'}")
-        print(f"Alternate Answers: {sample['alternate_correct_responses'] or 'None'}")
-        print(f"Options: A) {sample['option_a']} B) {sample['option_b']} C) {sample['option_c']} D) {sample['option_d']}")
-        print(f"Correct: {sample['correct_option']}")
-        print(f"Level: {sample['cefr_level']} | Topic: {sample['topic']}")
-        print(f"Explanation: {sample['explanation']}")
-        print(f"Resource: {sample['resource'] or 'None'}")
-        print(f"Hash: {sample['question_hash']}")
-        print("="*60)
-    
+    print(f"\nReport generated: {REPORT_FILE}")
     conn.close()
 
-def main():
-    """Main function to set up a new database."""
-    print("ITALIAN QUIZ - NEW DATABASE SETUP (COMPREHENSIVE)")
-    print("=" * 60)
-    print("Comprehensive Dataset: 217 topics total")
-    print("  A1: 46 | A2: 48 | B1: 42 | B2: 43 | C1: 38")
-    print("=" * 60)
-    print("This will create a fresh database and populate it with questions.")
-    print("WARNING: This will overwrite any existing database file!")
-    print("=" * 60)
-    
-    if os.path.exists(DB_FILE):
-        response = input(f"\nDatabase '{DB_FILE}' already exists. Overwrite it? (yes/no): ")
-        if response.lower() not in ['yes', 'y']:
-            print("Setup cancelled.")
-            return
-        
-        # Create backup before overwriting
-        backup_name = f"{DB_FILE}.backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        os.rename(DB_FILE, backup_name)
-        print(f"Existing database backed up to: {backup_name}")
-    
-    try:
-        print("\n1. Creating database structure...")
-        create_database_structure()
-        
-        print("\n2. Populating with questions from CSV files...")
-        topic_counts = populate_from_csv_files()
-        
-        print("\n3. Generating report...")
-        generate_report(topic_counts)
-        
-        print("\n4. Verifying database...")
-        verify_database()
-        
-        print(f"\n" + "="*60)
-        print(f"SUCCESS! New database '{DB_FILE}' is ready to use.")
-        print(f"="*60)
-        print(f"✓ Database created with comprehensive dataset support")
-        print(f"✓ Check '{REPORT_FILE}' for detailed topic coverage")
-        print(f"✓ You can now run app.py to start the quiz application")
-        print("="*60)
-        
-    except Exception as e:
-        print(f"\nERROR: Database setup failed: {e}")
-        if os.path.exists(DB_FILE):
-            os.remove(DB_FILE)
-        print("Cleaned up incomplete database file.")
-
 if __name__ == "__main__":
-    main()
+    print("ITALIAN QUIZ - NEW DATABASE SETUP (FIXED SCHEMA)")
+    print("============================================================")
+    
+    create_schema()
+    populate_database()
+    verify_and_report()
+    
+    print("============================================================")
+    print("✅ SUCCESS! New database 'italian_quiz.db' is ready to use.")
+    print("============================================================")

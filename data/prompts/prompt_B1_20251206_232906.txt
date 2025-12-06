@@ -1,0 +1,227 @@
+You are an expert Italian language educator creating questions for CEFR level B1.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 8 questions with perfect accuracy. Quality over quantity - every question must be 100% correct.
+
+Question distribution:
+- 8 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "B1",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+Good hints:
+- "feminine speaker" (for agreement)
+- "formal" (for Lei forms)
+- "herbal tea, not tè" (for word choice)
+- "motion verb" (for auxiliary selection)
+
+Bad hints:
+- Hints that just repeat grammar rules
+- Hints that reveal the answer
+- Unnecessary hints when context is clear
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Congiuntivo presente (introduzione: opinioni, emozioni base)
+
+    Subjunctive present - expressing opinions, emotions, doubt:
+    - After verbs of opinion: penso che, credo che, mi sembra che, dubito che
+    - After expressions of emotion: sono felice che, mi dispiace che, ho paura che
+    - After impersonal expressions: è importante che, bisogna che, è necessario che
+    - When NOT to use it: so che + indicativo (certainty), è vero che + indicativo
+    - Most common irregular forms: sia/siano (essere), abbia/abbiano (avere), faccia/facciano (fare), vada/vadano (andare)
+    - Formation regular: -are → -i/-iamo/-iate/-ino, -ere/-ire → -a/-iamo/-iate/-ano
+    Examples:
+      • "Penso che sia importante" (I think it's important)
+      • "Sono felice che tu venga" (I'm happy you're coming)
+      • "Dubito che lo sappia" (I doubt he knows it)
+    
+
+### Si impersonale / si passivante (base)
+
+    Two different constructions with "si":
+    
+    1. Si impersonale (impersonal "one/people"):
+       • Si + 3rd person singular verb (usually)
+       • "In Italia si mangia bene" (In Italy one eats well / people eat well)
+       • "Si dice che..." (People say that... / It is said that...)
+       • Active meaning, focus on action not agent
+    
+    2. Si passivante (passive with si):
+       • Si + 3rd person verb (agrees with subject)
+       • "Si vende casa" (House for sale - singular)
+       • "Si vendono case" (Houses for sale - plural)
+       • Passive meaning, focus on what is done
+    
+    Difference: impersonale = active focus on people doing, passivante = passive focus on things being done
+    
+
+### Pronomi possessivi (vs aggettivi possessivi)
+
+    Possessive pronouns (standing alone) vs possessive adjectives (with noun):
+    
+    POSSESSIVE ADJECTIVES (with noun):
+    • il mio libro (my book), la mia casa (my house)
+    • Always with article (except: mio padre, mia madre, mio fratello, mia sorella when singular)
+    • Agreement: with the thing possessed, not the possessor
+    
+    POSSESSIVE PRONOUNS (standalone - replace noun):
+    • il mio (mine), la mia (mine-fem), i miei (mine-pl-masc), le mie (mine-pl-fem)
+    • Must keep the article
+    • Agreement: with the thing being replaced
+    
+    Examples:
+    • "Questo è il mio libro" (adjective - This is my book)
+    • "Questo libro è il mio" (pronoun - This book is mine)
+    • "La mia macchina è rossa, la tua è blu" (Mine is red, yours is blue)
+    
+    Special cases:
+    • With essere: article optional
+      "È mio" or "È il mio" (It's mine) - both correct
+      "Sono miei" or "Sono i miei" (They're mine)
+    
+    All forms:
+    • il mio/la mia/i miei/le mie (mine)
+    • il tuo/la tua/i tuoi/le tue (yours-informal)
+    • il suo/la sua/i suoi/le sue (his/hers/its)
+    • il nostro/la nostra/i nostri/le nostre (ours)
+    • il vostro/la vostra/i vostri/le vostre (yours-plural)
+    • il loro/la loro/i loro/le loro (theirs - no agreement!)
+    
+    Common errors:
+    • *"È il mio" when you mean the adjective (should be "il mio libro")
+    • Forgetting article with pronoun: *"È mio libro" (wrong) → "È il mio libro" or "È mio" (correct)
+    
+
+### Sapere vs. Conoscere
+
+    Two verbs for "to know" - different uses:
+    
+    SAPERE (to know facts, information, how to do something):
+    • Facts: "So che è vero" (I know it's true)
+    • Information: "Sai dove abita?" (Do you know where he lives?)
+    • Skills: "So parlare italiano" (I know how to speak Italian / I can speak Italian)
+    • With infinitive: ability/skill
+    • Present: so, sai, sa, sappiamo, sapete, sanno
+    
+    CONOSCERE (to know people, places, be familiar with):
+    • People: "Conosco Marco" (I know Marco / I'm acquainted with Marco)
+    • Places: "Conosco Roma" (I know Rome / I'm familiar with Rome)
+    • Works: "Conosci questo libro?" (Do you know this book? / Are you familiar with it?)
+    • Never with infinitive
+    • Present: conosco, conosci, conosce, conosciamo, conoscete, conoscono
+    
+    Key difference:
+    • Sapere = know information (followed by che, quando, dove, come, perché, infinitive)
+    • Conoscere = be familiar/acquainted (followed by noun - person, place, thing)
+    
+    Common errors:
+    • *"Conosco che è vero" (wrong) → "So che è vero" (correct)
+    • *"So Marco" (wrong) → "Conosco Marco" (correct)
+    • *"Conosco parlare" (wrong) → "So parlare" (correct)
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- Focus on: common phrases, idiomatic expressions, grammar patterns
+- "complete_sentence" contains the perfect Italian translation
+- "alternate_correct_responses" lists other acceptable versions
+- All options should attempt the translation (even if wrong)
+
+## TOPICS TO COVER
+
+Create AT LEAST the specified number for each topic:
+- Si impersonale / si passivante (base): minimum 1 question(s)
+- Congiuntivo presente (introduzione: opinioni, emozioni base): minimum 4 question(s)
+- Salute e medicina (sintomi, consigli, visite mediche): minimum 1 question(s)
+- Pronomi possessivi (vs aggettivi possessivi): minimum 1 question(s)
+- Sapere vs. Conoscere: minimum 1 question(s)
+
+Note: Some topics are marked as challenging and may receive bonus questions.
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Questo ristorante ha una bella ___ e il servizio è sempre cortese.
+- Non ___ niente adesso, sono troppo arrabbiato per parlare.
+- Questo libro è ___ di quello che ho letto ieri.
+- Ogni anno, migliaia di libri ___ in Italia. (pubblicare)
+- La mia macchina è vecchia, ma la ___ è nuova.
+- Silenzio! Gli studenti ___ sostenendo un esame molto importante.
+- ___ attento!
+- È un ___ molto qualificato.
+- Non posso aiutarti adesso, ma ___ spiegherò domani mattina.
+- Cosa stai facendo? ___ leggendo un libro molto interessante.
+- Devo chiamare il ___ tecnico.
+- ___ il maltempo, siamo riusciti ad arrivare puntuali all'appuntamento.
+- ___ molto, si possono ottenere ottimi risultati.
+- Vorrei fare un ___ perché la camera d'albergo non corrisponde alla descrizione online.
+- In quel ristorante ___ servono piatti tipici della regione.
+
+## QUALITY CHECKLIST
+
+Before including each question, verify:
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level B1 appropriate vocabulary and grammar
+
+Generate the 8 questions now. Return ONLY valid JSON.

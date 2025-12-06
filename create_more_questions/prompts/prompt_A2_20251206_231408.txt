@@ -1,0 +1,170 @@
+You are an expert Italian language educator creating questions for CEFR level A2.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 7 questions with perfect accuracy. Quality over quantity - every question must be 100% correct.
+
+Question distribution:
+- 7 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "A2",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+Good hints:
+- "feminine speaker" (for agreement)
+- "formal" (for Lei forms)
+- "herbal tea, not tè" (for word choice)
+- "motion verb" (for auxiliary selection)
+
+Bad hints:
+- Hints that just repeat grammar rules
+- Hints that reveal the answer
+- Unnecessary hints when context is clear
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Congiunzioni e connettivi (base)
+
+    Basic conjunctions and connectors:
+    - Coordination: e (and), o (or), ma (but), però (however)
+    - Cause: perché (because), siccome (since)
+    - Effect: quindi (therefore), allora (so/then), perciò (therefore)
+    - Addition: anche (also), inoltre (moreover)
+    - Contrast: ma (but), però (however/but), invece (instead)
+    - Time: quando (when), mentre (while), prima di (before), dopo (after)
+    Examples:
+      • "Sono stanco, quindi vado a casa"
+      • "Mi piace l'Italia ma è cara"
+      • "Studio perché voglio imparare"
+    
+
+### Pronomi Relativi
+
+    Cover relative pronouns:
+    - che (that/which/who) - most common, subject or direct object
+    - cui (which/whom) - used after prepositions (di cui, a cui, con cui)
+    - il quale/la quale/i quali/le quali - formal alternative
+    - chi (those who/whoever) - as subject
+    Examples:
+      • "Il libro che leggo" (that I read - direct object)
+      • "L'uomo che parla" (who speaks - subject)
+      • "La persona di cui parlo" (about whom I speak)
+      • "Chi studia, impara" (whoever studies, learns)
+    
+
+### Forme negative composte (non...mai, non...niente, ecc.)
+
+    Double negative constructions (standard in Italian):
+    - Non... mai (never): Non vado mai al cinema
+    - Non... niente/nulla (nothing): Non ho niente da dire
+    - Non... nessuno (nobody): Non vedo nessuno
+    - Non... più (not anymore/no longer): Non fumo più
+    - Non... ancora (not yet): Non è ancora arrivato
+    - Can start with negative word: Mai vado al cinema (emphatic)
+    Note: Unlike English, Italian REQUIRES double negatives
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- Focus on: common phrases, idiomatic expressions, grammar patterns
+- "complete_sentence" contains the perfect Italian translation
+- "alternate_correct_responses" lists other acceptable versions
+- All options should attempt the translation (even if wrong)
+
+## TOPICS TO COVER
+
+Create AT LEAST the specified number for each topic:
+- Particella ne (base): minimum 1 question(s)
+- Avverbi di frequenza/tempo/luogo: minimum 1 question(s)
+- Forme negative composte (non...mai, non...niente, ecc.): minimum 2 question(s)
+- Pronomi Relativi: minimum 1 question(s)
+- Descrizioni fisiche e del carattere: minimum 1 question(s)
+- Congiunzioni e connettivi (base): minimum 1 question(s)
+
+Note: Some topics are marked as challenging and may receive bonus questions.
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Il mio ufficio si trova al ___ piano.
+- Cosa stai ___ adesso?
+- Abito al ___ piano, non c'è l'ascensore.
+- Ti ___ il libro domani sera.
+- Scusi, possiamo avere il ___ per favore?
+- Mi ___ la tua penna per un attimo?
+- Conosci Maria? Sì, ___ vedo ogni giorno.
+- Non vado ___ al mare perché non so nuotare.
+- Ho ___ il trapano dal mio vicino.
+- Studio l'italiano ___ voglio vivere in Italia.
+- Mentre ___ per strada, ho incontrato un vecchio amico.
+- Io ci ___ sempre venti minuti per andare al lavoro.
+- Abito al ___ piano di questo palazzo.
+- Quanti libri hai letto? ___ ho letti tre.
+- Oggi c'è molta ___, guida con prudenza.
+
+## QUALITY CHECKLIST
+
+Before including each question, verify:
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level A2 appropriate vocabulary and grammar
+
+Generate the 7 questions now. Return ONLY valid JSON.
