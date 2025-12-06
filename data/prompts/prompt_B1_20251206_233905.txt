@@ -1,0 +1,185 @@
+You are an expert Italian language educator creating questions for CEFR level B1.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 7 questions with perfect accuracy. Quality over quantity - every question must be 100% correct.
+
+Question distribution:
+- 7 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "B1",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+Good hints:
+- "feminine speaker" (for agreement)
+- "formal" (for Lei forms)
+- "herbal tea, not tè" (for word choice)
+- "motion verb" (for auxiliary selection)
+
+Bad hints:
+- Hints that just repeat grammar rules
+- Hints that reveal the answer
+- Unnecessary hints when context is clear
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Pronomi combinati (glielo, me ne, ecc.)
+
+    Combined pronouns - when direct and indirect pronouns come together:
+    
+    Formation rules:
+    1. Indirect changes: mi→me, ti→te, ci→ce, vi→ve
+    2. gli/le/Le → glie- (combines with direct: glielo, gliela, glieli, gliele)
+    3. Order: INDIRECT + DIRECT
+    
+    Examples:
+    • Mi + lo → me lo: "Me lo dai?" (Will you give it to me?)
+    • Ti + la → te la: "Te la mando" (I'll send it to you)
+    • Gli/Le + lo → glielo: "Glielo dico" (I tell it to him/her/you-formal)
+    • Ci + ne → ce ne: "Ce ne sono tre" (There are three of them)
+    
+    With infinitives:
+    • Attached: "Puoi darmelo?" (Can you give it to me?)
+    • Or before modal: "Me lo puoi dare?"
+    
+    With imperatives:
+    • Positive: attached: "Dammelo!" (Give it to me!)
+    • Negative informal: separate or attached: "Non darmelo!" or "Non me lo dare!"
+    • Negative formal: separate: "Non me lo dia!"
+    
+    Common mistakes:
+    • *"mi lo" (wrong) → "me lo" (correct)
+    • Remember "glie-" stays together: "glielo" not "gli lo"
+    
+
+### Sapere vs. Conoscere
+
+    Two verbs for "to know" - different uses:
+    
+    SAPERE (to know facts, information, how to do something):
+    • Facts: "So che è vero" (I know it's true)
+    • Information: "Sai dove abita?" (Do you know where he lives?)
+    • Skills: "So parlare italiano" (I know how to speak Italian / I can speak Italian)
+    • With infinitive: ability/skill
+    • Present: so, sai, sa, sappiamo, sapete, sanno
+    
+    CONOSCERE (to know people, places, be familiar with):
+    • People: "Conosco Marco" (I know Marco / I'm acquainted with Marco)
+    • Places: "Conosco Roma" (I know Rome / I'm familiar with Rome)
+    • Works: "Conosci questo libro?" (Do you know this book? / Are you familiar with it?)
+    • Never with infinitive
+    • Present: conosco, conosci, conosce, conosciamo, conoscete, conoscono
+    
+    Key difference:
+    • Sapere = know information (followed by che, quando, dove, come, perché, infinitive)
+    • Conoscere = be familiar/acquainted (followed by noun - person, place, thing)
+    
+    Common errors:
+    • *"Conosco che è vero" (wrong) → "So che è vero" (correct)
+    • *"So Marco" (wrong) → "Conosco Marco" (correct)
+    • *"Conosco parlare" (wrong) → "So parlare" (correct)
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- Focus on: common phrases, idiomatic expressions, grammar patterns
+- "complete_sentence" contains the perfect Italian translation
+- "alternate_correct_responses" lists other acceptable versions
+- All options should attempt the translation (even if wrong)
+
+## TOPICS TO COVER
+
+Create AT LEAST the specified number for each topic:
+- Imperativo (pronomi atoni; negazione): minimum 1 question(s)
+- Lavoro: minimum 2 question(s)
+- Prestiti e restituzione (avanzato): minimum 1 question(s)
+- Pronomi combinati (glielo, me ne, ecc.): minimum 2 question(s)
+- Sapere vs. Conoscere: minimum 1 question(s)
+
+Note: Some topics are marked as challenging and may receive bonus questions.
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- La mia macchina fotografica è vecchia, ma la ___ è nuova e ha funzioni migliori.
+- Per l'esame di storia, devi ___ molto bene.
+- Penso che la pasta di mia nonna sia la ___ di tutta la regione.
+- Ieri mattina sono andato in banca e ho ___ un nuovo conto corrente.
+- Quando ho dato i soldi a Marco, ___ ho dati in contanti ieri.
+- Pur ___ stanco, ho deciso di finire il lavoro.
+- Che brutto tempo oggi, è proprio un ___!
+- Per ridurre l'___, cerco sempre di usare i mezzi pubblici.
+- In Italia ci sono molti ___ d'arte.
+- Lei ___ essere più paziente. (dovere)
+- Il proprietario di casa ha aumentato ___ del venti per cento.
+- La camera d'albergo era così rumorosa che non ___ a dormire.
+- ___ di chiudere la porta.
+- ___ possibile avere informazioni? (essere)
+- La camera che ci avete dato non è quella che ___.
+
+## QUALITY CHECKLIST
+
+Before including each question, verify:
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level B1 appropriate vocabulary and grammar
+
+Generate the 7 questions now. Return ONLY valid JSON.

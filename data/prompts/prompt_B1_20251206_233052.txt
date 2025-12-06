@@ -1,0 +1,216 @@
+You are an expert Italian language educator creating questions for CEFR level B1.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 6 questions with perfect accuracy. Quality over quantity - every question must be 100% correct.
+
+Question distribution:
+- 6 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "B1",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+Good hints:
+- "feminine speaker" (for agreement)
+- "formal" (for Lei forms)
+- "herbal tea, not tè" (for word choice)
+- "motion verb" (for auxiliary selection)
+
+Bad hints:
+- Hints that just repeat grammar rules
+- Hints that reveal the answer
+- Unnecessary hints when context is clear
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Preposizioni + infinito (da, di, a)
+
+    Prepositions with infinitives - mandatory patterns:
+    
+    DA + infinitive:
+    • Something to be done: "Ho molto da fare" (I have a lot to do)
+    • Purpose: "macchina da scrivere" (typewriter - machine for writing)
+    • Characteristic: "È facile da capire" (It's easy to understand)
+    • After qualcosa/niente: "qualcosa da bere" (something to drink)
+    
+    DI + infinitive:
+    • After many verbs: cercare di, decidere di, finire di, smettere di, avere bisogno di
+    • "Cerco di studiare" (I try to study)
+    • "Ho bisogno di dormire" (I need to sleep)
+    • After adjectives + essere: "Sono felice di vederti" (I'm happy to see you)
+    
+    A + infinitive:
+    • After motion verbs: andare a, venire a
+    • After verbs of beginning: cominciare a, iniziare a, mettersi a
+    • "Vado a mangiare" (I'm going to eat)
+    • "Comincio a capire" (I'm beginning to understand)
+    • Tendency: "È lento a capire" (He's slow to understand)
+    
+    No preposition:
+    • Modal verbs: dovere, potere, volere, sapere
+    • "Devo studiare" (I must study) - no preposition!
+    
+    Common verb patterns to memorize:
+    • cercare di, decidere di, finire di, smettere di, dimenticare di, promettere di
+    • cominciare a, continuare a, imparare a, riuscire a, insegnare a
+    • avere da (fare), essere da (fare)
+    
+
+### Comparativi e superlativi (irregolarità)
+
+    Irregular comparatives and superlatives:
+    
+    Irregular forms:
+    • buono → migliore (better), il migliore / ottimo (the best)
+    • cattivo → peggiore (worse), il peggiore / pessimo (the worst)
+    • grande → maggiore (bigger/greater/older), il maggiore / massimo (the biggest/greatest)
+    • piccolo → minore (smaller/younger), il minore / minimo (the smallest)
+    
+    When to use:
+    • "più buono" vs "migliore": both correct, migliore more common for quality
+    • "più cattivo" vs "peggiore": similar, peggiore for quality
+    • "più grande" vs "maggiore": maggiore often for age (fratello maggiore = older brother)
+    
+    Comparisons with "di" vs "che":
+    • "di + article": "Maria è più alta di Luca" (comparing two people/things)
+    • "che": "È più facile che difficile" (comparing two qualities)
+    • "che": "Lavoro più a Roma che a Milano" (comparing two prepositions)
+    
+    Superlatives:
+    • Relative: "il più alto" (the tallest), "la più bella" (the most beautiful)
+    • Absolute: "altissimo" (very tall), "bellissima" (very beautiful)
+    • With irregular: "il migliore di tutti" (the best of all)
+    
+
+### Suffissi (diminutivi, accrescitivi, peggiorativi)
+
+    Suffixes that modify meaning - very common in Italian:
+    
+    DIMINUTIVES (small, cute, affectionate):
+    • -ino/-ina: gattino (kitten), casina (little house), piccolino (very small)
+    • -etto/-etta: libretto (booklet), ragazzetto (little boy)
+    • -ello/-ella: asinello (little donkey), stradella (little street)
+    • -uccio/-uccia: calduccio (nice and warm), casuccia (cute little house)
+    
+    AUGMENTATIVES (big, impressive):
+    • -one/-ona: librone (big book), nasone (big nose), ragazzone (big guy)
+    • Can change gender: la porta → il portone (big door/gate - becomes masculine)
+    
+    PEJORATIVES (bad, ugly, contemptuous):
+    • -accio/-accia: tempaccio (awful weather), ragazzaccio (bad boy), parolaccia (swear word)
+    • -astro/-astra: poetastro (bad poet), figliastro (stepson)
+    • -ucolo/-ucola: medicocucolo (quack doctor)
+    
+    Multiple suffixes:
+    • Can combine: casa → casetta → casettina (house → little house → very little house)
+    
+    Important notes:
+    • Not all words accept all suffixes
+    • Some forms are lexicalized: mattone (brick, not "big morning")
+    • Context matters: "che bellino!" (how cute!) vs "È piccolino" (it's rather small)
+    • Very productive in spoken Italian - shows familiarity/informality
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- Focus on: common phrases, idiomatic expressions, grammar patterns
+- "complete_sentence" contains the perfect Italian translation
+- "alternate_correct_responses" lists other acceptable versions
+- All options should attempt the translation (even if wrong)
+
+## TOPICS TO COVER
+
+Create AT LEAST the specified number for each topic:
+- Comparativi e superlativi (irregolarità): minimum 1 question(s)
+- Media e attualità (notizie base, opinioni): minimum 1 question(s)
+- Suffissi (diminutivi, accrescitivi, peggiorativi): minimum 2 question(s)
+- Sport e hobby: minimum 1 question(s)
+- Preposizioni + infinito (da, di, a): minimum 1 question(s)
+
+Note: Some topics are marked as challenging and may receive bonus questions.
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Quando vado a fare la spesa, porto sempre delle borse ___ per evitare la plastica.
+- Nel mio quartiere c'è troppo traffico, bisogna costruire più ___ ciclabili.
+- Ieri sera non sono uscito perché ___ molto stanco
+- Il mio capo mi ha ___ a responsabile del reparto vendite.
+- Questa chiesa è stata ___ nel Quattrocento.
+- Non riesco a collegarmi al computer perché la password ___ cambiata.
+- Il ___ non funziona.
+- Se ___ tempo, andrò al cinema. (avere)
+- Il proprietario ha promesso di ___ l'ascensore entro domani.
+- Nella mia via c'è molto ___ di notte a causa del traffico.
+- C'è uno ___ del venti percento.
+- Hai comprato le mele? Sì, ___ ho comprate un chilo.
+- ___ di chiudere la porta.
+- ___ queste istruzioni, il montaggio sarà facile. (seguire)
+- Era molto tardi, ___ abbiamo preso un taxi
+
+## QUALITY CHECKLIST
+
+Before including each question, verify:
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level B1 appropriate vocabulary and grammar
+
+Generate the 6 questions now. Return ONLY valid JSON.

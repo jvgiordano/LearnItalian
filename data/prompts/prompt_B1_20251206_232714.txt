@@ -1,0 +1,264 @@
+You are an expert Italian language educator creating questions for CEFR level B1.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 6 questions with perfect accuracy. Quality over quantity - every question must be 100% correct.
+
+Question distribution:
+- 6 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "B1",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+Good hints:
+- "feminine speaker" (for agreement)
+- "formal" (for Lei forms)
+- "herbal tea, not tè" (for word choice)
+- "motion verb" (for auxiliary selection)
+
+Bad hints:
+- Hints that just repeat grammar rules
+- Hints that reveal the answer
+- Unnecessary hints when context is clear
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Animali domestici e veterinario
+
+    Pet care and veterinary topics - practical everyday vocabulary:
+    
+    COMMON PETS:
+    • il cane (dog), il gatto (cat), il pesce (fish), l'uccellino (bird)
+    • il coniglio (rabbit), il criceto (hamster)
+    
+    BASIC CARE:
+    • il cibo/il mangime (food), l'acqua (water)
+    • la passeggiata (walk): "Devo portare il cane a passeggio"
+    • la toelettatura (grooming)
+    • la lettiera (litter box - for cats)
+    • la cuccia (dog bed/house)
+    
+    VETERINARY:
+    • il veterinario (vet), la clinica veterinaria (vet clinic)
+    • le vaccinazioni (vaccinations): "Il gatto ha bisogno di vaccini"
+    • la rabbia (rabies), l'antirabbica (rabies vaccine)
+    • il trattamento antipulci (anti-flea treatment)
+    • il vermifugo (dewormer)
+    • la visita (checkup): "Devo portare il cane dal veterinario per una visita"
+    
+    HEALTH ISSUES:
+    • malato/a (sick), ferito/a (injured)
+    • le pulci (fleas), le zecche (ticks)
+    • la diarrea (diarrhea), il vomito (vomiting)
+    • l'allergia (allergy)
+    
+    Common phrases:
+    • "Il gatto non sta bene" (The cat isn't well)
+    • "Ha bisogno di un richiamo" (He/she needs a booster shot)
+    • "Quanto costa la visita?" (How much does the visit cost?)
+    
+
+### Infinito passato (dopo aver/essere + participio)
+
+    Past infinitive - expressing an action that happened before another:
+    
+    Formation:
+    • avere/essere (infinitive) + past participle
+    • After AVERE: dopo aver mangiato (after eating/having eaten)
+    • After ESSERE: dopo essere andato/a/i/e (after going/having gone)
+    
+    When to use:
+    1. After "dopo": "Dopo aver mangiato, sono uscito" (After eating, I went out)
+    2. With verbs of regret: "Mi dispiace di essere arrivato tardi" (I'm sorry for arriving late)
+    3. With verbs of belief: "Credo di aver capito" (I think I understood)
+    4. After senza: "È uscito senza aver chiuso la porta" (He left without having closed the door)
+    
+    Agreement with essere:
+    • Must agree with subject: "Dopo essere arrivata, Maria ha chiamato" (After arriving, Maria called)
+    • Reflexive: "Dopo essermi svegliato, ho fatto colazione" (After waking up, I had breakfast)
+    
+    vs simple infinitive:
+    • Simple: simultaneous or general: "Prima di mangiare" (before eating - not yet done)
+    • Past: completed before: "Dopo aver mangiato" (after having eaten - already done)
+    
+    Common expressions:
+    • Dopo aver fatto (after doing)
+    • Senza aver detto (without saying)
+    • Prima di essere andato (before having gone - rare, usually use simple)
+    • Credo di aver dimenticato (I think I forgot)
+    
+    Important:
+    • Subject of main verb must be same as implied subject of infinitive
+    • "Dopo aver mangiato, sono uscito" (I ate, I went out - same subject ✓)
+    • Can't say: *"Dopo aver mangiato, il film è iniziato" (I ate, the film started - different subjects ✗)
+    
+
+### Sapere vs. Conoscere
+
+    Two verbs for "to know" - different uses:
+    
+    SAPERE (to know facts, information, how to do something):
+    • Facts: "So che è vero" (I know it's true)
+    • Information: "Sai dove abita?" (Do you know where he lives?)
+    • Skills: "So parlare italiano" (I know how to speak Italian / I can speak Italian)
+    • With infinitive: ability/skill
+    • Present: so, sai, sa, sappiamo, sapete, sanno
+    
+    CONOSCERE (to know people, places, be familiar with):
+    • People: "Conosco Marco" (I know Marco / I'm acquainted with Marco)
+    • Places: "Conosco Roma" (I know Rome / I'm familiar with Rome)
+    • Works: "Conosci questo libro?" (Do you know this book? / Are you familiar with it?)
+    • Never with infinitive
+    • Present: conosco, conosci, conosce, conosciamo, conoscete, conoscono
+    
+    Key difference:
+    • Sapere = know information (followed by che, quando, dove, come, perché, infinitive)
+    • Conoscere = be familiar/acquainted (followed by noun - person, place, thing)
+    
+    Common errors:
+    • *"Conosco che è vero" (wrong) → "So che è vero" (correct)
+    • *"So Marco" (wrong) → "Conosco Marco" (correct)
+    • *"Conosco parlare" (wrong) → "So parlare" (correct)
+    
+
+### Pronomi possessivi (vs aggettivi possessivi)
+
+    Possessive pronouns (standing alone) vs possessive adjectives (with noun):
+    
+    POSSESSIVE ADJECTIVES (with noun):
+    • il mio libro (my book), la mia casa (my house)
+    • Always with article (except: mio padre, mia madre, mio fratello, mia sorella when singular)
+    • Agreement: with the thing possessed, not the possessor
+    
+    POSSESSIVE PRONOUNS (standalone - replace noun):
+    • il mio (mine), la mia (mine-fem), i miei (mine-pl-masc), le mie (mine-pl-fem)
+    • Must keep the article
+    • Agreement: with the thing being replaced
+    
+    Examples:
+    • "Questo è il mio libro" (adjective - This is my book)
+    • "Questo libro è il mio" (pronoun - This book is mine)
+    • "La mia macchina è rossa, la tua è blu" (Mine is red, yours is blue)
+    
+    Special cases:
+    • With essere: article optional
+      "È mio" or "È il mio" (It's mine) - both correct
+      "Sono miei" or "Sono i miei" (They're mine)
+    
+    All forms:
+    • il mio/la mia/i miei/le mie (mine)
+    • il tuo/la tua/i tuoi/le tue (yours-informal)
+    • il suo/la sua/i suoi/le sue (his/hers/its)
+    • il nostro/la nostra/i nostri/le nostre (ours)
+    • il vostro/la vostra/i vostri/le vostre (yours-plural)
+    • il loro/la loro/i loro/le loro (theirs - no agreement!)
+    
+    Common errors:
+    • *"È il mio" when you mean the adjective (should be "il mio libro")
+    • Forgetting article with pronoun: *"È mio libro" (wrong) → "È il mio libro" or "È mio" (correct)
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- Focus on: common phrases, idiomatic expressions, grammar patterns
+- "complete_sentence" contains the perfect Italian translation
+- "alternate_correct_responses" lists other acceptable versions
+- All options should attempt the translation (even if wrong)
+
+## TOPICS TO COVER
+
+Create AT LEAST the specified number for each topic:
+- Infinito passato (dopo aver/essere + participio): minimum 1 question(s)
+- Lavoro: minimum 1 question(s)
+- Animali domestici e veterinario: minimum 1 question(s)
+- Sapere vs. Conoscere: minimum 1 question(s)
+- Prestiti e restituzione (avanzato): minimum 1 question(s)
+- Pronomi possessivi (vs aggettivi possessivi): minimum 1 question(s)
+
+Note: Some topics are marked as challenging and may receive bonus questions.
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Mentre ___ un libro in giardino, è scoppiato un forte temporale.
+- Il progetto su ___ stiamo lavorando richiede molta attenzione ai dettagli.
+- Non ___ sono più in frigorifero, devo comprarne altri.
+- Non c'era ___ alla fermata dell'autobus.
+- In questo momento ___ preparando la cena per tutta la famiglia.
+- La finestra ___ dal vento.
+- Questo ristorante è il ___ della città.
+- Hai bisogno di aiuto? No, non ___ ho bisogno.
+- La tecnologia ___ rapidamente.
+- Quando siamo tornati a casa, ci siamo accorti che qualcuno ___ entrato dalla finestra.
+- Il nostro aereo è in ___ di due ore, quindi perderemo la coincidenza.
+- Vivo in un ___ di sei piani.
+- L'anno prossimo andrò in pensione e ___ più tempo per viaggiare.
+- ___ a casa, ho preparato la cena.
+- ___ molto tempo, posso aiutarti.
+
+## QUALITY CHECKLIST
+
+Before including each question, verify:
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level B1 appropriate vocabulary and grammar
+
+Generate the 6 questions now. Return ONLY valid JSON.

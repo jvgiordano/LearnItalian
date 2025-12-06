@@ -1,0 +1,161 @@
+You are an expert Italian language educator creating questions for CEFR level B1.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 6 questions with perfect accuracy. Quality over quantity - every question must be 100% correct.
+
+Question distribution:
+- 6 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "B1",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+Good hints:
+- "feminine speaker" (for agreement)
+- "formal" (for Lei forms)
+- "herbal tea, not tè" (for word choice)
+- "motion verb" (for auxiliary selection)
+
+Bad hints:
+- Hints that just repeat grammar rules
+- Hints that reveal the answer
+- Unnecessary hints when context is clear
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Proprietà e confini
+
+    Property boundaries and asserting rights - practical commands:
+    
+    PROPERTY VOCABULARY:
+    • la proprietà privata (private property)
+    • il terreno (land), il confine (boundary)
+    • il proprietario (owner), l'inquilino (tenant)
+    • il cartello (sign): "Proprietà privata - Vietato l'ingresso"
+    
+    ASSERTIVE COMMANDS (telling someone to leave):
+    • "Questa è proprietà privata" (This is private property)
+    • "Deve andarsene" (You must leave - formal)
+    • "Devi andartene" (You must leave - informal)
+    • "Non può entrare qui" (You can't enter here)
+    • "Fuori dalla mia proprietà!" (Off my property!)
+    • "Se ne vada!" (Go away! - formal)
+    • "Vattene!" (Go away! - informal)
+    
+    LEGAL/BOUNDARY LANGUAGE:
+    • vietato (forbidden): "Vietato l'accesso" (No entry)
+    • l'intrusione (trespassing)
+    • il permesso (permission): "Non ha il permesso di entrare"
+    • chiamare la polizia (call the police)
+    
+    ESCALATION:
+    • "Le chiedo gentilmente di andarsene" (I'm asking you politely to leave)
+    • "Se non se ne va, chiamo la polizia" (If you don't leave, I'll call the police)
+    • "Sto chiamando la polizia" (I'm calling the police)
+    
+    Important note: These commands use formal Lei or informal tu depending on context
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- Focus on: common phrases, idiomatic expressions, grammar patterns
+- "complete_sentence" contains the perfect Italian translation
+- "alternate_correct_responses" lists other acceptable versions
+- All options should attempt the translation (even if wrong)
+
+## TOPICS TO COVER
+
+Create AT LEAST the specified number for each topic:
+- Prestiti e restituzione (avanzato): minimum 1 question(s)
+- Condizionale presente: minimum 1 question(s)
+- Ristorante (recensioni/preferenze): minimum 1 question(s)
+- Imperativo (pronomi atoni; negazione): minimum 2 question(s)
+- Proprietà e confini: minimum 1 question(s)
+
+
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- La ragazza con i capelli lunghi e ___ è mia cugina.
+- Ho inviato il mio curriculum vitae per quella posizione e spero di essere chiamato per un ___.
+- L'___ è un diritto fondamentale.
+- Scusa il ritardo, ___ parcheggio.
+- Se io ___ te, accetterei l'offerta. (essere)
+- Marco e Luca si sono ___ la mano prima della partita.
+- Era molto tardi, ___ abbiamo preso un taxi
+- Ti ho restituito il libro che mi avevi ___ la settimana scorsa.
+- Molte famiglie ___ la carta e il vetro ogni settimana.
+- Nel quartiere c’è troppo traffico e ___ più piste ciclabili.
+- Dopo aver studiato per tre mesi, sono riuscita a ___ l'esame di certificazione CILS B1.
+- Nel mio quartiere c'è troppo traffico, bisogna costruire più ___ ciclabili.
+- Mi piace giocare a ___ ogni weekend al circolo sportivo.
+- Maria se ne è ___ molto presto dalla festa perché non si sentiva bene.
+- È importante fare la raccolta differenziata per ___ l'inquinamento.
+
+## QUALITY CHECKLIST
+
+Before including each question, verify:
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level B1 appropriate vocabulary and grammar
+
+Generate the 6 questions now. Return ONLY valid JSON.

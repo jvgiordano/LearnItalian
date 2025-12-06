@@ -1,0 +1,190 @@
+You are an expert Italian language educator creating questions for CEFR level B1.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 7 questions with perfect accuracy. Quality over quantity - every question must be 100% correct.
+
+Question distribution:
+- 7 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "B1",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+Good hints:
+- "feminine speaker" (for agreement)
+- "formal" (for Lei forms)
+- "herbal tea, not tè" (for word choice)
+- "motion verb" (for auxiliary selection)
+
+Bad hints:
+- Hints that just repeat grammar rules
+- Hints that reveal the answer
+- Unnecessary hints when context is clear
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Congiuntivo presente (introduzione: opinioni, emozioni base)
+
+    Subjunctive present - expressing opinions, emotions, doubt:
+    - After verbs of opinion: penso che, credo che, mi sembra che, dubito che
+    - After expressions of emotion: sono felice che, mi dispiace che, ho paura che
+    - After impersonal expressions: è importante che, bisogna che, è necessario che
+    - When NOT to use it: so che + indicativo (certainty), è vero che + indicativo
+    - Most common irregular forms: sia/siano (essere), abbia/abbiano (avere), faccia/facciano (fare), vada/vadano (andare)
+    - Formation regular: -are → -i/-iamo/-iate/-ino, -ere/-ire → -a/-iamo/-iate/-ano
+    Examples:
+      • "Penso che sia importante" (I think it's important)
+      • "Sono felice che tu venga" (I'm happy you're coming)
+      • "Dubito che lo sappia" (I doubt he knows it)
+    
+
+### Suffissi (diminutivi, accrescitivi, peggiorativi)
+
+    Suffixes that modify meaning - very common in Italian:
+    
+    DIMINUTIVES (small, cute, affectionate):
+    • -ino/-ina: gattino (kitten), casina (little house), piccolino (very small)
+    • -etto/-etta: libretto (booklet), ragazzetto (little boy)
+    • -ello/-ella: asinello (little donkey), stradella (little street)
+    • -uccio/-uccia: calduccio (nice and warm), casuccia (cute little house)
+    
+    AUGMENTATIVES (big, impressive):
+    • -one/-ona: librone (big book), nasone (big nose), ragazzone (big guy)
+    • Can change gender: la porta → il portone (big door/gate - becomes masculine)
+    
+    PEJORATIVES (bad, ugly, contemptuous):
+    • -accio/-accia: tempaccio (awful weather), ragazzaccio (bad boy), parolaccia (swear word)
+    • -astro/-astra: poetastro (bad poet), figliastro (stepson)
+    • -ucolo/-ucola: medicocucolo (quack doctor)
+    
+    Multiple suffixes:
+    • Can combine: casa → casetta → casettina (house → little house → very little house)
+    
+    Important notes:
+    • Not all words accept all suffixes
+    • Some forms are lexicalized: mattone (brick, not "big morning")
+    • Context matters: "che bellino!" (how cute!) vs "È piccolino" (it's rather small)
+    • Very productive in spoken Italian - shows familiarity/informality
+    
+
+### Accordo del participio passato (con pronomi diretti, ne, riflessivi)
+
+    Past participle agreement - when and how:
+    1. With essere: ALWAYS agrees with subject
+       • "Maria è andata" (feminine), "Loro sono arrivati" (masculine plural)
+    2. With direct object pronouns: agrees with pronoun
+       • "L'ho vista" (I saw her - 'a' for feminine la)
+       • "Li ho comprati" (I bought them - 'i' for masculine li)
+    3. With "ne": agrees with what ne replaces
+       • "Ne ho comprati tre" (I bought three of them - 'i' for masculine)
+    4. With reflexive verbs: agrees with subject (uses essere)
+       • "Maria si è svegliata" (Maria woke up - feminine)
+       • "Ci siamo divertiti" (We had fun - masculine plural)
+    5. When NOT to agree: avere + direct object (no pronoun)
+       • "Ho visto Maria" (no agreement - Maria comes after)
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- Focus on: common phrases, idiomatic expressions, grammar patterns
+- "complete_sentence" contains the perfect Italian translation
+- "alternate_correct_responses" lists other acceptable versions
+- All options should attempt the translation (even if wrong)
+
+## TOPICS TO COVER
+
+Create AT LEAST the specified number for each topic:
+- Descrizioni (dettaglio): minimum 1 question(s)
+- Casa e quartiere (problemi/soluzioni): minimum 1 question(s)
+- Congiuntivo presente (introduzione: opinioni, emozioni base): minimum 2 question(s)
+- Accordo del participio passato (con pronomi diretti, ne, riflessivi): minimum 1 question(s)
+- Suffissi (diminutivi, accrescitivi, peggiorativi): minimum 1 question(s)
+- Futuro semplice (esteso): minimum 1 question(s)
+
+Note: Some topics are marked as challenging and may receive bonus questions.
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Dopo la ___ vorrei iscrivermi all'università per studiare medicina.
+- Marco cerca un lavoro ___ gli permetta di viaggiare spesso.
+- Dubito che loro ___ tempo per aiutarci con il trasloco.
+- Domani mattina ho un ___ di lavoro con il direttore dell'azienda.
+- Mi ___ un bicchiere d'acqua, per favore?
+- L'___ è stato cancellato.
+- Vuoi delle arance? No grazie, non ___ servono.
+- Mio fratello non ha mai ___ la nonna perché lei è morta prima che lui nascesse.
+- Dobbiamo ridurre le ___ di CO2 per combattere il cambiamento climatico
+- Ho portato i documenti in ufficio e ___ ho consegnati personalmente.
+- Il film che abbiamo visto ieri sera era molto ___ interessante di quello della settimana scorsa.
+- Se non ti senti bene, non ___ ad uscire! Riposati.
+- Mi sembra che ___ una buona idea. (essere)
+- Si ___ il prossimo giugno.
+- Mi hai portato la rivista che ti avevo chiesto? Sì, ___ portata.
+
+## QUALITY CHECKLIST
+
+Before including each question, verify:
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level B1 appropriate vocabulary and grammar
+
+Generate the 7 questions now. Return ONLY valid JSON.

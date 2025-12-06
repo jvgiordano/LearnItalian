@@ -1,0 +1,236 @@
+You are an expert Italian language educator creating questions for CEFR level B1.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 7 questions with perfect accuracy. Quality over quantity - every question must be 100% correct.
+
+Question distribution:
+- 7 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "B1",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+Good hints:
+- "feminine speaker" (for agreement)
+- "formal" (for Lei forms)
+- "herbal tea, not tè" (for word choice)
+- "motion verb" (for auxiliary selection)
+
+Bad hints:
+- Hints that just repeat grammar rules
+- Hints that reveal the answer
+- Unnecessary hints when context is clear
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Discorso indiretto (base)
+
+    Reported speech (indirect discourse) - basic transformations:
+    
+    1. Tense changes (when reporting verb is past):
+       • Presente → Imperfetto: "Sono stanco" → Ha detto che era stanco
+       • Passato prossimo → Trapassato prossimo: "Ho mangiato" → Ha detto che aveva mangiato
+       • Futuro → Condizionale passato: "Verrò" → Ha detto che sarebbe venuto
+    
+    2. Time expression changes:
+       • oggi → quel giorno, domani → il giorno dopo, ieri → il giorno prima
+       • ora → allora, fa → prima
+    
+    3. Pronoun changes:
+       • Direct: "Io sono stanco" → Marco ha detto che lui era stanco
+       • Possessive: "il mio libro" → "il suo libro"
+    
+    Examples:
+      • Direct: Maria dice: "Vado al cinema"
+      • Indirect: Maria dice che va al cinema (present reporting → no change)
+      • Indirect: Maria ha detto che andava al cinema (past reporting → imperfetto)
+    
+
+### Animali domestici e veterinario
+
+    Pet care and veterinary topics - practical everyday vocabulary:
+    
+    COMMON PETS:
+    • il cane (dog), il gatto (cat), il pesce (fish), l'uccellino (bird)
+    • il coniglio (rabbit), il criceto (hamster)
+    
+    BASIC CARE:
+    • il cibo/il mangime (food), l'acqua (water)
+    • la passeggiata (walk): "Devo portare il cane a passeggio"
+    • la toelettatura (grooming)
+    • la lettiera (litter box - for cats)
+    • la cuccia (dog bed/house)
+    
+    VETERINARY:
+    • il veterinario (vet), la clinica veterinaria (vet clinic)
+    • le vaccinazioni (vaccinations): "Il gatto ha bisogno di vaccini"
+    • la rabbia (rabies), l'antirabbica (rabies vaccine)
+    • il trattamento antipulci (anti-flea treatment)
+    • il vermifugo (dewormer)
+    • la visita (checkup): "Devo portare il cane dal veterinario per una visita"
+    
+    HEALTH ISSUES:
+    • malato/a (sick), ferito/a (injured)
+    • le pulci (fleas), le zecche (ticks)
+    • la diarrea (diarrhea), il vomito (vomiting)
+    • l'allergia (allergy)
+    
+    Common phrases:
+    • "Il gatto non sta bene" (The cat isn't well)
+    • "Ha bisogno di un richiamo" (He/she needs a booster shot)
+    • "Quanto costa la visita?" (How much does the visit cost?)
+    
+
+### Suffissi (diminutivi, accrescitivi, peggiorativi)
+
+    Suffixes that modify meaning - very common in Italian:
+    
+    DIMINUTIVES (small, cute, affectionate):
+    • -ino/-ina: gattino (kitten), casina (little house), piccolino (very small)
+    • -etto/-etta: libretto (booklet), ragazzetto (little boy)
+    • -ello/-ella: asinello (little donkey), stradella (little street)
+    • -uccio/-uccia: calduccio (nice and warm), casuccia (cute little house)
+    
+    AUGMENTATIVES (big, impressive):
+    • -one/-ona: librone (big book), nasone (big nose), ragazzone (big guy)
+    • Can change gender: la porta → il portone (big door/gate - becomes masculine)
+    
+    PEJORATIVES (bad, ugly, contemptuous):
+    • -accio/-accia: tempaccio (awful weather), ragazzaccio (bad boy), parolaccia (swear word)
+    • -astro/-astra: poetastro (bad poet), figliastro (stepson)
+    • -ucolo/-ucola: medicocucolo (quack doctor)
+    
+    Multiple suffixes:
+    • Can combine: casa → casetta → casettina (house → little house → very little house)
+    
+    Important notes:
+    • Not all words accept all suffixes
+    • Some forms are lexicalized: mattone (brick, not "big morning")
+    • Context matters: "che bellino!" (how cute!) vs "È piccolino" (it's rather small)
+    • Very productive in spoken Italian - shows familiarity/informality
+    
+
+### Ci e ne (avanzato)
+
+    Advanced uses beyond A2 basics:
+    
+    CI:
+    1. Place (there): "Ci vado domani" (I'm going there tomorrow)
+    2. About it/to it: "Ci penso" (I'm thinking about it), "Ci credo" (I believe in it)
+    3. With verbs: volerci, metterci, crederci, pensarci, contarci
+    4. Replaces "a + something": "Penso a Maria" → "Ci penso"
+    
+    NE:
+    1. Quantity: "Ne voglio tre" (I want three of them)
+    2. About it/of it: "Ne parliamo?" (Shall we talk about it?)
+    3. Replaces "di + something": "Parlo di Maria" → "Ne parlo"
+    4. Partitive: "Vuoi del pane?" → "Sì, ne voglio"
+    
+    Combined with other pronouns:
+    • me ne, te ne, se ne, ce ne, ve ne
+    • "Me ne vado" (I'm leaving), "Te ne do tre" (I'll give you three)
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- Focus on: common phrases, idiomatic expressions, grammar patterns
+- "complete_sentence" contains the perfect Italian translation
+- "alternate_correct_responses" lists other acceptable versions
+- All options should attempt the translation (even if wrong)
+
+## TOPICS TO COVER
+
+Create AT LEAST the specified number for each topic:
+- Discorso indiretto (base): minimum 2 question(s)
+- Animali domestici e veterinario: minimum 2 question(s)
+- Suffissi (diminutivi, accrescitivi, peggiorativi): minimum 1 question(s)
+- Ci e ne (avanzato): minimum 1 question(s)
+- Salute e medicina (sintomi, consigli, visite mediche): minimum 1 question(s)
+
+Note: Some topics are marked as challenging and may receive bonus questions.
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Il mio collega si è ___ dall'azienda per cercare nuove opportunità.
+- Il professore ci ha spiegato le regole, e noi ___ abbiamo subito mandate via email.
+- La mia famiglia ___ sempre i rifiuti organici da quelli non riciclabili.
+- Paolo ha detto che ___ stanco e che preferiva restare a casa.
+- Il calcio ___ lo sport più seguito in Italia.
+- Domani andremo al mare se ___ bel tempo.
+- Per ridurre l'inquinamento, ___ usare meno l'automobile.
+- Vorrei che il mio ragazzo ___ più romantico e mi portasse dei fiori ogni tanto.
+- Per ritirare il pacco, devi andare allo ___ della posta.
+- Write: I visited them last week.
+- Non uscire senza ombrello, fuori c'è un ___ terribile!
+- In Italia ___ mangia molto bene e si beve ottimo vino.
+- È una ___ difficile.
+- Hai letto l'___ di giornale che parla della crisi economica?
+- Il nuovo smartphone è ___ del vecchio modello in tutti gli aspetti.
+
+## QUALITY CHECKLIST
+
+Before including each question, verify:
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level B1 appropriate vocabulary and grammar
+
+Generate the 7 questions now. Return ONLY valid JSON.

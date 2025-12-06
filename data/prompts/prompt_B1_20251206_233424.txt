@@ -1,0 +1,190 @@
+You are an expert Italian language educator creating questions for CEFR level B1.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 6 questions with perfect accuracy. Quality over quantity - every question must be 100% correct.
+
+Question distribution:
+- 6 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "B1",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+Good hints:
+- "feminine speaker" (for agreement)
+- "formal" (for Lei forms)
+- "herbal tea, not tè" (for word choice)
+- "motion verb" (for auxiliary selection)
+
+Bad hints:
+- Hints that just repeat grammar rules
+- Hints that reveal the answer
+- Unnecessary hints when context is clear
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Animali domestici e veterinario
+
+    Pet care and veterinary topics - practical everyday vocabulary:
+    
+    COMMON PETS:
+    • il cane (dog), il gatto (cat), il pesce (fish), l'uccellino (bird)
+    • il coniglio (rabbit), il criceto (hamster)
+    
+    BASIC CARE:
+    • il cibo/il mangime (food), l'acqua (water)
+    • la passeggiata (walk): "Devo portare il cane a passeggio"
+    • la toelettatura (grooming)
+    • la lettiera (litter box - for cats)
+    • la cuccia (dog bed/house)
+    
+    VETERINARY:
+    • il veterinario (vet), la clinica veterinaria (vet clinic)
+    • le vaccinazioni (vaccinations): "Il gatto ha bisogno di vaccini"
+    • la rabbia (rabies), l'antirabbica (rabies vaccine)
+    • il trattamento antipulci (anti-flea treatment)
+    • il vermifugo (dewormer)
+    • la visita (checkup): "Devo portare il cane dal veterinario per una visita"
+    
+    HEALTH ISSUES:
+    • malato/a (sick), ferito/a (injured)
+    • le pulci (fleas), le zecche (ticks)
+    • la diarrea (diarrhea), il vomito (vomiting)
+    • l'allergia (allergy)
+    
+    Common phrases:
+    • "Il gatto non sta bene" (The cat isn't well)
+    • "Ha bisogno di un richiamo" (He/she needs a booster shot)
+    • "Quanto costa la visita?" (How much does the visit cost?)
+    
+
+### Comparativi e superlativi (irregolarità)
+
+    Irregular comparatives and superlatives:
+    
+    Irregular forms:
+    • buono → migliore (better), il migliore / ottimo (the best)
+    • cattivo → peggiore (worse), il peggiore / pessimo (the worst)
+    • grande → maggiore (bigger/greater/older), il maggiore / massimo (the biggest/greatest)
+    • piccolo → minore (smaller/younger), il minore / minimo (the smallest)
+    
+    When to use:
+    • "più buono" vs "migliore": both correct, migliore more common for quality
+    • "più cattivo" vs "peggiore": similar, peggiore for quality
+    • "più grande" vs "maggiore": maggiore often for age (fratello maggiore = older brother)
+    
+    Comparisons with "di" vs "che":
+    • "di + article": "Maria è più alta di Luca" (comparing two people/things)
+    • "che": "È più facile che difficile" (comparing two qualities)
+    • "che": "Lavoro più a Roma che a Milano" (comparing two prepositions)
+    
+    Superlatives:
+    • Relative: "il più alto" (the tallest), "la più bella" (the most beautiful)
+    • Absolute: "altissimo" (very tall), "bellissima" (very beautiful)
+    • With irregular: "il migliore di tutti" (the best of all)
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- Focus on: common phrases, idiomatic expressions, grammar patterns
+- "complete_sentence" contains the perfect Italian translation
+- "alternate_correct_responses" lists other acceptable versions
+- All options should attempt the translation (even if wrong)
+
+## TOPICS TO COVER
+
+Create AT LEAST the specified number for each topic:
+- Comparativi e superlativi (irregolarità): minimum 1 question(s)
+- Connettivi di causa/effetto/concessione/ordine): minimum 1 question(s)
+- Stare + gerundio (progressivo): minimum 1 question(s)
+- Animali domestici e veterinario: minimum 1 question(s)
+- Lavoro: minimum 1 question(s)
+- Condizionale presente: minimum 1 question(s)
+
+
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- La casa dove i miei nonni vivevano ___ un enorme camino in salotto.
+- Non ho potuto venire alla festa ___ ero malato.
+- Mia figlia gioca a ___ ogni martedì sera.
+- Quella ___ ha combinato un sacco di guai a scuola.
+- Secondo me, questo ristorante è ___ migliore della città.
+- Ricordo che da bambino ___ sempre in bicicletta nel parco con mio nonno.
+- Il servizio era eccellente, ma il cibo non ___ piaciuto per niente.
+- ___ ogni giorno, i ragazzi hanno migliorato i loro voti.
+- Non ___ più voglia di uscire.
+- Per il raffreddore, Le consiglio di prendere questo sciroppo tre ___ al giorno.
+- Devo ___ il bagaglio.
+- Quante mele hai mangiato? Ne ho ___ due.
+- Vuoi incontrare i miei genitori? Sì, vorrei ___ molto.
+- Il locale era molto affollato, ma il servizio ___ veloce e cortese.
+- ___ ha bussato alla porta ma non ho aperto.
+
+## QUALITY CHECKLIST
+
+Before including each question, verify:
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level B1 appropriate vocabulary and grammar
+
+Generate the 6 questions now. Return ONLY valid JSON.

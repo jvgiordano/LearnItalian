@@ -1,0 +1,172 @@
+You are an expert Italian language educator creating questions for CEFR level B1.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 6 questions with perfect accuracy. Quality over quantity - every question must be 100% correct.
+
+Question distribution:
+- 6 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "B1",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+Good hints:
+- "feminine speaker" (for agreement)
+- "formal" (for Lei forms)
+- "herbal tea, not tè" (for word choice)
+- "motion verb" (for auxiliary selection)
+
+Bad hints:
+- Hints that just repeat grammar rules
+- Hints that reveal the answer
+- Unnecessary hints when context is clear
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Gerundio (usi)
+
+    Gerund uses beyond progressive (stare + gerundio):
+    
+    1. Cause (because): "Essendo stanco, sono andato a letto" (Being tired, I went to bed)
+    2. Time (while): "Camminando, ho incontrato Maria" (While walking, I met Maria)
+    3. Condition (if/by): "Studiando, imparerai" (By studying, you'll learn)
+    4. Manner (how): "È uscito correndo" (He left running)
+    
+    Formation:
+    • Regular: -are → -ando, -ere → -endo, -ire → -endo
+    • Irregular: fare → facendo, dire → dicendo, bere → bevendo
+    
+    With pronouns:
+    • Attached to end: "mangiandolo" (eating it), "vedendola" (seeing her)
+    • Or before stare: "Lo sto mangiando" OR "Sto mangiandolo"
+    
+    Gerund vs infinitive:
+    • After prepositions (except per): use infinitive
+    • "Prima di mangiare" (before eating - infinitive)
+    • "Pur essendo..." (while being - gerund after pur)
+    
+
+### Ci e ne (avanzato)
+
+    Advanced uses beyond A2 basics:
+    
+    CI:
+    1. Place (there): "Ci vado domani" (I'm going there tomorrow)
+    2. About it/to it: "Ci penso" (I'm thinking about it), "Ci credo" (I believe in it)
+    3. With verbs: volerci, metterci, crederci, pensarci, contarci
+    4. Replaces "a + something": "Penso a Maria" → "Ci penso"
+    
+    NE:
+    1. Quantity: "Ne voglio tre" (I want three of them)
+    2. About it/of it: "Ne parliamo?" (Shall we talk about it?)
+    3. Replaces "di + something": "Parlo di Maria" → "Ne parlo"
+    4. Partitive: "Vuoi del pane?" → "Sì, ne voglio"
+    
+    Combined with other pronouns:
+    • me ne, te ne, se ne, ce ne, ve ne
+    • "Me ne vado" (I'm leaving), "Te ne do tre" (I'll give you three)
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- Focus on: common phrases, idiomatic expressions, grammar patterns
+- "complete_sentence" contains the perfect Italian translation
+- "alternate_correct_responses" lists other acceptable versions
+- All options should attempt the translation (even if wrong)
+
+## TOPICS TO COVER
+
+Create AT LEAST the specified number for each topic:
+- Lavoro: minimum 2 question(s)
+- Ambiente (pratiche): minimum 1 question(s)
+- Ci e ne (avanzato): minimum 1 question(s)
+- Verbi modali + pronomi clitici: minimum 1 question(s)
+- Gerundio (usi): minimum 1 question(s)
+
+Note: Some topics are marked as challenging and may receive bonus questions.
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Devo comprare le medicine per la nonna, ma non posso ___ subito.
+- Da bambino il mio più grande hobby era ___ il pianoforte.
+- Hai visto le mie sorelle? Sì, ___ ho incontrate al bar.
+- Ho ___ le chiavi in macchina.
+- Vado molto d'___ con la mia nuova coinquilina.
+- ___ ha chiamato mentre ero fuori.
+- La ___ è di venticinque gradi.
+- Comincio ___ capire l'italiano.
+- La ___ ha tagliato i capelli.
+- Hai bisogno di ___ dal supermercato? Devo fare la spesa.
+- ___ fosse stanco, ha finito il suo turno di notte.
+- Maria mi ha detto che ___ stanca.
+- Penso che tu ___ ragione, dobbiamo studiare di più.
+- Mi piace molto andare a cavallo, ma è uno sport costoso quindi non ___ quasi mai.
+- Hai comprato il pane? Sì, ma ___ sono dimenticato.
+
+## QUALITY CHECKLIST
+
+Before including each question, verify:
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level B1 appropriate vocabulary and grammar
+
+Generate the 6 questions now. Return ONLY valid JSON.

@@ -1,0 +1,5 @@
+  ✓ A1: 46 topics found (Expected: 46)
+  ✓ A2: 47 topics found (Expected: 47)
+  ✓ B1: 42 topics found (Expected: 42)
+  ✓ B2: 43 topics found (Expected: 43)
+  ✓ C1: 27 topics found (Expected: 38)
