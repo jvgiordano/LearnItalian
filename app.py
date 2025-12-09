@@ -21,26 +21,51 @@ WIDTH = 1400
 HEIGHT = 900
 
 MASTERY_HISTORY_LENGTH = 20
-MASTERY_THRESHOLD = 6  # Questions become rare after 6 correct answers
-MIN_TOPIC_QUESTIONS = 3  # Minimum questions per topic in adaptive quiz
+MASTERY_THRESHOLD = 6
+MIN_TOPIC_QUESTIONS = 3
+
+
+# --- Trackpad/Mousewheel Scroll Fix for Linux and Windows ---
+def enable_trackpad_scroll(scrollable_frame):
+    """Enable trackpad/mousewheel scrolling for CTkScrollableFrame."""
+    def on_mousewheel(event):
+        if event.num == 4:
+            scrollable_frame._parent_canvas.yview_scroll(-1, "units")
+        elif event.num == 5:
+            scrollable_frame._parent_canvas.yview_scroll(1, "units")
+        elif hasattr(event, 'delta'):
+            scrollable_frame._parent_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+    
+    canvas = scrollable_frame._parent_canvas
+    canvas.bind("<Button-4>", on_mousewheel)
+    canvas.bind("<Button-5>", on_mousewheel)
+    canvas.bind("<MouseWheel>", on_mousewheel)
+    scrollable_frame.bind("<Button-4>", on_mousewheel)
+    scrollable_frame.bind("<Button-5>", on_mousewheel)
+    scrollable_frame.bind("<MouseWheel>", on_mousewheel)
+    scrollable_frame._mousewheel_handler = on_mousewheel
+
+
+def bind_children_scroll(parent_widget, mousewheel_handler):
+    """Recursively bind scroll events to all children of a widget."""
+    for child in parent_widget.winfo_children():
+        child.bind("<Button-4>", mousewheel_handler)
+        child.bind("<Button-5>", mousewheel_handler)
+        child.bind("<MouseWheel>", mousewheel_handler)
+        bind_children_scroll(child, mousewheel_handler)
+
 
 class ImprovedAdaptiveLearningEngine:
     def __init__(self):
         self.levels = ['A0', 'A1', 'A2', 'B1', 'B2', 'C1']
-        # Coverage requirement for level progression - UPDATED to 85%
-        self.MIN_COVERAGE_FOR_PROGRESSION = 0.30 # This is now legacy, but kept for other calculations
-        # Ensure database has required columns
+        self.MIN_COVERAGE_FOR_PROGRESSION = 0.30
         self.ensure_database_schema()
 
     def get_recent_quiz_performance(self, level, last_n_quizzes=5):
-        """
-        Calculate average performance from the last N quizzes for a specific level.
-        Returns a score between 0 and 1 (percentage).
-        """
+        """Calculate average performance from the last N quizzes for a specific level."""
         conn = sqlite3.connect('italian_quiz.db')
         cursor = conn.cursor()
         
-        # Get questions from the specified level
         cursor.execute("SELECT id FROM questions WHERE cefr_level = ?", (level,))
         level_question_ids = [row[0] for row in cursor.fetchall()]
         
@@ -48,7 +73,6 @@ class ImprovedAdaptiveLearningEngine:
             conn.close()
             return 0.0
         
-        # Get recent answer history for these questions
         placeholders = ','.join('?' for _ in level_question_ids)
         cursor.execute(f"""
             SELECT ah.is_correct, ah.timestamp
@@ -56,20 +80,18 @@ class ImprovedAdaptiveLearningEngine:
             WHERE ah.question_id IN ({placeholders})
             ORDER BY ah.timestamp DESC
             LIMIT ?
-        """, level_question_ids + [last_n_quizzes * 10])  # Assuming ~10 questions per quiz
+        """, level_question_ids + [last_n_quizzes * 10])
         
         recent_answers = cursor.fetchall()
         conn.close()
         
         if not recent_answers:
-            return 0.0  # No history, treat as low performance
+            return 0.0
         
-        # Calculate success rate
         correct_count = sum(1 for answer in recent_answers if answer[0] == 1)
         total_count = len(recent_answers)
         
         return correct_count / total_count if total_count > 0 else 0.0
-
 
     def ensure_database_schema(self):
         """Ensure the database has all required columns and tables."""
@@ -77,7 +99,6 @@ class ImprovedAdaptiveLearningEngine:
         cursor = conn.cursor()
         
         try:
-            # 1. Ensure 'enhanced_performance' table has freeform columns and unanswered column
             cursor.execute('PRAGMA table_info(enhanced_performance)')
             columns = [col[1] for col in cursor.fetchall()]
             
@@ -87,11 +108,9 @@ class ImprovedAdaptiveLearningEngine:
                 cursor.execute('ALTER TABLE enhanced_performance ADD COLUMN freeform_incorrect_count INTEGER DEFAULT 0')
             if 'partial_correct_count' not in columns:
                 cursor.execute('ALTER TABLE enhanced_performance ADD COLUMN partial_correct_count INTEGER DEFAULT 0')
-            # NEW: Add unanswered_count column
             if 'unanswered_count' not in columns:
                 cursor.execute('ALTER TABLE enhanced_performance ADD COLUMN unanswered_count INTEGER DEFAULT 0')
 
-            # 2. Ensure 'quiz_history' table exists and has the 'session_id' column
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS quiz_history (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -107,7 +126,6 @@ class ImprovedAdaptiveLearningEngine:
             if 'session_id' not in quiz_history_columns:
                 cursor.execute('ALTER TABLE quiz_history ADD COLUMN session_id TEXT')
 
-            # 3. Create daily_stats table for Progress Timeline
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS daily_stats (
                     date DATE PRIMARY KEY,
@@ -117,13 +135,12 @@ class ImprovedAdaptiveLearningEngine:
                 )
             ''')
             
-            # 4. Create answer_history table for recency calculations
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS answer_history (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     question_id INTEGER NOT NULL,
                     cefr_level TEXT NOT NULL,
-                    is_correct INTEGER NOT NULL, -- 1 for true, 0 for false
+                    is_correct INTEGER NOT NULL,
                     timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (question_id) REFERENCES questions(id)
                 )
@@ -142,16 +159,12 @@ class ImprovedAdaptiveLearningEngine:
             if current_index + 1 < len(self.levels):
                 return self.levels[current_index + 1]
             else:
-                return current_level  # Already at max level
+                return current_level
         except ValueError:
-            return self.levels[1] # Default to A1 if something goes wrong
+            return self.levels[1]
 
     def assess_user_level_and_topics(self):
-        """
-        Comprehensive assessment of user's current level and topic strengths/weaknesses.
-        This method is now primarily for displaying stats and weaknesses, while the actual
-        level calculation is handled by the more complex calculate_estimated_level.
-        """
+        """Comprehensive assessment of user's current level and topic strengths/weaknesses."""
         conn = sqlite3.connect('italian_quiz.db')
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
@@ -171,7 +184,6 @@ class ImprovedAdaptiveLearningEngine:
             ''')
             performance_data = cursor.fetchall()
         except Exception:
-            # Fallback if unanswered_count doesn't exist yet
             try:
                 cursor.execute('''
                     SELECT q.cefr_level, q.topic,
@@ -211,7 +223,6 @@ class ImprovedAdaptiveLearningEngine:
             if level == 'A0': continue
             coverage_percentages[level] = self.get_coverage_percentage(level)
         
-        # Use the new, more robust calculation method for the final estimation
         estimated_level = self.calculate_estimated_level()
         
         conn.close()
@@ -222,14 +233,12 @@ class ImprovedAdaptiveLearningEngine:
             'coverage_percentages': coverage_percentages
         }
 
-    # FIXED: Helper method for sustained success check
     def _check_sustained_success(self, cursor, level):
         """Check for 85% success over last 50 Qs, sustained for 25 consecutive checks."""
         cursor.execute(
             "SELECT is_correct FROM answer_history WHERE cefr_level = ? ORDER BY timestamp DESC LIMIT 100",
             (level,)
         )
-        # Fetch results and reverse to get chronological order
         results = [row[0] for row in cursor.fetchall()]
         results.reverse()
 
@@ -237,8 +246,6 @@ class ImprovedAdaptiveLearningEngine:
             return False
 
         sustain_counter = 0
-        # Loop through the results to check the moving window
-        # We start checking from the 50th answer
         for i in range(49, len(results)):
             window = results[i-49 : i+1]
             success_rate = sum(window) / 50.0
@@ -246,14 +253,14 @@ class ImprovedAdaptiveLearningEngine:
             if success_rate >= 0.85:
                 sustain_counter += 1
                 if sustain_counter >= 25:
-                    return True # Achieved 25 consecutive successful checks
+                    return True
             else:
-                sustain_counter = 0 # Reset if the condition fails
+                sustain_counter = 0
         
         return False
 
     def get_sustained_success_streak(self, level):
-        """FIXED: Returns the current sustained success streak for a given level."""
+        """Returns the current sustained success streak for a given level."""
         if level == 'A0': return 0
         conn = sqlite3.connect('italian_quiz.db')
         cursor = conn.cursor()
@@ -270,7 +277,6 @@ class ImprovedAdaptiveLearningEngine:
             return 0
 
         sustain_counter = 0
-        max_sustain_counter = 0  # Track the highest streak achieved
         
         for i in range(49, len(results)):
             window = results[i-49 : i+1]
@@ -278,18 +284,15 @@ class ImprovedAdaptiveLearningEngine:
             
             if success_rate >= 0.85:
                 sustain_counter += 1
-                max_sustain_counter = max(max_sustain_counter, sustain_counter)
             else:
                 sustain_counter = 0
         
-        # Return the current sustained counter (not max) for accurate progress tracking
         return sustain_counter
 
-    # UPDATED: Helper method for topic coverage check - now 85% instead of 90%
     def _check_topic_coverage(self, cursor, level):
         """Check if at least 85% of topics in a level have been attempted."""
         coverage_percentage = self.get_level_topic_coverage(level, cursor)
-        return coverage_percentage >= 0.85  # CHANGED from 0.90 to 0.85
+        return coverage_percentage >= 0.85
 
     def get_level_topic_coverage(self, level, cursor_obj=None):
         """Returns the topic coverage percentage for a given level."""
@@ -320,7 +323,6 @@ class ImprovedAdaptiveLearningEngine:
         
         return answered_topics / total_topics if total_topics > 0 else 0
 
-    # Helper method for mastery score check
     def _check_mastery_score(self, cursor, level):
         """Check if the overall Mastery Score for a level is at least 50%."""
         stats = self._calculate_mastery_for_level(level, cursor)
@@ -336,30 +338,21 @@ class ImprovedAdaptiveLearningEngine:
         conn.close()
         return stats['mastery_value']
 
-    # REWRITTEN: The core logic for CEFR level advancement
     def calculate_estimated_level(self):
-        """
-        Calculates user's CEFR level based on the new 3-criteria model:
-        1. Sustained recent success (85% over 50 Qs, for 25 checks)
-        2. Broad topic coverage (85%) - UPDATED from 90%
-        3. Minimum mastery score (50%)
-        """
-        highest_mastered = 'A0' # Default level
+        """Calculates user's CEFR level based on the 3-criteria model."""
+        highest_mastered = 'A0'
         conn = sqlite3.connect('italian_quiz.db')
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
-        # Check each level independently to allow for non-sequential progression
         for level in self.levels:
-            if level == 'A0': continue # Can't master A0
+            if level == 'A0': continue
             
-            # Check all three conditions for the current level
             cond1_sustained_success = self._check_sustained_success(cursor, level)
             cond2_topic_coverage = self._check_topic_coverage(cursor, level)
             cond3_mastery_score = self._check_mastery_score(cursor, level)
 
             if cond1_sustained_success and cond2_topic_coverage and cond3_mastery_score:
-                # If all conditions are met, this level is considered mastered
                 if self.levels.index(level) >= self.levels.index(highest_mastered):
                     highest_mastered = level
         
@@ -369,51 +362,69 @@ class ImprovedAdaptiveLearningEngine:
     def get_level_distribution(self, user_level, total_questions=10, user_assessment=None):
         """
         Determine how many questions should come from each level.
-        - 5-9 questions from the user's level, adjusted by mastery.
-        - Special case for C1 users to ensure broader review.
+        UPDATED: Only introduce next level questions once 25% mastery achieved.
         """
         user_level_index = self.levels.index(user_level) if user_level in self.levels else 0
         distribution = {level: 0 for level in self.levels if level != 'A0'}
 
-        # Special case for C1 users
+        # UPDATED: Check if user has achieved 25% mastery of current level
+        current_mastery = self.get_level_mastery_score(user_level)
+        can_introduce_next_level = current_mastery >= 0.25
+
         if user_level == 'C1':
             user_level_count = random.randint(3, 6)
         else:
-            # Adjust question count based on coverage/mastery
             coverage = user_assessment['coverage_percentages'].get(user_level, 0)
-            if coverage < 0.3:  # Low mastery, focus on current level
+            if coverage < 0.3:
                 user_level_count = random.randint(8, 9)
-            elif coverage < 0.7: # Medium mastery, start introducing more variety
+            elif coverage < 0.7:
                 user_level_count = random.randint(6, 7)
-            else: # High mastery, reduce current level questions
+            else:
                 user_level_count = random.randint(5, 6)
 
         distribution[user_level] = min(total_questions, user_level_count)
         remaining = total_questions - distribution[user_level]
 
-        # Distribute remaining questions
+        # UPDATED: Distribute remaining questions with 25% mastery gate
         if remaining > 0:
-            if user_level == 'A1':  # Working towards A1 (from A0)
-                # For beginners, only introduce a small amount of next level
-                distribution['A2'] = min(remaining, random.randint(1, 2))
-                # Fill any remaining slots with more A1 questions
-                if remaining > distribution['A2']:
-                    distribution['A1'] += remaining - distribution['A2']
-            elif user_level == 'A2': # Working towards A2 (from A1)
-                distribution['A1'] += max(1, int(remaining * 0.3))
-                distribution['B1'] = remaining - distribution['A1']
+            if user_level == 'A1':
+                if can_introduce_next_level:
+                    distribution['A2'] = min(remaining, random.randint(1, 2))
+                    if remaining > distribution['A2']:
+                        distribution['A1'] += remaining - distribution['A2']
+                else:
+                    distribution['A1'] += remaining
+                    
+            elif user_level == 'A2':
+                if can_introduce_next_level:
+                    distribution['A1'] += max(1, int(remaining * 0.3))
+                    distribution['B1'] = remaining - distribution['A1']
+                else:
+                    distribution['A1'] += remaining
+                    
             elif user_level == 'B1':
-                distribution['A2'] += max(1, int(remaining * 0.3))
-                distribution['B2'] = remaining - distribution['A2']
+                if can_introduce_next_level:
+                    distribution['A2'] += max(1, int(remaining * 0.3))
+                    distribution['B2'] = remaining - distribution['A2']
+                else:
+                    distribution['A2'] += remaining
+                    
             elif user_level == 'B2':
-                distribution['B1'] += max(1, int(remaining * 0.4))
-                distribution['C1'] = remaining - distribution['B1']
+                if can_introduce_next_level:
+                    distribution['B1'] += max(1, int(remaining * 0.4))
+                    distribution['C1'] = remaining - distribution['B1']
+                else:
+                    distribution['B1'] += remaining
+                    
             elif user_level == 'C1':
-                distribution['B2'] += max(1, int(remaining * 0.5))
-                distribution['B1'] += max(1, int(remaining * 0.3))
-                distribution['A2'] += remaining - (distribution['B2'] + distribution['B1'])
+                if can_introduce_next_level:
+                    distribution['B2'] += max(1, int(remaining * 0.5))
+                    distribution['B1'] += max(1, int(remaining * 0.3))
+                    distribution['A2'] += remaining - (distribution['B2'] + distribution['B1'])
+                else:
+                    distribution['B2'] += max(1, int(remaining * 0.6))
+                    distribution['B1'] += remaining - distribution['B2']
         
-        # Ensure total is correct
         current_total = sum(distribution.values())
         if current_total != total_questions:
             diff = total_questions - current_total
@@ -423,11 +434,7 @@ class ImprovedAdaptiveLearningEngine:
     
     
     def get_questions_for_level(self, level, count, user_assessment, topics=None, exclude_recent_hours=24, topic_counts=None, max_per_topic=3):
-        """
-        Get questions for a specific level, prioritizing topic weaknesses and avoiding recent questions
-        NOW WITH: Respects maximum questions per topic limit
-        FIXED: Includes hint and alternate_correct_responses columns
-        """
+        """Get questions for a specific level, prioritizing topic weaknesses and avoiding recent questions."""
         if count <= 0:
             return []
         
@@ -438,7 +445,6 @@ class ImprovedAdaptiveLearningEngine:
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
-        # Build query with filters - FIXED: Added hint and alternate_correct_responses
         base_query = '''
             SELECT q.id, q.question_text, q.english_translation, q.option_a, q.option_b, 
                    q.option_c, q.option_d, q.correct_option, q.cefr_level, q.topic, q.explanation, q.resource,
@@ -453,20 +459,17 @@ class ImprovedAdaptiveLearningEngine:
         
         params = [level]
         
-        # Filter by topics if specified
         if topics:
             placeholders = ','.join('?' for _ in topics)
             base_query += f" AND q.topic IN ({placeholders})"
             params.extend(topics)
         
-        # Exclude topics that already have max_per_topic questions
         maxed_topics = [topic for topic, cnt in topic_counts.items() if cnt >= max_per_topic]
         if maxed_topics:
             placeholders = ','.join('?' for _ in maxed_topics)
             base_query += f" AND q.topic NOT IN ({placeholders})"
             params.extend(maxed_topics)
         
-        # Exclude questions seen very recently (especially wrong ones)
         cutoff_time = (datetime.now() - timedelta(hours=exclude_recent_hours)).isoformat()
         base_query += """ AND (
             ep.last_seen IS NULL 
@@ -482,10 +485,8 @@ class ImprovedAdaptiveLearningEngine:
         if not available_questions:
             return []
         
-        # Convert to list for easier manipulation
         questions = [dict(q) for q in available_questions]
         
-        # Group questions by topic
         questions_by_topic = {}
         for q in questions:
             topic = q['topic']
@@ -493,41 +494,33 @@ class ImprovedAdaptiveLearningEngine:
                 questions_by_topic[topic] = []
             questions_by_topic[topic].append(q)
         
-        # Prioritize questions based on multiple factors
         for topic_questions in questions_by_topic.values():
             for q in topic_questions:
                 priority_score = self.calculate_question_priority_v2(q, user_assessment, level)
                 q['priority_score'] = priority_score
             
-            # Group questions by priority score (to handle ties)
             priority_groups = {}
             for q in topic_questions:
-                # Round to 1 decimal to group very similar scores
                 score_key = round(q['priority_score'], 1)
                 if score_key not in priority_groups:
                     priority_groups[score_key] = []
                 priority_groups[score_key].append(q)
             
-            # Rebuild topic_questions with randomization within priority groups
             topic_questions.clear()
             for score_key in sorted(priority_groups.keys(), reverse=True):
                 group = priority_groups[score_key]
-                random.shuffle(group)  # Randomize questions with same/similar priority
+                random.shuffle(group)
                 topic_questions.extend(group)
         
-        # Select questions while respecting topic limits
         selected = []
-        topic_selection_counts = dict(topic_counts)  # Work with a copy
+        topic_selection_counts = dict(topic_counts)
         
-        # Create a single list of all questions sorted by priority
         all_questions_sorted = []
         for topic_questions in questions_by_topic.values():
             all_questions_sorted.extend(topic_questions)
         
-        # Sort ALL questions by priority score (highest first)
         all_questions_sorted.sort(key=lambda x: x['priority_score'], reverse=True)
         
-        # Select highest priority questions while respecting topic limit
         for q in all_questions_sorted:
             if len(selected) >= count:
                 break
@@ -535,15 +528,11 @@ class ImprovedAdaptiveLearningEngine:
             topic = q['topic']
             current_count = topic_selection_counts.get(topic, 0)
             
-            # Only add if we haven't hit the limit for this topic
             if current_count < max_per_topic:
                 selected.append(q)
                 topic_selection_counts[topic] = current_count + 1
         
-        # Add some randomization to avoid always getting the same "highest priority" questions
-        # But maintain some priority ordering
         if len(selected) > 3:
-            # Shuffle within priority groups
             high_priority = selected[:len(selected)//3]
             mid_priority = selected[len(selected)//3:2*len(selected)//3]
             low_priority = selected[2*len(selected)//3:]
@@ -557,73 +546,60 @@ class ImprovedAdaptiveLearningEngine:
         return selected[:count]
            
     def calculate_question_priority_v2(self, question_data, user_assessment, target_level):
-        """
-        Calculate priority score focusing on learning objectives rather than repetition
-        """
+        """Calculate priority score focusing on learning objectives."""
         topic = question_data['topic']
         correct = question_data.get('correct_count', 0)
         incorrect = question_data.get('incorrect_count', 0)
         last_seen = question_data.get('last_seen')
         
-        # Base score starts neutral
         base_score = 1.0
         
-        # Topic weakness factor (highest priority)
         topic_factor = 1.0
         for weakness in user_assessment['topic_weaknesses']:
             if weakness['topic'] == topic and weakness['level'] == target_level:
-                topic_factor = 3.0  # High priority for weak topics
+                topic_factor = 3.0
                 break
         
-        # Freshness factor - prefer questions not seen recently or never seen
         freshness_factor = 1.0
         if not last_seen:
-            freshness_factor = 2.0  # Never seen before
+            freshness_factor = 2.0
         else:
             last_seen_dt = datetime.fromisoformat(last_seen)
             hours_since = (datetime.now() - last_seen_dt).total_seconds() / 3600
             
-            if hours_since > 168:  # More than a week
+            if hours_since > 168:
                 freshness_factor = 1.8
-            elif hours_since > 72:  # More than 3 days
+            elif hours_since > 72:
                 freshness_factor = 1.5
-            elif hours_since > 24:  # More than a day
+            elif hours_since > 24:
                 freshness_factor = 1.2
-            else:  # Very recent
+            else:
                 freshness_factor = 0.3
         
-        # Performance factor - slightly favor questions with some history but not mastered
         performance_factor = 1.0
         total_attempts = correct + incorrect
         
         if total_attempts == 0:
-            performance_factor = 1.5  # New questions are good
+            performance_factor = 1.5
         elif total_attempts >= 3 and correct >= 2 and (correct / total_attempts) >= 0.8:
-            performance_factor = 0.4  # Mastered questions get low priority
+            performance_factor = 0.4
         elif incorrect > correct:
-            performance_factor = 0.6  # Questions they struggle with get lower priority to avoid frustration
+            performance_factor = 0.6
         else:
-            performance_factor = 1.0  # Balanced performance
+            performance_factor = 1.0
         
-        # Combine factors
         final_score = base_score * topic_factor * freshness_factor * performance_factor
         
         return final_score
     
     def check_question_similarity(self, q1_text, q2_text, threshold=0.5):
-        """
-        Check if two questions are too similar to appear in the same quiz.
-        Returns True if questions are too similar.
-        """
-        # Normalize both questions for comparison
+        """Check if two questions are too similar to appear in the same quiz."""
         q1_normalized = self.normalize_text_for_comparison(q1_text)
         q2_normalized = self.normalize_text_for_comparison(q2_text)
         
-        # Quick check: if questions share many of the same words
         q1_words = set(q1_normalized.split())
         q2_words = set(q2_normalized.split())
         
-        # Filter out very common words (Italian stop words)
         stop_words = {'il', 'la', 'i', 'le', 'un', 'una', 'di', 'da', 'in', 'su', 
                       'per', 'con', 'a', 'e', 'o', 'ma', 'che', 'non', 'si', 'mi', 
                       'ti', 'ci', 'vi', 'lo', 'gli', 'ne', 'dopo', 'ogni', 'tutto'}
@@ -631,46 +607,32 @@ class ImprovedAdaptiveLearningEngine:
         q1_meaningful = q1_words - stop_words
         q2_meaningful = q2_words - stop_words
         
-        # If questions share too many meaningful words, they're similar
         if len(q1_meaningful) > 2 and len(q2_meaningful) > 2:
             shared_words = q1_meaningful.intersection(q2_meaningful)
             smaller_set = min(len(q1_meaningful), len(q2_meaningful))
             if len(shared_words) / smaller_set > 0.65:
                 return True
         
-        # Also check overall string similarity
         similarity = SequenceMatcher(None, q1_normalized, q2_normalized).ratio()
         return similarity > threshold
 
-
-
     def fetch_adaptive_questions(self, number=10, user_assessment=None, level=None, topics=None):
-        """
-        MODIFIED: Intelligently reserves 0-3 slots for uncovered topics based on recent performance
-        AND restricts fallback questions to appropriate levels only
-        """
+        """Intelligently reserves 0-3 slots for uncovered topics based on recent performance."""
         if user_assessment is None:
             user_assessment = self.assess_user_level_and_topics()
         
-        # The user's mastered level
         user_level = user_assessment['estimated_level']
-        
-        # The level the user is WORKING ON is the next one up
         target_level = self.get_next_level(user_level)
         
-        # Override target level if a specific level is requested for a non-adaptive quiz
         if level:
             target_level = level
         
-        # Get distribution of questions across levels, centered on the target level
         distribution = self.get_level_distribution(target_level, number, user_assessment)
         
-        # First, identify uncovered topics for the target level
         conn = sqlite3.connect('italian_quiz.db')
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
-        # Find topics in target level that have never been answered
         cursor.execute("""
             SELECT DISTINCT q.topic 
             FROM questions q
@@ -689,27 +651,21 @@ class ImprovedAdaptiveLearningEngine:
         conn.close()
         
         all_selected_questions = []
-        topic_counts = {}  # Track how many questions we have from each topic
-        selected_question_texts = []  # Track question texts for similarity checking
+        topic_counts = {}
+        selected_question_texts = []
         
-        # Determine how many new topic questions to include based on recent performance
         new_topic_count = 0
         if uncovered_topics and distribution.get(target_level, 0) > 0:
             recent_performance = self.get_recent_quiz_performance(target_level, last_n_quizzes=5)
             
             if recent_performance >= 0.85:
-                # Excellent performance - be more adventurous
                 new_topic_count = min(3, len(uncovered_topics), distribution.get(target_level, 0))
             elif recent_performance >= 0.70:
-                # Good performance - moderate exploration
                 new_topic_count = min(2, len(uncovered_topics), distribution.get(target_level, 0))
             else:
-                # Below 70% - focus on consolidation, no forced new topics
                 new_topic_count = 0
         
-        # Reserve slots for new topic questions if performance warrants it
         if new_topic_count > 0:
-            # Randomly select which uncovered topics to introduce
             topics_to_introduce = random.sample(uncovered_topics, 
                                                min(new_topic_count, len(uncovered_topics)))
             
@@ -723,27 +679,21 @@ class ImprovedAdaptiveLearningEngine:
                     all_selected_questions.extend(topic_questions)
                     selected_question_texts.extend([q['question_text'] for q in topic_questions])
                     topic_counts[new_topic] = 1
-                    # Reduce the count for target level since we've added questions
                     distribution[target_level] -= 1
                     
-                    # Stop if we've filled our new topic quota
                     if len(all_selected_questions) >= new_topic_count:
                         break
         
-        # Get questions for each level according to remaining distribution
         for dist_level, count in distribution.items():
             if count > 0:
-                # Get more candidates than needed to account for similarity filtering
-                candidates_needed = count * 3  # Get 3x candidates
+                candidates_needed = count * 3
                 level_questions = self.get_questions_for_level(
                     dist_level, candidates_needed, user_assessment, topics, 
                     topic_counts=topic_counts,
                     max_per_topic=2
                 )
                 
-                # Filter out questions that are too similar to already selected ones
                 for q in level_questions:
-                    # Check similarity with all already selected questions
                     is_similar = False
                     for selected_text in selected_question_texts:
                         if self.check_question_similarity(q['question_text'], selected_text):
@@ -753,16 +703,13 @@ class ImprovedAdaptiveLearningEngine:
                     if not is_similar and len(all_selected_questions) < number:
                         all_selected_questions.append(q)
                         selected_question_texts.append(q['question_text'])
-                        # Update topic counts
                         topic = q['topic']
                         topic_counts[topic] = topic_counts.get(topic, 0) + 1
                         
-                        # Stop if we have enough questions for this level
                         level_count = len([q for q in all_selected_questions if q['cefr_level'] == dist_level])
                         if level_count >= count:
                             break
         
-        # If we don't have enough questions due to similarity filtering, get more
         if len(all_selected_questions) < number:
             remaining_needed = number - len(all_selected_questions)
             existing_ids = {q['id'] for q in all_selected_questions}
@@ -771,10 +718,8 @@ class ImprovedAdaptiveLearningEngine:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
             
-            # Get additional candidates - NOW WITH LEVEL RESTRICTIONS
             maxed_topics = [topic for topic, count in topic_counts.items() if count >= 3]
             
-            # Determine appropriate levels for fallback based on target level
             if target_level == 'A1':
                 allowed_levels = ['A1', 'A2']
             elif target_level == 'A2':
@@ -786,7 +731,7 @@ class ImprovedAdaptiveLearningEngine:
             elif target_level == 'C1':
                 allowed_levels = ['B1', 'B2', 'C1']
             else:
-                allowed_levels = ['A1', 'A2']  # Default safe fallback
+                allowed_levels = ['A1', 'A2']
             
             level_placeholders = ','.join('?' for _ in allowed_levels)
             
@@ -826,16 +771,13 @@ class ImprovedAdaptiveLearningEngine:
             cursor.execute(query, params)
             additional_candidates = [dict(q) for q in cursor.fetchall()]
             
-            # Filter additional candidates for similarity and topic limits
             for q in additional_candidates:
-                # Check similarity
                 is_similar = False
                 for selected_text in selected_question_texts:
                     if self.check_question_similarity(q['question_text'], selected_text):
                         is_similar = True
                         break
                 
-                # Check topic limit
                 if not is_similar and topic_counts.get(q['topic'], 0) < 3:
                     all_selected_questions.append(q)
                     selected_question_texts.append(q['question_text'])
@@ -845,24 +787,20 @@ class ImprovedAdaptiveLearningEngine:
             
             conn.close()
         
-        # Shuffle the final selection to avoid predictable ordering
         random.shuffle(all_selected_questions)
         
         return all_selected_questions[:number]
 
-
     def get_coverage_percentage(self, level):
-        """Get coverage percentage for a specific CEFR level"""
+        """Get coverage percentage for a specific CEFR level."""
         if level == 'A0': return 0.0
         conn = sqlite3.connect('italian_quiz.db')
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
-        # Total questions for this level
         cursor.execute("SELECT COUNT(*) AS total FROM questions WHERE cefr_level = ?", (level,))
         total_q = cursor.fetchone()['total']
         
-        # Questions answered correctly at least once (including freeform)
         try:
             cursor.execute('''
                 SELECT COUNT(DISTINCT q.id) AS answered 
@@ -871,7 +809,6 @@ class ImprovedAdaptiveLearningEngine:
                 WHERE q.cefr_level = ? AND (ep.correct_count > 0 OR ep.freeform_correct_count > 0)
             ''', (level,))
         except:
-            # Fallback if freeform columns don't exist
             cursor.execute('''
                 SELECT COUNT(DISTINCT q.id) AS answered 
                 FROM questions q 
@@ -886,8 +823,9 @@ class ImprovedAdaptiveLearningEngine:
         coverage = (answered_q / total_q) if total_q > 0 else 0
         return coverage
     
+ 
     def get_total_coverage_and_mastery(self, cursor):
-        """Calculate total coverage and mastery across all levels"""
+        """Calculate total coverage and mastery across all levels with 1.15 multiplier and 100% cap."""
         cursor.execute("SELECT COUNT(*) AS total FROM questions")
         total_questions = cursor.fetchone()['total']
         
@@ -910,32 +848,30 @@ class ImprovedAdaptiveLearningEngine:
         mastery_value = 0
         if total_questions > 0:
             coverage = answered_questions / total_questions
-            # UPDATED: Use new scoring values
             try:
                 cursor.execute('''
                     SELECT q.topic, q.cefr_level,
-                           COUNT(DISTINCT q.id) as questions_in_topic,
-                           SUM(IFNULL(ep.correct_count, 0)) as mc_correct,
-                           SUM(IFNULL(ep.incorrect_count, 0)) as mc_incorrect,
-                           SUM(IFNULL(ep.freeform_correct_count, 0)) as ff_correct,
-                           SUM(IFNULL(ep.freeform_incorrect_count, 0)) as ff_incorrect,
-                           SUM(IFNULL(ep.partial_correct_count, 0)) as partial_correct,
-                           SUM(IFNULL(ep.unanswered_count, 0)) as unanswered
+                        COUNT(DISTINCT q.id) as questions_in_topic,
+                        SUM(IFNULL(ep.correct_count, 0)) as mc_correct,
+                        SUM(IFNULL(ep.incorrect_count, 0)) as mc_incorrect,
+                        SUM(IFNULL(ep.freeform_correct_count, 0)) as ff_correct,
+                        SUM(IFNULL(ep.freeform_incorrect_count, 0)) as ff_incorrect,
+                        SUM(IFNULL(ep.partial_correct_count, 0)) as partial_correct,
+                        SUM(IFNULL(ep.unanswered_count, 0)) as unanswered
                     FROM questions q
                     LEFT JOIN enhanced_performance ep ON q.id = ep.question_id
                     GROUP BY q.topic, q.cefr_level
                 ''')
             except:
-                # Fallback if unanswered_count doesn't exist
                 cursor.execute('''
                     SELECT q.topic, q.cefr_level,
-                           COUNT(DISTINCT q.id) as questions_in_topic,
-                           SUM(IFNULL(ep.correct_count, 0)) as mc_correct,
-                           SUM(IFNULL(ep.incorrect_count, 0)) as mc_incorrect,
-                           SUM(IFNULL(ep.freeform_correct_count, 0)) as ff_correct,
-                           SUM(IFNULL(ep.freeform_incorrect_count, 0)) as ff_incorrect,
-                           SUM(IFNULL(ep.partial_correct_count, 0)) as partial_correct,
-                           0 as unanswered
+                        COUNT(DISTINCT q.id) as questions_in_topic,
+                        SUM(IFNULL(ep.correct_count, 0)) as mc_correct,
+                        SUM(IFNULL(ep.incorrect_count, 0)) as mc_incorrect,
+                        SUM(IFNULL(ep.freeform_correct_count, 0)) as ff_correct,
+                        SUM(IFNULL(ep.freeform_incorrect_count, 0)) as ff_incorrect,
+                        SUM(IFNULL(ep.partial_correct_count, 0)) as partial_correct,
+                        0 as unanswered
                     FROM questions q
                     LEFT JOIN enhanced_performance ep ON q.id = ep.question_id
                     GROUP BY q.topic, q.cefr_level
@@ -944,28 +880,30 @@ class ImprovedAdaptiveLearningEngine:
             total_weighted_score = 0
             total_possible_score = 0
             for topic_row in topic_data:
-                # Fixed: Handle sqlite3.Row properly - try to access the column directly
                 try:
                     unanswered_count = topic_row['unanswered']
                 except (IndexError, KeyError):
                     unanswered_count = 0
                     
                 topic_attempts = (topic_row['mc_correct'] + topic_row['mc_incorrect'] + 
-                                  topic_row['ff_correct'] + topic_row['ff_incorrect'] + 
-                                  topic_row['partial_correct'] + unanswered_count)
+                                topic_row['ff_correct'] + topic_row['ff_incorrect'] + 
+                                topic_row['partial_correct'] + unanswered_count)
                 if topic_attempts >= 4:
                     # UPDATED SCORING VALUES
-                    score = (topic_row['ff_correct'] * 2.30 +  # Changed from 1.25
-                             topic_row['mc_correct'] * 0.9 + 
-                             topic_row['partial_correct'] * 1.5 - 
-                             topic_row['ff_incorrect'] * 2.60 -  # Changed from 1.5
-                             topic_row['mc_incorrect'] * 2.80 -  # Changed from 1.75
-                             unanswered_count * 0.5)  # NEW: unanswered penalty
-                    max_score = topic_row['questions_in_topic'] * 1.75  # Changed from 1.25
+                    score = (topic_row['ff_correct'] * 1.95 +
+                            topic_row['mc_correct'] * 0.95 + 
+                            topic_row['partial_correct'] * 1.4 - 
+                            topic_row['ff_incorrect'] * 2.2 -
+                            topic_row['mc_incorrect'] * 2.65 -
+                            unanswered_count * 0.2)
+                    max_score = topic_row['questions_in_topic'] * 1.75
                     total_weighted_score += max(0, score)
                     total_possible_score += max_score
             if total_possible_score > 0:
-                mastery_value = (total_weighted_score / total_possible_score) * coverage
+                # Apply 1.15 multiplier to mastery calculation
+                mastery_value = ((total_weighted_score / total_possible_score) * coverage) * 1.15
+                # CAP at 100%
+                mastery_value = min(mastery_value, 1.0)
         else:
             coverage = 0
         return coverage, mastery_value
@@ -978,11 +916,9 @@ class ImprovedAdaptiveLearningEngine:
             INSERT OR REPLACE INTO daily_stats (date, total_coverage, total_mastery, last_updated)
             VALUES (?, ?, ?, ?)
         ''', (today, coverage, mastery, datetime.now()))
-    
+
     def determine_freeform_probability(self, cefr_level, freeform_mode):
-        """
-        Determine probability with significantly increased freeform chances
-        """
+        """Determine probability with significantly increased freeform chances."""
         if freeform_mode == "no_freeform":
             return 0.0
         elif freeform_mode == "only_freeform":
@@ -1000,113 +936,88 @@ class ImprovedAdaptiveLearningEngine:
         return 0.0
     
     def check_freeform_answer(self, user_answer, correct_answer):
-        """
-        Enhanced freeform answer checking with specific rules
-        NOW: Ignores trailing punctuation marks
-        """
+        """Enhanced freeform answer checking with specific rules."""
         if not user_answer or not correct_answer:
             return False, False, "No answer provided"
 
-        # Strip trailing punctuation from both answers
         def strip_trailing_punctuation(text):
-            """Remove common ending punctuation marks"""
             if not text:
                 return text
             text = text.strip()
-            # Remove common ending punctuation: . ? ! : ; , ...
             while text and text[-1] in '.?!:;,':
                 text = text[:-1].strip()
-            # Also handle ellipsis
             if text.endswith('...'):
                 text = text[:-3].strip()
             return text
         
-        # Clean both answers of trailing punctuation
         user_clean = strip_trailing_punctuation(user_answer)
         correct_clean = strip_trailing_punctuation(correct_answer)
 
-        # 1. Direct match (case-insensitive, punctuation-stripped)
         if user_clean.lower().strip() == correct_clean.lower().strip():
             return True, False, None
 
         normalized_user = self.normalize_text_for_comparison(user_clean)
         normalized_correct = self.normalize_text_for_comparison(correct_clean)
 
-        # 2. Normalized match (handles accents)
         if normalized_user == normalized_correct:
             return True, True, "⚠️ Correct but watch the accents!"
 
-        # 3. Specific single NON-VOWEL mistake (add/remove/substitute)
         if self.has_single_letter_mistake(user_clean.lower().strip(), correct_clean.lower().strip()):
             return True, True, "⚠️ Correct but watch the spelling!"
 
-        # 4. Fallback to similarity ratio, but with an explicit vowel check
         similarity = SequenceMatcher(None, normalized_user, normalized_correct).ratio()
         if similarity >= 0.85:
             if len(normalized_user) == len(normalized_correct):
                 diff_indices = [i for i, (a, b) in enumerate(zip(normalized_user, normalized_correct)) if a != b]
                 
-                # Only if there's one single difference...
                 if len(diff_indices) == 1:
                     idx = diff_indices[0]
                     vowels = {'a', 'e', 'i', 'o', 'u'}
                     
-                    # ...and that difference is NOT a vowel.
                     if normalized_user[idx] not in vowels and normalized_correct[idx] not in vowels:
                         return True, True, "⚠️ Very close! Check spelling carefully."
 
-        # If none of the above criteria are met, the answer is incorrect.
         return False, False, None
 
     def normalize_text_for_comparison(self, text):
-        """Normalize text by removing accents and cleaning"""
+        """Normalize text by removing accents and cleaning."""
         if not text: return ""
         text = text.lower().strip()
         text = unicodedata.normalize('NFD', text)
         text = ''.join(c for c in text if unicodedata.category(c) != 'Mn')
-        # Note: Don't remove ALL punctuation here since we handle trailing punctuation separately
-        # This preserves internal punctuation like apostrophes in "l'amico"
-        text = re.sub(r'[.!?,:;"\'\-\(\)]+$', '', text)  # Only remove trailing punctuation
-        text = re.sub(r'^[.!?,:;"\'\-\(\)]+', '', text)  # And leading punctuation
+        text = re.sub(r'[.!?,:;"\'\-\(\)]+$', '', text)
+        text = re.sub(r'^[.!?,:;"\'\-\(\)]+', '', text)
         text = re.sub(r'\s+', ' ', text).strip()
         return text
     
     
     def has_single_letter_mistake(self, user_text, correct_text):
-        """
-        Check for a single non-vowel letter mistake.
-        """
+        """Check for a single non-vowel letter mistake."""
         vowels = {'a', 'e', 'i', 'o', 'u'}
         if abs(len(user_text) - len(correct_text)) > 1: return False
         
-        # Substitution check
         if len(user_text) == len(correct_text):
             diff_indices = [i for i, (a, b) in enumerate(zip(user_text, correct_text)) if a != b]
             if len(diff_indices) == 1:
                 idx = diff_indices[0]
-                # Fail if either the user's char or correct char is a vowel
                 if user_text[idx] in vowels or correct_text[idx] in vowels: 
                     return False
                 return True
             return False
 
-        # Deletion check (user is missing one char)
         if len(user_text) == len(correct_text) - 1:
             for i in range(len(correct_text)):
                 if user_text == correct_text[:i] + correct_text[i+1:]:
                     deleted_char = correct_text[i]
-                    # Fail if the deleted character was a vowel
                     if deleted_char in vowels: 
                         return False
                     return True
             return False
 
-        # Insertion check (user added one char)
         if len(user_text) == len(correct_text) + 1:
             for i in range(len(user_text)):
                 if correct_text == user_text[:i] + user_text[i+1:]:
                     inserted_char = user_text[i]
-                    # Fail if the inserted character was a vowel
                     if inserted_char in vowels: 
                         return False
                     return True
@@ -1114,14 +1025,10 @@ class ImprovedAdaptiveLearningEngine:
         return False
     
     def update_performance(self, cursor, question_id, cefr_level, topic, is_correct, is_freeform=False, is_partial=False, is_unanswered=False):
-        """
-        Update performance tracking with weighted scoring for freeform responses
-        UPDATED: Now tracks unanswered questions
-        """
+        """Update performance tracking with weighted scoring for freeform responses."""
         now = datetime.now().isoformat()
         try:
             if is_unanswered:
-                # NEW: Handle unanswered questions
                 cursor.execute('''
                     INSERT OR REPLACE INTO enhanced_performance (question_id, correct_count, incorrect_count, freeform_correct_count, freeform_incorrect_count, partial_correct_count, unanswered_count, last_seen, mastery_level)
                     VALUES (?, 
@@ -1175,7 +1082,6 @@ class ImprovedAdaptiveLearningEngine:
                             IFNULL((SELECT mastery_level FROM enhanced_performance WHERE question_id = ?), 0) + ?)
                 ''', (question_id, question_id, 1 if is_correct else 0, question_id, 0 if is_correct else 1, question_id, question_id, question_id, question_id, now, question_id, 1 if is_correct else -1))
         except Exception as e:
-            # Fallback for databases without unanswered_count column
             cursor.execute('''
                 INSERT OR REPLACE INTO enhanced_performance (question_id, correct_count, incorrect_count, last_seen, mastery_level)
                 VALUES (?, 
@@ -1194,9 +1100,8 @@ class ImprovedAdaptiveLearningEngine:
                     ?)
         ''', (topic, cefr_level, topic, cefr_level, weight if is_correct else 0, topic, cefr_level, 0 if is_correct else weight, now))
 
-    # UPDATED: Modified to hide question counts and show only percentages
     def _calculate_mastery_for_level(self, level, cursor):
-        """Helper method to calculate coverage and new mastery with updated scoring."""
+        """Helper method to calculate coverage and mastery with updated scoring, 1.15 multiplier, and 100% cap."""
         cursor.execute("SELECT COUNT(*) AS total FROM questions WHERE cefr_level = ?", (level,))
         total_q = cursor.fetchone()['total']
         if total_q == 0:
@@ -1210,29 +1115,27 @@ class ImprovedAdaptiveLearningEngine:
         answered_q = cursor.fetchone()['answered'] or 0
         coverage = (answered_q / total_q) if total_q > 0 else 0
         
-        # UPDATED SCORING VALUES and added unanswered handling
         try:
             cursor.execute('''
                 SELECT q.topic, COUNT(DISTINCT q.id) as questions_in_topic, 
-                       SUM(IFNULL(ep.correct_count, 0)) as mc_correct,
-                       SUM(IFNULL(ep.incorrect_count, 0)) as mc_incorrect,
-                       SUM(IFNULL(ep.freeform_correct_count, 0)) as ff_correct,
-                       SUM(IFNULL(ep.freeform_incorrect_count, 0)) as ff_incorrect,
-                       SUM(IFNULL(ep.partial_correct_count, 0)) as partial_correct,
-                       SUM(IFNULL(ep.unanswered_count, 0)) as unanswered
+                    SUM(IFNULL(ep.correct_count, 0)) as mc_correct,
+                    SUM(IFNULL(ep.incorrect_count, 0)) as mc_incorrect,
+                    SUM(IFNULL(ep.freeform_correct_count, 0)) as ff_correct,
+                    SUM(IFNULL(ep.freeform_incorrect_count, 0)) as ff_incorrect,
+                    SUM(IFNULL(ep.partial_correct_count, 0)) as partial_correct,
+                    SUM(IFNULL(ep.unanswered_count, 0)) as unanswered
                 FROM questions q LEFT JOIN enhanced_performance ep ON q.id = ep.question_id
                 WHERE q.cefr_level = ? GROUP BY q.topic
             ''', (level,))
         except:
-            # Fallback if unanswered_count doesn't exist
             cursor.execute('''
                 SELECT q.topic, COUNT(DISTINCT q.id) as questions_in_topic,
-                       SUM(IFNULL(ep.correct_count, 0)) as mc_correct,
-                       SUM(IFNULL(ep.incorrect_count, 0)) as mc_incorrect,
-                       SUM(IFNULL(ep.freeform_correct_count, 0)) as ff_correct,
-                       SUM(IFNULL(ep.freeform_incorrect_count, 0)) as ff_incorrect,
-                       SUM(IFNULL(ep.partial_correct_count, 0)) as partial_correct,
-                       0 as unanswered
+                    SUM(IFNULL(ep.correct_count, 0)) as mc_correct,
+                    SUM(IFNULL(ep.incorrect_count, 0)) as mc_incorrect,
+                    SUM(IFNULL(ep.freeform_correct_count, 0)) as ff_correct,
+                    SUM(IFNULL(ep.freeform_incorrect_count, 0)) as ff_incorrect,
+                    SUM(IFNULL(ep.partial_correct_count, 0)) as partial_correct,
+                    0 as unanswered
                 FROM questions q LEFT JOIN enhanced_performance ep ON q.id = ep.question_id
                 WHERE q.cefr_level = ? GROUP BY q.topic
             ''', (level,))
@@ -1241,31 +1144,33 @@ class ImprovedAdaptiveLearningEngine:
         total_weighted_score, total_possible_score = 0, 0
         
         for topic_row in topic_data:
-            # Fixed: Handle sqlite3.Row properly
             try:
                 unanswered_count = topic_row['unanswered']
             except (IndexError, KeyError):
                 unanswered_count = 0
             
             topic_attempts = (topic_row['mc_correct'] + topic_row['mc_incorrect'] + 
-                              topic_row['ff_correct'] + topic_row['ff_incorrect'] + 
-                              topic_row['partial_correct'] + unanswered_count)
+                            topic_row['ff_correct'] + topic_row['ff_incorrect'] + 
+                            topic_row['partial_correct'] + unanswered_count)
             
             if topic_attempts >= 4:
                 # UPDATED SCORING VALUES
-                score = (topic_row['ff_correct'] * 1.75 +      # Changed from 1.25
-                         topic_row['mc_correct'] * 0.85 + 
-                         topic_row['partial_correct'] * 1.0 - 
-                         topic_row['ff_incorrect'] * 1.95 -     # Changed from 1.5
-                         topic_row['mc_incorrect'] * 2.00 -     # Changed from 1.75
-                         unanswered_count * 0.5)  # NEW: unanswered penalty
-                max_score = topic_row['questions_in_topic'] * 1.75     # Changed from 1.25
+                score = (topic_row['ff_correct'] * 1.95 +
+                        topic_row['mc_correct'] * 0.95 + 
+                        topic_row['partial_correct'] * 1.4 - 
+                        topic_row['ff_incorrect'] * 2.2 -
+                        topic_row['mc_incorrect'] * 2.65 -
+                        unanswered_count * 0.2)
+                max_score = topic_row['questions_in_topic'] * 1.75
                 total_weighted_score += max(0, score)
                 total_possible_score += max_score
         
-        mastery = (total_weighted_score / total_possible_score) * coverage if total_possible_score > 0 else 0
+        # Apply 1.15 multiplier to mastery calculation
+        mastery = ((total_weighted_score / total_possible_score) * coverage * 1.15) if total_possible_score > 0 else 0
         
-        # UPDATED: Only show percentages, not counts
+        # CAP at 100%
+        mastery = min(mastery, 1.0)
+        
         return {
             "coverage": f"{coverage*100:.0f}%",
             "mastery": f"{mastery*100:.0f}%",
@@ -1273,26 +1178,23 @@ class ImprovedAdaptiveLearningEngine:
             "mastery_value": mastery
         }
 
+
 class QuizApp(ctk.CTk):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.title(APP_NAME)
         
-        # 1. AUTO-MAXIMIZE WINDOW
-        # Instead of fixed width/height, we set it to screen size and maximize
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
         self.geometry(f"{screen_width}x{screen_height}")
         
-        # This triggers the "maximize" state (Windows/some Linux)
         try:
             self.after(0, lambda: self.state('zoomed'))
         except:
-            # Fallback for systems that don't support 'zoomed' state
             self.after(0, lambda: self.attributes('-fullscreen', True))
         
         self.adaptive_engine = ImprovedAdaptiveLearningEngine()
-        self.current_user_level = None # To track level changes for pop-up
+        self.current_user_level = None
         
         container = ctk.CTkFrame(self)
         container.pack(side="top", fill="both", expand=True)
@@ -1351,18 +1253,16 @@ class HomeScreen(ctk.CTkFrame):
         title_label = ctk.CTkLabel(self, text=APP_NAME, font=ctk.CTkFont(size=40, weight="bold"))
         title_label.pack(pady=(40, 10))
 
-        attribution_label = ctk.CTkLabel(self, text="(V1.0.8 - Made by jvgiordano using Claude 4.0 Sonnet, Gemini 2.5 Pro, and Grok 4)", 
+        attribution_label = ctk.CTkLabel(self, text="(V1.2.0 - Made by jvgiordano using Claude 4.0 Sonnet, Claude 4.5 Opus, Gemini 2.5 Pro, Gemini 3.0 Pro, and Grok 4)", 
                                          font=ctk.CTkFont(size=14), text_color="gray60")
         attribution_label.pack(pady=(0, 20))
 
-        # --- Main Level and Progress Display ---
         self.level_label = ctk.CTkLabel(self, text="", font=ctk.CTkFont(size=20, weight="bold"))
         self.level_label.pack(pady=(0, 5))
         
         self.working_on_label = ctk.CTkLabel(self, text="", font=ctk.CTkFont(size=16))
         self.working_on_label.pack(pady=(0, 20))
 
-        # Frame for the three progress metrics
         self.progress_metrics_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.progress_metrics_frame.pack(pady=(0, 20))
         
@@ -1374,7 +1274,6 @@ class HomeScreen(ctk.CTkFrame):
         
         self.streak_label = ctk.CTkLabel(self.progress_metrics_frame, text="Sustained Success: -", font=ctk.CTkFont(size=16))
         self.streak_label.pack(side="left", padx=15)
-        # --- End Progress Display ---
 
         adaptive_quiz_button = ctk.CTkButton(self, text="Start Adaptive Quiz", 
                                              command=self.start_adaptive_quiz, 
@@ -1435,16 +1334,14 @@ class HomeScreen(ctk.CTkFrame):
         close_button_frame = ctk.CTkFrame(self, fg_color="transparent")
         close_button_frame.pack(side="bottom", fill="x", padx=20, pady=20)
 
-        # --- SCALING CONTROLS ---
         scale_label = ctk.CTkLabel(close_button_frame, text="UI Zoom:", font=ctk.CTkFont(size=14, weight="bold"))
         scale_label.pack(side="left", padx=(0, 10))
 
         self.scaling_optionemenu = ctk.CTkOptionMenu(close_button_frame, 
-                                                     values=["80%", "90%", "100%", "110%", "120%", "130%", "140%"],
+                                                     values=["80%", "90%", "100%", "110%", "120%", "130%", "140%", "150%", "160%"],
                                                      command=self.controller.change_scaling_event)
-        self.scaling_optionemenu.set("100%") # Default
+        self.scaling_optionemenu.set("100%")
         self.scaling_optionemenu.pack(side="left", padx=(0, 20))
-        # ------------------------
 
         close_button = ctk.CTkButton(close_button_frame, text="Close Application",
                                      command=self.controller.destroy,
@@ -1475,28 +1372,22 @@ class HomeScreen(ctk.CTkFrame):
         self.controller.frames[QuizScreen].start_quiz(adaptive=False, freeform_mode=freeform_mode)
 
     def refresh_data(self):
-        # --- Level Up Check ---
         assessment = self.controller.adaptive_engine.assess_user_level_and_topics()
         new_level = assessment['estimated_level']
         old_level = self.controller.current_user_level
         
-        # If the level has changed (and it's not the first time running)
         if old_level is not None and old_level != new_level:
-            # Check if the new level is actually higher
             levels = self.controller.adaptive_engine.levels
             if levels.index(new_level) > levels.index(old_level):
                 self.controller.show_level_up_popup(old_level, new_level)
         
         self.controller.current_user_level = new_level
-        # --- End Level Up Check ---
         
         working_on_level = self.controller.adaptive_engine.get_next_level(new_level)
 
-        # Update main level labels
         self.level_label.configure(text=f"Your Estimated Level: {new_level}")
         self.working_on_label.configure(text=f"Working on: {working_on_level}")
 
-        # Get and update progress metrics for the NEXT level (the one being worked on)
         mastery_score = self.controller.adaptive_engine.get_level_mastery_score(working_on_level)
         topic_coverage = self.controller.adaptive_engine.get_level_topic_coverage(working_on_level)
         success_streak = self.controller.adaptive_engine.get_sustained_success_streak(working_on_level)
@@ -1519,20 +1410,21 @@ class HowToUseScreen(ctk.CTkFrame):
 
         scrollable_frame = ctk.CTkScrollableFrame(main_container, label_text="Welcome to Progress with Italian!")
         scrollable_frame.pack(pady=10, padx=20, fill="both", expand=True)
+        enable_trackpad_scroll(scrollable_frame)
 
-        # UPDATED: Changed 90% to 85% in the documentation
+        # UPDATED: Documentation reflects new scoring and 25% mastery gate
         how_to_use_text = """
-Welcome to Progress with Italian! (by jvgiordano - August, 2025)
+Welcome to Progress with Italian! (by jvgiordano - December, 2025)
 
 ->This program is based on "Progress with Lawless French". 
 
 ## Introduction ##
 
-The goal of this application is to help you internalize Italian grammar so that is becomes second nature for everyday use. That is, you'll develop an intuitive grasp for the architecture of Italian grammar.
+The goal of this application is to help you internalize Italian grammar so that it becomes second nature for everyday use. That is, you'll develop an intuitive grasp for the architecture of Italian grammar.
 
-Instead of explicitly teaching the grammar rules, this program provide use-case repetition to ingrain these patterns in your brain. For example, if you answer a particular grammar question incorrectly, that specific question will be delayed from repeating. Instead, other questions targeting the same grammatical concept will be promoted and appear more frequently to help familiarize the concept. 
+Instead of explicitly teaching the grammar rules, this program provides use-case repetition to ingrain these patterns in your brain. For example, if you answer a particular grammar question incorrectly, that specific question will be delayed from repeating. Instead, other questions targeting the same grammatical concept will be promoted and appear more frequently to help familiarize the concept. 
 
-The goal is to learn the rule, not the answer to a specific questions.
+The goal is to learn the rule, not the answer to specific questions.
 
 So, how does "Progress with Italian" achieve this?
 
@@ -1540,17 +1432,15 @@ The program works by "intelligently" testing you with 10 question quizzes. This 
 
 You should always strive to get 100% on each lesson. Take the time to struggle with questions you don't know!
 
+Even testing yourself on questions you have no experience with is great for learning!
 
-Even testing yourself on question you have no experience with is great for learning!
-
-
-The 10 question format creates just enough psychological tension to promote focus and engagement, while the batch feedback maintains the productive stress, and avoid instant gratification. Striving for perfect scores generates beneficial stress that streghtens memory formation during learning. While short-term feedback is essential for effective learning, providing it too quickly eliminates that productive tension. The minor pause between quizzes responses and feedback also encourages retrieval practice, beneficial for memory consolidation.
+The 10 question format creates just enough psychological tension to promote focus and engagement, while the batch feedback maintains the productive stress and avoids instant gratification. Striving for perfect scores generates beneficial stress that strengthens memory formation during learning. While short-term feedback is essential for effective learning, providing it too quickly eliminates that productive tension. The minor pause between quiz responses and feedback also encourages retrieval practice, beneficial for memory consolidation.
 
 An after quiz report is always provided. Slight explanations are given for wrong answers, such as the correct conjugation type. However, for rules you can't seem to grasp or aren't sticking, you may need to do additional research to gain conscious understanding to get that *click*.
 
 ## Theory of Work ##
 
-Here's an grammatical example of how the program works (in theory):
+Here's a grammatical example of how the program works (in theory):
 
 You will be asked to fill in blanks in Italian sentences:
 
@@ -1560,7 +1450,7 @@ ___ gatto è nero (My cat is black) => *Il mio* gatto è nero.
 ___ cane è piccolo (My dog is small) => *Il mio* cane è piccolo.
 ___ fratello è alto (My brother is tall) => *Mio* fratello è alto
 
-You go through these examples one by one (probably not during the same quiz but over time), and begin to realize that when you want to show possesion of something (a singular masculine word here), you say "Il mio." 
+You go through these examples one by one (probably not during the same quiz but over time), and begin to realize that when you want to show possession of something (a singular masculine word here), you say "Il mio." 
 
 Il mio caffè (My coffee)
 Il mio gatto (My cat)
@@ -1570,43 +1460,36 @@ Pretty simple. But then you come to "fratello" (brother) and suddenly there is o
 
 You might struggle with this a bit longer. Everything seems to be "Il Mio" or "La mia" (for feminine words). Except for certain people. You might not even realize the exception is certain people because my friend (il mio amico) also requires "Il" or "la" (la mia amica). 
 
-
-The general rule in Italian when showing posession is you must use an article and a possesive: 
+The general rule in Italian when showing possession is you must use an article and a possessive: 
 
 "My cat" => "Il mio gatto". "Il" is the article, "mio" is the possessive. Literally, "The my cat."
-
 
 The exception to this is singular family members: 
 
 "My brother" => "Mio fratello"
  
-
-This program stives to teach you these rules without explaining them, but sometimes, a little conscious knowledge can make the unconscious *click*. 
+This program strives to teach you these rules without explaining them, but sometimes, a little conscious knowledge can make the unconscious *click*. 
 
 Hopefully, the hints provided after the quizzes should help if you get stuck. But should you need a little conscious enlightenment, you might need to do some research (try an LLM - Gemini, Claude, Grok, etc.)
 
-
-The difference now besides teacing you the lesson explicitly is your brain has already realized there is a rule there, somewhere, somehow related to this, it just wasn't able to tease the arbritrariness out. 
-
+The difference now besides teaching you the lesson explicitly is your brain has already realized there is a rule there, somewhere, somehow related to this, it just wasn't able to tease the arbitrariness out. 
 
 ## Depth, Difficulty, and Progression ##
 
-
 Concerning the depth and difficulty: 
 
-There are 5 levels of Italian provided, based on the CEFR framework. A1 and A2 are for beginner, B1 and B2 are intermediate, and C1 is advanced. To progress between levels, you need to satisfy ALL THREE criteria:
+There are 5 levels of Italian provided, based on the CEFR framework. A1 and A2 are for beginners, B1 and B2 are intermediate, and C1 is advanced. To progress between levels, you need to satisfy ALL THREE criteria:
 • **Sustained Success:** Achieve an average of 85% correct answers in the last 50 questions, and sustain this for 25 consecutive additional questions from that level.
 • **Broad Coverage:** Attempt at least 85% of the available topics within that level (only one question per topic).
 • **Minimum Mastery:** Attain a mastery score of at least 50% for the level. (Mastery scoring explained below).
 
-
 All new beginners actually start at A0 (there are no A0 questions.)
-
 
 THIS PROGRAM AIMS TO BE CONSERVATIVE IN ITS CEFR ESTIMATION. DO NOT BE DISCOURAGED.
 
-
 The system also allows non-sequential progression - if you start practicing B1 and demonstrate mastery, you'll be recognized as B1 even without completing A1/A2. You can also select to only cover grammar or vocabulary topics which interest you, and you can even select specific topics across CEFR levels you want to practice (like present tense conjugations and futuro semplice).
+
+**NEW:** Questions from the next CEFR level will only be introduced once you achieve 25% mastery of your current level. This ensures you build a solid foundation before being challenged with more advanced material.
 
 The program has two response formats: Multiple Choice and Free Form (fill in). By default, the program uses a mix of these. As you advance, more questions will become free-form, including those you may have previously answered as multiple choice. But the program offers other response modes.
 
@@ -1615,7 +1498,7 @@ The app includes three response modes:
 • **Only Free Form Responses:** All questions require typing the correct answer.
 • **No Free Form Responses:** Traditional multiple choice only.
 
-Mastery Scoring is separate from coverage scoring. Mastery scoring aims to demonstrate how well you have "mastered"  a level.
+Mastery Scoring is separate from coverage scoring. Mastery scoring aims to demonstrate how well you have "mastered" a level.
 
 Free form answers are worth more points! The system uses intelligent matching with the following rules:
 • **Accents:** Not required but recommended (marked as partial if missing)
@@ -1631,20 +1514,19 @@ Examples of Partial Credit:
 ✗ "cafe" instead of "caffè" (multiple errors)
 
 Response modes provide different points towards this score:
-• Free-form correct: +1.75 points
-• Multiple choice correct: +0.85 points
-• Free-form (partially correct): +1.0 points
-• Unanswered questions: -0.5 points
-• Free-form wrong: -1.95 points
-• Multiple choice wrong: -2.00 points
+• Free-form correct: +1.95 points
+• Multiple choice correct: +0.95 points
+• Free-form (partially correct): +1.4 points
+• Unanswered questions: -0.2 points
+• Free-form wrong: -2.2 points
+• Multiple choice wrong: -2.65 points
 • Topics must be seen 4+ times to count toward mastery (that is 4 questions from a given topic)
 
-
-There is an "Adaptive" algorithm which adjust the difficulty and level of questions based on your usage and compentency.
+There is an "Adaptive" algorithm which adjusts the difficulty and level of questions based on your usage and competency.
 
 The "Adaptive" algorithm gives you 5-9 questions per quiz from your next CEFR level estimate, with the number decreasing as you approach mastery. So, A0 level users (newbies) will mostly get A1 questions. 
 
-For C1 users (advanced), this changes to 3-6 questions to ensure a broader review of previous levels. The remainder of the quiz is filled with questions from nearby levels.
+For C1 users (advanced), this changes to 3-6 questions to ensure a broader review of previous levels. The remainder of the quiz is filled with questions from nearby levels - but only once you've achieved 25% mastery of your current working level.
 
 The Progress section will show your progress in each section. The CEFR bar chart will show you coverage and mastery. The blue bars represent coverage (questions you've encountered once), and the gold bars show your mastery (weighted by difficulty and topic progress). You can clear all your progress here as well.
 
@@ -1653,14 +1535,15 @@ There will be some errors in the questions. I've done my best to remove these, b
 For those with American keyboards, I recommend installing the "United States - International" keyboard on Windows for typing with accents.
 
 Good luck!
-
-
 """
         text_label = ctk.CTkLabel(scrollable_frame, text=how_to_use_text,
                                  font=ctk.CTkFont(size=16),
                                  justify="left",
                                  wraplength=WIDTH - 280)
         text_label.pack(pady=10, padx=20)
+        
+        if hasattr(scrollable_frame, '_mousewheel_handler'):
+            bind_children_scroll(scrollable_frame, scrollable_frame._mousewheel_handler)
 
         back_button = ctk.CTkButton(main_container, text="Back to Start Page",
                                     command=lambda: controller.show_frame(HomeScreen),
@@ -1678,6 +1561,7 @@ class TopicSelectionScreen(ctk.CTkFrame):
 
         self.scrollable_frame = ctk.CTkScrollableFrame(self)
         self.scrollable_frame.pack(pady=10, padx=20, fill="both", expand=True)
+        enable_trackpad_scroll(self.scrollable_frame)
 
         control_frame = ctk.CTkFrame(self)
         control_frame.pack(pady=10, padx=20, fill="x")
@@ -1689,6 +1573,7 @@ class TopicSelectionScreen(ctk.CTkFrame):
         back_button.pack(side="left")
 
     def refresh_data(self):
+        """Populate the scrollable frame with topics grouped by CEFR level."""
         for widget in self.scrollable_frame.winfo_children():
             widget.destroy()
         self.topic_vars.clear()
@@ -1707,19 +1592,44 @@ class TopicSelectionScreen(ctk.CTkFrame):
             grouped_topics[row['cefr_level']].append(row['topic'])
 
         for level, topics in grouped_topics.items():
-            level_label = ctk.CTkLabel(self.scrollable_frame, text=f"Level {level}", font=ctk.CTkFont(size=18, weight="bold"))
+            level_label = ctk.CTkLabel(self.scrollable_frame, text=f"Level {level}", 
+                                       font=ctk.CTkFont(size=18, weight="bold"))
             level_label.pack(anchor="w", padx=10, pady=(15, 5))
+            
             for topic in topics:
                 var = ctk.StringVar(value="off")
-                cb = ctk.CTkCheckBox(self.scrollable_frame, text=topic, variable=var, onvalue=topic, offvalue="off")
+                cb = ctk.CTkCheckBox(self.scrollable_frame, text=topic, variable=var, 
+                                    onvalue=topic, offvalue="off")
                 cb.pack(anchor="w", padx=20, pady=2)
                 self.topic_vars.append(var)
+        
+        if hasattr(self.scrollable_frame, '_mousewheel_handler'):
+            bind_children_scroll(self.scrollable_frame, self.scrollable_frame._mousewheel_handler)
     
     def start_topic_quiz(self):
+        """Start quiz with selected topics."""
         selected_topics = [var.get() for var in self.topic_vars if var.get() != "off"]
-        if selected_topics:
-            freeform_mode = self.controller.frames[HomeScreen].get_freeform_mode()
-            self.controller.frames[QuizScreen].start_quiz(adaptive=False, topics=selected_topics, freeform_mode=freeform_mode)
+        
+        if not selected_topics:
+            warning_dialog = ctk.CTkToplevel(self)
+            warning_dialog.title("No Topics Selected")
+            warning_dialog.geometry("300x150")
+            warning_dialog.transient(self.controller)
+            warning_dialog.grab_set()
+            
+            warning_label = ctk.CTkLabel(
+                warning_dialog, 
+                text="Please select at least one topic\nto start the quiz.",
+                font=ctk.CTkFont(size=14)
+            )
+            warning_label.pack(pady=30)
+            
+            ok_button = ctk.CTkButton(warning_dialog, text="OK", command=warning_dialog.destroy)
+            ok_button.pack(pady=10)
+            return
+        
+        freeform_mode = self.controller.frames[HomeScreen].get_freeform_mode()
+        self.controller.frames[QuizScreen].start_quiz(adaptive=False, topics=selected_topics, freeform_mode=freeform_mode)
 
 class QuizScreen(ctk.CTkFrame):
     def __init__(self, parent, controller):
@@ -1730,11 +1640,11 @@ class QuizScreen(ctk.CTkFrame):
         
         self.scrollable_frame = ctk.CTkScrollableFrame(self, label_text="Italian Quiz")
         self.scrollable_frame.pack(pady=20, padx=20, fill="both", expand=True)
+        enable_trackpad_scroll(self.scrollable_frame)
         
-        # Configure grid for centering with max width
-        self.scrollable_frame.grid_columnconfigure(0, weight=1, minsize=100)  # Left margin
-        self.scrollable_frame.grid_columnconfigure(1, weight=0, minsize=800, uniform="content")  # Content column with max width
-        self.scrollable_frame.grid_columnconfigure(2, weight=1, minsize=100)  # Right margin
+        self.scrollable_frame.grid_columnconfigure(0, weight=1, minsize=100)
+        self.scrollable_frame.grid_columnconfigure(1, weight=0, minsize=800, uniform="content")
+        self.scrollable_frame.grid_columnconfigure(2, weight=1, minsize=100)
         
         self.control_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.control_frame.pack(pady=10, padx=20, fill="x")
@@ -1756,11 +1666,10 @@ class QuizScreen(ctk.CTkFrame):
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
             
-            # FIXED: Added hint column to the query
             query = '''SELECT id, question_text, english_translation, option_a, option_b, 
-                           option_c, option_d, correct_option, cefr_level, topic, explanation, resource,
-                           hint 
-                     FROM questions'''
+                   option_c, option_d, correct_option, cefr_level, topic, explanation, resource,
+                   hint, alternate_correct_responses 
+             FROM questions'''
             params = []
             where_clauses = []
             
@@ -1823,7 +1732,7 @@ class QuizScreen(ctk.CTkFrame):
         
         self.scrollable_frame.configure(label_text=title_text)
         self.populate_quiz_frame()
-        self.scrollable_frame._parent_canvas.yview_moveto(0)  # Reset scroll to top
+        self.scrollable_frame._parent_canvas.yview_moveto(0)
         self.controller.show_frame(QuizScreen)
 
     def populate_quiz_frame(self):
@@ -1835,13 +1744,11 @@ class QuizScreen(ctk.CTkFrame):
         self.submit_all_button.pack(side="right")
         self.quit_button.pack(side="left")
 
-        # Create a centered container with max width
         self.scrollable_frame.grid_columnconfigure(0, weight=1)
         self.scrollable_frame.grid_columnconfigure(2, weight=1)
         
         current_row = 0
         for i, q_data in enumerate(self.questions):
-            # FIXED: Force freeform for questions starting with "Write:"
             if q_data['question_text'].strip().startswith("Write:"):
                 is_freeform = True
             else:
@@ -1850,8 +1757,6 @@ class QuizScreen(ctk.CTkFrame):
             
             question_container = ctk.CTkFrame(self.scrollable_frame, fg_color="#F8F9FA", corner_radius=10)
             question_container.grid(row=current_row, column=1, sticky="ew", pady=(10, 5), padx=20)
-            # Set maximum width for the container
-            question_container.grid_configure(ipadx=0, ipady=0)
             self.scrollable_frame.grid_rowconfigure(current_row, weight=0)
             
             question_row = ctk.CTkFrame(question_container, fg_color="transparent")
@@ -1870,10 +1775,8 @@ class QuizScreen(ctk.CTkFrame):
             
             has_translation = english_text and not q_data['question_text'].startswith("How would you say")
             
-            # FIXED: Use hint from database column instead of extracting from question text
             hint_text = q_data.get('hint', '')
             
-            # Still check for old-style hints in parentheses for backward compatibility
             if not hint_text and "(" in question_text and question_text.rstrip().endswith(")"):
                 last_paren = question_text.rfind("(")
                 if last_paren != -1:
@@ -2067,14 +1970,12 @@ class QuizScreen(ctk.CTkFrame):
                     input_widget.set("Choose your answer...")
                     input_widget.pack(anchor="w", pady=5)
             
-            # Display hint if it exists
             has_hint = hint_text and hint_text.strip()
             
             if has_hint:
                 info_frame = ctk.CTkFrame(text_container, fg_color="transparent")
                 info_frame.pack(anchor="w", pady=5)
 
-                # Clean up hint text - remove parentheses if present
                 cleaned_hint = hint_text.strip()
                 if cleaned_hint.startswith('(') and cleaned_hint.endswith(')'):
                     cleaned_hint = cleaned_hint[1:-1]
@@ -2084,9 +1985,6 @@ class QuizScreen(ctk.CTkFrame):
                                           text_color="#666666",
                                           justify="left")
                 hint_label.pack(anchor="w", pady=(5, 0))
-
-            # FIXED: Remove CEFR level display during quiz to prevent cheating
-            # This section has been removed - no more info_label showing cefr_level
             
             current_row += 1
 
@@ -2107,12 +2005,15 @@ class QuizScreen(ctk.CTkFrame):
             })
             
         self.scrollable_frame._parent_canvas.yview_moveto(0)
+        
+        if hasattr(self.scrollable_frame, '_mousewheel_handler'):
+            bind_children_scroll(self.scrollable_frame, self.scrollable_frame._mousewheel_handler)
 
     def submit_all_answers(self):
         correct_answers = []
         incorrect_answers = []
         partial_answers = []
-        unanswered_questions = []  # NEW: Track unanswered questions
+        unanswered_questions = []
         
         conn = None
         try:
@@ -2122,7 +2023,7 @@ class QuizScreen(ctk.CTkFrame):
 
             for item in self.quiz_items:
                 user_answer_text = ""
-                is_unanswered = False  # NEW: Flag for unanswered questions
+                is_unanswered = False
                 
                 if item["is_freeform"]:
                     user_answer_text = item["input_widget"].get().strip()
@@ -2142,13 +2043,11 @@ class QuizScreen(ctk.CTkFrame):
                 is_correct, is_partial, partial_feedback = False, False, None
                 
                 if is_unanswered:
-                    # NEW: Handle unanswered questions
                     is_correct = False
                     is_partial = False
                 elif item["is_freeform"]:
                     is_correct, is_partial, partial_feedback = self.controller.adaptive_engine.check_freeform_answer(user_answer_text, correct_answer_text)
                     
-                    # If not correct, check against alternate responses
                     if not is_correct and q_data.get('alternate_correct_responses'):
                         alt_responses = q_data['alternate_correct_responses'].split(';')
                         for alt_answer in alt_responses:
@@ -2171,11 +2070,11 @@ class QuizScreen(ctk.CTkFrame):
                     'is_partial': is_partial,
                     'partial_feedback': partial_feedback,
                     'question_data': q_data,
-                    'is_unanswered': is_unanswered  # NEW: Track if unanswered
+                    'is_unanswered': is_unanswered
                 }
                 
                 if is_unanswered:
-                    unanswered_questions.append(result_item)  # NEW: Add to unanswered list
+                    unanswered_questions.append(result_item)
                 elif is_correct and is_partial:
                     partial_answers.append(result_item)
                 elif is_correct:
@@ -2183,15 +2082,11 @@ class QuizScreen(ctk.CTkFrame):
                 else:
                     incorrect_answers.append(result_item)
                 
-                # UPDATED: Pass is_unanswered flag to update_performance
                 self.controller.adaptive_engine.update_performance(
                     cursor, item["question_id"], item["cefr_level"], item["topic"], 
                     is_correct, item["is_freeform"], is_partial, is_unanswered
                 )
 
-                # Log the individual answer for recency tracking
-                # A partial answer is still a success for the 85% rule
-                # NEW: Unanswered questions count as failures
                 is_success_for_recency = 1 if (is_correct or is_partial) else 0
                 cursor.execute(
                     "INSERT INTO answer_history (question_id, cefr_level, is_correct, timestamp) VALUES (?, ?, ?, ?)",
@@ -2227,15 +2122,11 @@ class QuizScreen(ctk.CTkFrame):
         
         self.scrollable_frame._parent_canvas.yview_moveto(0)
         
-        # UPDATED: Pass unanswered questions to show_enhanced_results
         self.show_enhanced_results(incorrect_answers, partial_answers, correct_answers, unanswered_questions)
 
-
     def show_enhanced_results(self, incorrect_answers, partial_answers, correct_answers, unanswered_questions):
-        """Show results with wrong answers at top, partial in middle, correct at bottom
-        UPDATED: Now includes unanswered questions section"""
+        """Show results with wrong answers at top, partial in middle, correct at bottom."""
         
-        # Setup centered grid layout
         self.scrollable_frame.grid_columnconfigure(0, weight=1)
         self.scrollable_frame.grid_columnconfigure(2, weight=1)
         
@@ -2244,20 +2135,18 @@ class QuizScreen(ctk.CTkFrame):
         
         current_row = self.show_final_score(len(correct_answers) + len(partial_answers), len(self.quiz_items), 1)
         
-        # NEW: Unanswered Questions Section
         if unanswered_questions:
             unanswered_title_frame = ctk.CTkFrame(self.scrollable_frame, fg_color="#696969", corner_radius=8)
             unanswered_title_frame.grid(row=current_row, column=1, sticky="ew", pady=(10, 10), padx=20)
             current_row += 1
             
-            unanswered_title = ctk.CTkLabel(unanswered_title_frame, text=f"⏭️ Unanswered Questions ({len(unanswered_questions)})", 
+            unanswered_title = ctk.CTkLabel(unanswered_title_frame, text=f"⏸️ Unanswered Questions ({len(unanswered_questions)})", 
                                            font=ctk.CTkFont(size=18, weight="bold"), text_color="white")
             unanswered_title.pack(pady=10)
             
             for i, result in enumerate(unanswered_questions):
                 current_row = self.display_answer_feedback(result, current_row, feedback_type="unanswered")
         
-        # Incorrect Answers Section
         if incorrect_answers:
             wrong_title_frame = ctk.CTkFrame(self.scrollable_frame, fg_color="#8B0000", corner_radius=8)
             wrong_title_frame.grid(row=current_row, column=1, sticky="ew", pady=(10, 10), padx=20)
@@ -2270,7 +2159,6 @@ class QuizScreen(ctk.CTkFrame):
             for i, result in enumerate(incorrect_answers):
                 current_row = self.display_answer_feedback(result, current_row, feedback_type="incorrect")
         
-        # Partially Correct Answers Section
         if partial_answers:
             partial_title_frame = ctk.CTkFrame(self.scrollable_frame, fg_color="#FF8C00", corner_radius=8)
             partial_title_frame.grid(row=current_row, column=1, sticky="ew", pady=(10, 10), padx=20)
@@ -2283,7 +2171,6 @@ class QuizScreen(ctk.CTkFrame):
             for i, result in enumerate(partial_answers):
                 current_row = self.display_answer_feedback(result, current_row, feedback_type="partial")
         
-        # Correct Answers Section
         if correct_answers:
             correct_title_frame = ctk.CTkFrame(self.scrollable_frame, fg_color="#006400", corner_radius=8)
             correct_title_frame.grid(row=current_row, column=1, sticky="ew", pady=(20, 10), padx=20)
@@ -2295,17 +2182,19 @@ class QuizScreen(ctk.CTkFrame):
             
             for i, result in enumerate(correct_answers):
                 current_row = self.display_answer_feedback(result, current_row, feedback_type="correct")
+        
+        if hasattr(self.scrollable_frame, '_mousewheel_handler'):
+            bind_children_scroll(self.scrollable_frame, self.scrollable_frame._mousewheel_handler)
 
     def display_answer_feedback(self, result, row, feedback_type):
-        """IMPROVED: Display individual answer feedback with better legibility and layout
-        UPDATED: Now handles 'unanswered' feedback type"""
+        """Display individual answer feedback with better legibility and layout."""
         item = result['item']
         user_answer_full = result['user_answer_full']
         is_correct = result['is_correct']
         is_partial = result.get('is_partial', False)
         partial_feedback = result.get('partial_feedback', None)
         q_data = result['question_data']
-        is_unanswered = result.get('is_unanswered', False)  # NEW
+        is_unanswered = result.get('is_unanswered', False)
         
         question_number = None
         for i, quiz_item in enumerate(self.quiz_items):
@@ -2325,7 +2214,6 @@ class QuizScreen(ctk.CTkFrame):
                                         text_color="#2B2B2B", width=30)
             number_label.pack(side="left", padx=(0, 10))
         
-        # IMPROVED: Better layout for question content
         text_container = ctk.CTkFrame(question_row, fg_color="transparent")
         text_container.pack(side="left", fill="x", expand=True)
         
@@ -2342,24 +2230,19 @@ class QuizScreen(ctk.CTkFrame):
                                      justify="left")
         question_label.pack(anchor="w", pady=(0, 5))
                 
-        # KEEP: Show CEFR level and topic in results (not hidden like in quiz)
         info_label = ctk.CTkLabel(question_row, text=f"{q_data['cefr_level']} | {q_data['topic']}", 
                                   font=ctk.CTkFont(size=14), text_color="#666666")
         info_label.pack(side="right", padx=(20, 0))
         
-        # IMPROVED: Better answer section layout with improved colors and readability
         answer_section = ctk.CTkFrame(feedback_container, fg_color="transparent")
         answer_section.pack(fill="x", padx=20, pady=(0, 15))
         
-        # Create a dedicated answers container with more space
         answers_container = ctk.CTkFrame(answer_section, fg_color="#FFFFFF", corner_radius=8)
         answers_container.pack(fill="x", padx=10, pady=5)
         
-        # Add spacing from the left
         spacing_frame = ctk.CTkFrame(answers_container, fg_color="transparent")
         spacing_frame.pack(fill="x", padx=15, pady=10)
         
-        # Add Resource button
         button_frame = ctk.CTkFrame(spacing_frame, fg_color="transparent")
         button_frame.pack(fill="x", pady=(0, 10))
         
@@ -2370,31 +2253,30 @@ class QuizScreen(ctk.CTkFrame):
                                           fg_color="#1F6AA5", hover_color="#1854A0")
             resource_button.pack(side="right")
         
-        # UPDATED: Handle different feedback types including unanswered
         if feedback_type == "unanswered":
             user_answer_label = ctk.CTkLabel(spacing_frame, 
-                                             text="⏭️ Question was not answered", 
+                                             text="⏸️ Question was not answered", 
                                              font=ctk.CTkFont(size=16, weight="bold"), 
-                                             text_color="#696969")  # Gray color for unanswered
+                                             text_color="#696969")
             user_answer_label.pack(anchor="w", pady=(2, 0))
         elif feedback_type == "partial":
             user_answer_label = ctk.CTkLabel(spacing_frame, 
                                              text=f"Your Answer: {user_answer_full}", 
                                              font=ctk.CTkFont(size=16, weight="bold"), 
-                                             text_color="#E65100")  # Darker orange for better contrast
+                                             text_color="#E65100")
             user_answer_label.pack(anchor="w", pady=(2, 0))
             
             if partial_feedback:
                 partial_label = ctk.CTkLabel(spacing_frame, 
                                              text=partial_feedback, 
                                              font=ctk.CTkFont(size=15, weight="bold"), 
-                                             text_color="#FF8F00")  # Medium orange
+                                             text_color="#FF8F00")
                 partial_label.pack(anchor="w", pady=(2, 0))
         elif feedback_type == "incorrect":
             user_answer_label = ctk.CTkLabel(spacing_frame, 
                                              text=f"Your Answer: {user_answer_full}", 
                                              font=ctk.CTkFont(size=16, weight="bold"), 
-                                             text_color="#C62828")  # Darker red for better contrast
+                                             text_color="#C62828")
             user_answer_label.pack(anchor="w", pady=(2, 0))
         
         correct_option = item["correct_option"]
@@ -2402,12 +2284,10 @@ class QuizScreen(ctk.CTkFrame):
         correct_label = ctk.CTkLabel(spacing_frame, 
                                      text=f"Correct Answer: {correct_option_text}", 
                                      font=ctk.CTkFont(size=16, weight="bold"), 
-                                     text_color="#2E7D32")  # Darker green for better contrast
+                                     text_color="#2E7D32")
         correct_label.pack(anchor="w", pady=(2, 0))
         
-        # IMPROVED: Better explanation layout with proper text wrapping
         if item["explanation"]:
-            # Add some visual separation
             separator_frame = ctk.CTkFrame(spacing_frame, height=1, fg_color="#E0E0E0")
             separator_frame.pack(fill="x", pady=(8, 8))
             
@@ -2415,14 +2295,14 @@ class QuizScreen(ctk.CTkFrame):
                                              text=f"Explanation: {item['explanation']}", 
                                              text_color="#424242",
                                              font=ctk.CTkFont(size=14, weight="bold"), 
-                                             wraplength=WIDTH-200,  # REDUCED from 120 to 200 to account for all container padding
+                                             wraplength=WIDTH-200,
                                              justify="left")
-            explanation_label.pack(anchor="w", pady=(0, 5), padx=(10, 10), fill="x")  # ADDED padx for left/right padding
+            explanation_label.pack(anchor="w", pady=(0, 5), padx=(10, 10), fill="x")
         
         return row + 1
 
     def show_final_score(self, score, total, row):
-        """Display final score at the top of the results"""
+        """Display final score at the top of the results."""
         percentage = (score / total) * 100 if total > 0 else 0
         
         score_frame = ctk.CTkFrame(self.scrollable_frame, fg_color="#2B2B2B", corner_radius=10)
@@ -2437,9 +2317,9 @@ class QuizScreen(ctk.CTkFrame):
         if percentage >= 90:
             message = "🎉 Eccellente! Outstanding performance!"
         elif percentage >= 80:
-            message = "👏 Molto bene! Great job!"
+            message = "👍 Molto bene! Great job!"
         elif percentage >= 70:
-            message = "👍 Bene! Good work, keep practicing!"
+            message = "👏 Bene! Good work, keep practicing!"
         elif percentage >= 60:
             message = "📚 Non male! Not bad, room for improvement."
         else:
@@ -2449,6 +2329,7 @@ class QuizScreen(ctk.CTkFrame):
                                      font=ctk.CTkFont(size=14), text_color="gray70")
         message_label.pack(pady=(0, 15))
         return row + 1
+
 
 class StatsScreen(ctk.CTkFrame):
     def __init__(self, parent, controller):
@@ -2468,28 +2349,24 @@ class StatsScreen(ctk.CTkFrame):
 
         self.main_scroll = ctk.CTkScrollableFrame(self)
         self.main_scroll.pack(fill="both", expand=True, padx=20, pady=(0, 20))
+        enable_trackpad_scroll(self.main_scroll)
         
-        # New progress summary frame
         self.summary_frame = ctk.CTkFrame(self.main_scroll, fg_color="transparent")
         self.summary_frame.pack(fill="x", pady=(0, 20), padx=50)
         self.summary_label = ctk.CTkLabel(self.summary_frame, text="", font=ctk.CTkFont(size=18))
         self.summary_label.pack(pady=15, padx=10)
 
-        # Progress Timeline (new top graph)
         self.timeline_frame = ctk.CTkFrame(self.main_scroll)
-        self.timeline_frame.pack(pady=(0, 20), padx=50)
+        self.timeline_frame.pack(fill="x", pady=(0, 20), padx=50)
         
-        # CEFR Level Completion and Level Progress table
         self.stats_frame = ctk.CTkFrame(self.main_scroll)
-        self.stats_frame.pack(pady=(0, 20), padx=50)
+        self.stats_frame.pack(fill="x", pady=(0, 20), padx=50)
         
-        # NEW: Detailed level-by-level progress metrics
         self.level_details_frame = ctk.CTkFrame(self.main_scroll)
         self.level_details_frame.pack(fill="x", pady=(0, 20), padx=50)
         
-        # Recent Quiz Performance (moved down)
         self.graph_frame = ctk.CTkFrame(self.main_scroll)
-        self.graph_frame.pack(pady=(0, 20), padx=50)
+        self.graph_frame.pack(fill="x", pady=(0, 20), padx=50)
         
         self.weaknesses_frame = ctk.CTkFrame(self.main_scroll)
         self.weaknesses_frame.pack(fill="x", pady=(0, 20), padx=50)
@@ -2497,7 +2374,6 @@ class StatsScreen(ctk.CTkFrame):
         self.explanation_frame = ctk.CTkFrame(self.main_scroll)
         self.explanation_frame.pack(fill="x", pady=(0, 20), padx=50)
         
-        # Clear Progress button at the very bottom
         clear_button_frame = ctk.CTkFrame(self.main_scroll, fg_color="transparent")
         clear_button_frame.pack(fill="x", pady=(40, 40), padx=50)
         
@@ -2515,8 +2391,10 @@ class StatsScreen(ctk.CTkFrame):
         self.update_graph()
         self.update_weaknesses()
         self.update_explanations()
-        # Scroll to top after refreshing all data
         self.main_scroll._parent_canvas.yview_moveto(0)
+        
+        if hasattr(self.main_scroll, '_mousewheel_handler'):
+            bind_children_scroll(self.main_scroll, self.main_scroll._mousewheel_handler)
 
     def update_summary(self):
         """Updates the new summary text at the top of the stats page."""
@@ -2524,13 +2402,13 @@ class StatsScreen(ctk.CTkFrame):
         next_level = self.controller.adaptive_engine.get_next_level(current_level)
         
         summary_text = f"Estimated CEFR Level: {current_level}    |    You are working towards: {next_level}"
-        if current_level == next_level: # Max level reached
+        if current_level == next_level:
             summary_text = f"Estimated CEFR Level: {current_level}    |    Congratulations, you've reached the highest level!"
 
         self.summary_label.configure(text=summary_text)
 
     def update_progress_timeline(self):
-        """Create the new Progress Timeline plot with linear time-spaced ticks"""
+        """Create the new Progress Timeline plot with linear time-spaced ticks."""
         for widget in self.timeline_frame.winfo_children():
             widget.destroy()
         
@@ -2541,7 +2419,6 @@ class StatsScreen(ctk.CTkFrame):
         conn = sqlite3.connect('italian_quiz.db')
         cursor = conn.cursor()
         
-        # Get all daily stats
         cursor.execute('''
             SELECT date, total_coverage, total_mastery 
             FROM daily_stats 
@@ -2549,7 +2426,6 @@ class StatsScreen(ctk.CTkFrame):
         ''')
         daily_data = cursor.fetchall()
         
-        # Get the first quiz date if no daily stats exist yet
         if not daily_data:
             cursor.execute('''
                 SELECT MIN(DATE(timestamp)) as first_date 
@@ -2557,7 +2433,6 @@ class StatsScreen(ctk.CTkFrame):
             ''')
             first_quiz = cursor.fetchone()
             if first_quiz and first_quiz[0]:
-                # Temporarily get a row_factory cursor to calculate current stats
                 conn.row_factory = sqlite3.Row
                 cursor = conn.cursor()
                 coverage, mastery = self.controller.adaptive_engine.get_total_coverage_and_mastery(cursor)
@@ -2572,88 +2447,65 @@ class StatsScreen(ctk.CTkFrame):
             no_data_label.pack(expand=True, pady=30)
             return
         
-        # Parse dates and values
         dates = []
         coverage_values = []
         mastery_values = []
         
-        # Add a starting point (day before first data)
         first_date = datetime.fromisoformat(daily_data[0][0])
         start_date = first_date - timedelta(days=1)
         dates.append(start_date)
         coverage_values.append(0)
         mastery_values.append(0)
         
-        # Add actual data
         for date_str, coverage, mastery in daily_data:
             dates.append(datetime.fromisoformat(date_str))
-            coverage_values.append(coverage * 100)  # Convert to percentage
+            coverage_values.append(coverage * 100)
             mastery_values.append(mastery * 100)
         
-        # Create the plot
-        # Increased DPI slightly for better text rendering on scaling
         fig, ax = plt.subplots(figsize=(10, 5), facecolor="#F0F0F0", dpi=100)
         
-        # Plot coverage line with blue fill
         ax.fill_between(dates, 0, coverage_values, alpha=0.5, color='#1F6AA5', zorder=1)
         ax.plot(dates, coverage_values, color='#1F6AA5', linewidth=2, zorder=2)
         
-        # Plot mastery line with gold fill (on top)
         ax.fill_between(dates, 0, mastery_values, alpha=0.7, color='#FFD700', zorder=3)
         ax.plot(dates, mastery_values, color='#FFD700', linewidth=2, zorder=4)
         
-        # Format the plot
         ax.set_xlabel("Date", color="black", fontsize=11)
         ax.set_ylabel("Percentage (%)", color="black", fontsize=11)
         
-        # Autoscale y-axis with some padding
         if coverage_values or mastery_values:
             max_value = max(max(coverage_values) if coverage_values else 0, 
                            max(mastery_values) if mastery_values else 0)
-            min_value = min(min(coverage_values) if coverage_values else 0,
-                           min(mastery_values) if mastery_values else 0)
             
-            # Add 10% padding above and below, but keep 0 as minimum if data starts from 0
-            padding = (max_value - min_value) * 0.1 if max_value > min_value else 5
-            y_min = max(0, min_value - padding)  # Don't go below 0
-            y_max = min(105, max_value + padding)  # Don't exceed 105% (since it's percentage)
-            
-            # If values are very small, ensure we have a reasonable scale
-            if y_max < 10:
-                y_max = 10
-                
-            ax.set_ylim(y_min, y_max)
+            y_max = max(10, min(105, max_value * 1.2))
+            ax.set_ylim(0, y_max)
         else:
-            ax.set_ylim(0, 10)  # Default for no data
+            ax.set_ylim(0, 10)
         
         ax.set_facecolor("#FFFFFF")
         
-        # --- CORRECTED X-AXIS LOGIC ---
-        # 1. Always set format first
+        date_nums = mdates.date2num(dates)
+        
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d'))
         
-        # 2. Logic: If <= 15 dates, show all. 
-        # If > 15, calculate 15 evenly spaced TIME points between Start and End.
-        if len(dates) > 15:
-            # Convert python datetimes to matplotlib floats (days since epoch)
-            start_num = mdates.date2num(dates[0])
-            end_num = mdates.date2num(dates[-1])
-            
-            # Generate 15 evenly spaced floats (time points)
-            ticks = np.linspace(start_num, end_num, 15)
-            
-            ax.set_xticks(ticks)
-        else:
-            # If few dates, just show exactly where the data is
-            ax.set_xticks(dates)
-            
-        fig.autofmt_xdate()
-        # -------------------------------
+        num_dates = len(dates)
         
-        # Grid
+        if num_dates <= 2:
+            tick_positions = date_nums
+        elif num_dates <= 15:
+            tick_positions = date_nums
+        else:
+            tick_positions = np.linspace(date_nums[0], date_nums[-1], min(15, num_dates))
+        
+        ax.xaxis.set_major_locator(plt.FixedLocator(tick_positions))
+        
+        x_padding = (date_nums[-1] - date_nums[0]) * 0.02 if len(date_nums) > 1 else 0.5
+        ax.set_xlim(date_nums[0] - x_padding, date_nums[-1] + x_padding)
+        
+        fig.autofmt_xdate()
+        
         ax.grid(True, which='major', linestyle='--', linewidth=0.5, color='gray', alpha=0.3)
         
-        # Spines
         for spine in ax.spines.values():
             spine.set_color('black')
             spine.set_linewidth(1)
@@ -2661,7 +2513,6 @@ class StatsScreen(ctk.CTkFrame):
         ax.tick_params(axis='x', colors='black')
         ax.tick_params(axis='y', colors='black')
         
-        # Create horizontal legend above the plot
         from matplotlib.patches import Patch
         legend_elements = [
             Patch(facecolor='#1F6AA5', alpha=0.7, label='Coverage'),
@@ -2670,71 +2521,87 @@ class StatsScreen(ctk.CTkFrame):
         ax.legend(handles=legend_elements, loc='upper center', bbox_to_anchor=(0.5, 1.15),
                   ncol=2, frameon=False)
         
-        canvas = FigureCanvasTkAgg(fig, master=self.timeline_frame)
+        fig.tight_layout()
+        
+        container = ctk.CTkFrame(self.timeline_frame, fg_color="transparent")
+        container.pack(fill="x", expand=True)
+        
+        canvas = FigureCanvasTkAgg(fig, master=container)
         canvas.draw()
-        canvas.get_tk_widget().pack(side="top", fill="both", expand=True, pady=10)
+        canvas_widget = canvas.get_tk_widget()
+        canvas_widget.pack(side="top", pady=10)
+        
+        self._timeline_canvas = canvas
+        self._timeline_fig = fig
 
     def _calculate_mastery_for_level(self, level, cursor):
         """Helper method to calculate coverage and new mastery with updated scoring."""
         return self.controller.adaptive_engine._calculate_mastery_for_level(level, cursor)
 
+
+
+
     def update_stats_table(self):
         for widget in self.stats_frame.winfo_children():
             widget.destroy()
         
-        second_row_container = ctk.CTkFrame(self.stats_frame, fg_color="transparent")
-        second_row_container.pack(fill="both", expand=True, pady=15)
+        # 1. Main Row Container
+        row_container = ctk.CTkFrame(self.stats_frame, fg_color="transparent")
+        row_container.pack(fill="both", expand=True, pady=10)
         
-        cefr_frame = ctk.CTkFrame(second_row_container)
-        cefr_frame.pack(side="left", fill="both", expand=True, padx=(0, 10))
+        # 2. Centering Wrapper
+        # Wraps the Chart and Table to keep them centered together
+        wrapper = ctk.CTkFrame(row_container, fg_color="transparent")
+        wrapper.pack(expand=True, anchor="center")
+
+        # --- LEFT SIDE: CEFR Chart ---
+        cefr_frame = ctk.CTkFrame(wrapper)
+        cefr_frame.grid(row=0, column=0, padx=(0, 10), sticky="n") 
         
-        cefr_title_label = ctk.CTkLabel(cefr_frame, text="CEFR Level Completion", 
-                                        font=ctk.CTkFont(size=18, weight="bold"))
-        cefr_title_label.pack(pady=(15, 10))
+        cefr_title = ctk.CTkLabel(cefr_frame, text="CEFR Level Completion", font=ctk.CTkFont(size=18, weight="bold"))
+        cefr_title.pack(pady=(15, 10))
         
         self.create_cefr_completion_chart(cefr_frame)
         
-        table_container = ctk.CTkFrame(second_row_container)
-        table_container.pack(side="right", fill="both", expand=True, padx=(10, 0))
+        # --- RIGHT SIDE: Level Progress Table ---
+        table_container = ctk.CTkFrame(wrapper)
+        table_container.grid(row=0, column=1, sticky="n") 
         
-        title_label = ctk.CTkLabel(table_container, text="Level Progress", 
-                                   font=ctk.CTkFont(size=18, weight="bold"))
+        title_label = ctk.CTkLabel(table_container, text="Level Progress", font=ctk.CTkFont(size=18, weight="bold"))
         title_label.pack(pady=(15, 20))
         
-        conn = sqlite3.connect('italian_quiz.db')
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        
+        # RESTORED BACKGROUND: 
+        # Removed fg_color="transparent". This creates the dark frame background behind the text.
         table_frame = ctk.CTkFrame(table_container)
         table_frame.pack(fill="both", expand=True, padx=15, pady=(0, 15))
         
-        for i in range(3):
-            table_frame.grid_columnconfigure(i, weight=1)
-        
+        # DATA FETCHING
+        conn = sqlite3.connect('italian_quiz.db')
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
         cursor.execute("SELECT DISTINCT cefr_level FROM questions ORDER BY cefr_level")
         levels = [row['cefr_level'] for row in cursor.fetchall()]
-        
-        stats = {}
-        for level in levels:
-            stats[level] = self._calculate_mastery_for_level(level, cursor)
-        
+        stats = {lvl: self._calculate_mastery_for_level(lvl, cursor) for lvl in levels}
         conn.close()
 
+        # TABLE GENERATION
         headers = ["Level", "Coverage", "Mastery"]
-        for i, header in enumerate(headers):
-            header_label = ctk.CTkLabel(table_frame, text=header, font=ctk.CTkFont(size=14, weight="bold"))
-            header_label.grid(row=0, column=i, padx=5, pady=5, sticky="nsew")
-        
-        for row_num, (level, data) in enumerate(stats.items(), start=1):
+        for col, header in enumerate(headers):
+            lbl = ctk.CTkLabel(table_frame, text=header, font=ctk.CTkFont(size=14, weight="bold"))
+            lbl.grid(row=0, column=col, padx=15, pady=8)
+
+        for row, (level, data) in enumerate(stats.items(), start=1):
             ctk.CTkLabel(table_frame, text=level, font=ctk.CTkFont(size=14)).grid(
-                row=row_num, column=0, padx=5, pady=2, sticky="nsew")
+                row=row, column=0, padx=15, pady=5)
             ctk.CTkLabel(table_frame, text=data['coverage'], font=ctk.CTkFont(size=14)).grid(
-                row=row_num, column=1, padx=5, pady=2, sticky="nsew")
+                row=row, column=1, padx=15, pady=5)
             ctk.CTkLabel(table_frame, text=data['mastery'], font=ctk.CTkFont(size=14)).grid(
-                row=row_num, column=2, padx=5, pady=2, sticky="nsew")
+                row=row, column=2, padx=15, pady=5)
+
+
 
     def update_level_details(self):
-        """NEW: Displays detailed Mastery, Coverage, and Success Streak for each level."""
+        """Displays detailed Mastery, Coverage, and Success Streak for each level."""
         for widget in self.level_details_frame.winfo_children():
             widget.destroy()
 
@@ -2819,15 +2686,24 @@ class StatsScreen(ctk.CTkFrame):
             ax1.grid(True, which='major', linestyle='--', linewidth=0.5, color='gray', alpha=0.7)
             
             if len(quiz_numbers) > 1:
-                ax1.set_xticks(quiz_numbers)
+                ax1.xaxis.set_major_locator(plt.FixedLocator(quiz_numbers))
             
             ax1.axhline(y=recent_average, color='red', linestyle='--', alpha=0.7, linewidth=2, 
                         label=f'Average: {recent_average:.1f}%')
             ax1.legend()
+            
+            fig1.tight_layout()
 
-            canvas1 = FigureCanvasTkAgg(fig1, master=self.graph_frame)
+            container = ctk.CTkFrame(self.graph_frame, fg_color="transparent")
+            container.pack(fill="x", expand=True)
+
+            canvas1 = FigureCanvasTkAgg(fig1, master=container)
             canvas1.draw()
-            canvas1.get_tk_widget().pack(side="top", fill="both", expand=True, pady=10)
+            canvas_widget = canvas1.get_tk_widget()
+            canvas_widget.pack(side="top", pady=10)
+            
+            self._graph_canvas = canvas1
+            self._graph_fig = fig1
     
     def create_cefr_completion_chart(self, parent_frame):
         """Create the CEFR Level Completion bar chart with updated legend."""
@@ -2846,7 +2722,7 @@ class StatsScreen(ctk.CTkFrame):
         
         conn.close()
         
-        fig2, ax2 = plt.subplots(figsize=(6, 4), facecolor="#F0F0F0", dpi=100)
+        fig2, ax2 = plt.subplots(figsize=(8, 5), facecolor="#F0F0F0", dpi=100)
         
         x_pos = range(len(levels))
         bar_width = 0.6
@@ -2877,9 +2753,15 @@ class StatsScreen(ctk.CTkFrame):
         
         ax2.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=2, frameon=False)
         
+        fig2.tight_layout()
+        
         canvas2 = FigureCanvasTkAgg(fig2, master=parent_frame)
         canvas2.draw()
-        canvas2.get_tk_widget().pack(side="top", fill="both", expand=True, pady=10)
+        canvas_widget = canvas2.get_tk_widget()
+        canvas_widget.pack(side="top", pady=10)
+        
+        self._cefr_canvas = canvas2
+        self._cefr_fig = fig2
 
     def update_weaknesses(self):
         for widget in self.weaknesses_frame.winfo_children():
@@ -2901,6 +2783,7 @@ class StatsScreen(ctk.CTkFrame):
         
         scrollable_weaknesses = ctk.CTkScrollableFrame(self.weaknesses_frame, height=150)
         scrollable_weaknesses.pack(fill="both", expand=True, pady=(0, 15))
+        enable_trackpad_scroll(scrollable_weaknesses)
         
         for weakness in weaknesses[:10]:
             weakness_frame = ctk.CTkFrame(scrollable_weaknesses, fg_color="transparent")
@@ -2915,6 +2798,9 @@ class StatsScreen(ctk.CTkFrame):
                                             command=lambda l=weakness['level'], t=weakness['topic']: self.practice_topic(t, l),
                                             width=100, height=28)
             practice_button.pack(side="right")
+        
+        if hasattr(scrollable_weaknesses, '_mousewheel_handler'):
+            bind_children_scroll(scrollable_weaknesses, scrollable_weaknesses._mousewheel_handler)
     
     def practice_topic(self, topic, level):
         """Start a quiz focused on a specific topic and level."""
@@ -2922,7 +2808,7 @@ class StatsScreen(ctk.CTkFrame):
         self.controller.frames[QuizScreen].start_quiz(adaptive=False, level=level, topics=[topic], freeform_mode=freeform_mode)
 
     def update_explanations(self):
-        """Add explanation box for metrics - UPDATED with new scoring values"""
+        """Add explanation box for metrics - UPDATED with new scoring values."""
         for widget in self.explanation_frame.winfo_children():
             widget.destroy()
         
@@ -2932,11 +2818,12 @@ class StatsScreen(ctk.CTkFrame):
         
         scrollable_explanations = ctk.CTkScrollableFrame(self.explanation_frame)
         scrollable_explanations.pack(fill="both", expand=True, pady=(0, 15))
+        enable_trackpad_scroll(scrollable_explanations)
         
         coverage_frame = ctk.CTkFrame(scrollable_explanations, fg_color="transparent")
         coverage_frame.pack(fill="x", pady=(0, 10))
         
-        coverage_title = ctk.CTkLabel(coverage_frame, text="Coverage", 
+        coverage_title = ctk.CTkLabel(coverage_frame, text="📊 Coverage", 
                                      font=ctk.CTkFont(size=14, weight="bold"), text_color="#1F6AA5")
         coverage_title.pack(anchor="w")
         
@@ -2965,7 +2852,7 @@ class StatsScreen(ctk.CTkFrame):
         adaptive_title.pack(anchor="w")
         
         adaptive_text = ctk.CTkLabel(adaptive_frame, 
-                                     text="The system ensures 60-70% of questions match your level, with the remainder from nearby levels. It avoids recently seen questions (especially wrong ones) and focuses on weak topics to promote actual learning rather than memorization.",
+                                     text="The system ensures 60-70% of questions match your level, with the remainder from nearby levels (once you reach 25% mastery). It avoids recently seen questions (especially wrong ones) and focuses on weak topics to promote actual learning rather than memorization.",
                                      font=ctk.CTkFont(size=12), wraplength=400, justify="left")
         adaptive_text.pack(anchor="w", pady=(2, 0))
         
@@ -2978,12 +2865,12 @@ class StatsScreen(ctk.CTkFrame):
         
         # UPDATED: Show new scoring values
         requirements_text = ctk.CTkLabel(requirements_frame, 
-                                         text="• Free-form correct: +1.75 points\n• Multiple choice correct: +0.85 points\n• Partially correct (free-form): +1.0 points\n• Unanswered questions: -0.5 points\n• Free-form wrong: -1.95 points\n• Multiple choice wrong: -2.00 points\n• Topics must be seen 4+ times to count toward mastery",
+                                         text="• Free-form correct: +1.95 points\n• Multiple choice correct: +0.95 points\n• Partially correct (free-form): +1.4 points\n• Unanswered questions: -0.2 points\n• Free-form wrong: -2.2 points\n• Multiple choice wrong: -2.65 points\n• Topics must be seen 4+ times to count toward mastery",
                                          font=ctk.CTkFont(size=12), wraplength=400, justify="left")
         requirements_text.pack(anchor="w", pady=(2, 0))
         
         progress_frame = ctk.CTkFrame(scrollable_explanations, fg_color="transparent")
-        progress_frame.pack(fill="x", pady=(10, 0))
+        progress_frame.pack(fill="x", pady=(10, 10))
         
         progress_title = ctk.CTkLabel(progress_frame, text="📈 Progress Timeline", 
                                       font=ctk.CTkFont(size=14, weight="bold"), text_color="#4CAF50")
@@ -3001,11 +2888,13 @@ class StatsScreen(ctk.CTkFrame):
                                       font=ctk.CTkFont(size=14, weight="bold"), text_color="#2196F3")
         level_up_title.pack(anchor="w")
 
-        # UPDATED: Changed from 90% to 85% for topic coverage
         level_up_text = ctk.CTkLabel(level_up_frame,
-                                     text="To advance a CEFR level, you must meet three conditions: 1. Sustained success (85% correct over 50 questions, for 25 consecutive windows). 2. Broad topic coverage (85% of topics in that level attempted). 3. A minimum overall mastery score of 50%.",
+                                     text="To advance a CEFR level, you must meet three conditions: 1. Sustained success (85% correct over 50 questions, for 25 consecutive windows). 2. Broad topic coverage (85% of topics in that level attempted). 3. A minimum overall mastery score of 50%. Questions from the next level are only introduced once you achieve 25% mastery of your current level.",
                                      font=ctk.CTkFont(size=12), wraplength=400, justify="left")
         level_up_text.pack(anchor="w", pady=(2, 0))
+        
+        if hasattr(scrollable_explanations, '_mousewheel_handler'):
+            bind_children_scroll(scrollable_explanations, scrollable_explanations._mousewheel_handler)
 
     def confirm_clear_progress(self):
         dialog = ctk.CTkToplevel(self)
@@ -3056,338 +2945,7 @@ class StatsScreen(ctk.CTkFrame):
         
         self.refresh_data()
         self.controller.frames[HomeScreen].refresh_data()
-    def __init__(self, parent, controller):
-        super().__init__(parent)
-        self.controller = controller
-        
-        header_frame = ctk.CTkFrame(self, fg_color="transparent")
-        header_frame.pack(fill="x", padx=20, pady=20)
-        
-        back_button = ctk.CTkButton(header_frame, text="← Back to Home", 
-                                    command=lambda: controller.show_frame(HomeScreen),
-                                    width=120, height=32)
-        back_button.pack(side="left")
-        
-        title_label = ctk.CTkLabel(header_frame, text="📈 Progress and Analytics", font=ctk.CTkFont(size=28, weight="bold"))
-        title_label.pack(side="left", padx=(40, 0))
-        # NOTE: Clear button removed from header
 
-        self.main_scroll = ctk.CTkScrollableFrame(self)
-        self.main_scroll.pack(fill="both", expand=True, padx=20, pady=(0, 20))
-        
-        # New progress summary frame
-        self.summary_frame = ctk.CTkFrame(self.main_scroll, fg_color="transparent")
-        self.summary_frame.pack(fill="x", pady=(0, 20), padx=50)
-        self.summary_label = ctk.CTkLabel(self.summary_frame, text="", font=ctk.CTkFont(size=18))
-        self.summary_label.pack(pady=15, padx=10)
-
-        # Progress Timeline (new top graph)
-        self.timeline_frame = ctk.CTkFrame(self.main_scroll)
-        self.timeline_frame.pack(pady=(0, 20), padx=50)
-        
-        # CEFR Level Completion and Level Progress table
-        self.stats_frame = ctk.CTkFrame(self.main_scroll)
-        self.stats_frame.pack(pady=(0, 20), padx=50)
-        
-        # NEW: Detailed level-by-level progress metrics
-        self.level_details_frame = ctk.CTkFrame(self.main_scroll)
-        self.level_details_frame.pack(fill="x", pady=(0, 20), padx=50)
-        
-        # Recent Quiz Performance (moved down)
-        self.graph_frame = ctk.CTkFrame(self.main_scroll)
-        self.graph_frame.pack(pady=(0, 20), padx=50)
-        
-        self.weaknesses_frame = ctk.CTkFrame(self.main_scroll)
-        self.weaknesses_frame.pack(fill="x", pady=(0, 20), padx=50)
-        
-        self.explanation_frame = ctk.CTkFrame(self.main_scroll)
-        self.explanation_frame.pack(fill="x", pady=(0, 20), padx=50)
-        
-        # Clear Progress button at the very bottom
-        clear_button_frame = ctk.CTkFrame(self.main_scroll, fg_color="transparent")
-        clear_button_frame.pack(fill="x", pady=(40, 40), padx=50)
-        
-        clear_button = ctk.CTkButton(clear_button_frame, text="Clear All Progress",
-                                     command=self.confirm_clear_progress,
-                                     fg_color="#D22B2B", hover_color="#AA2222",
-                                     width=200, height=40)
-        clear_button.pack()
-
-    def refresh_data(self):
-        self.update_summary()
-        self.update_progress_timeline()
-        self.update_stats_table()
-        self.update_level_details()
-        self.update_graph()
-        self.update_weaknesses()
-        self.update_explanations()
-        # Scroll to top after refreshing all data
-        self.main_scroll._parent_canvas.yview_moveto(0)
-
-    def update_summary(self):
-        """Updates the new summary text at the top of the stats page."""
-        current_level = self.controller.adaptive_engine.calculate_estimated_level()
-        next_level = self.controller.adaptive_engine.get_next_level(current_level)
-        
-        summary_text = f"Estimated CEFR Level: {current_level}    |    You are working towards: {next_level}"
-        if current_level == next_level: # Max level reached
-            summary_text = f"Estimated CEFR Level: {current_level}    |    Congratulations, you've reached the highest level!"
-
-        self.summary_label.configure(text=summary_text)
-
-    def update_progress_timeline(self):
-        """Create the new Progress Timeline plot"""
-        for widget in self.timeline_frame.winfo_children():
-            widget.destroy()
-        
-        title_label = ctk.CTkLabel(self.timeline_frame, text="Progress Timeline", 
-                                   font=ctk.CTkFont(size=18, weight="bold"))
-        title_label.pack(pady=(15, 10))
-        
-        conn = sqlite3.connect('italian_quiz.db')
-        cursor = conn.cursor()
-        
-        # Get all daily stats
-        cursor.execute('''
-            SELECT date, total_coverage, total_mastery 
-            FROM daily_stats 
-            ORDER BY date
-        ''')
-        daily_data = cursor.fetchall()
-        
-        # Get the first quiz date if no daily stats exist yet
-        if not daily_data:
-            cursor.execute('''
-                SELECT MIN(DATE(timestamp)) as first_date 
-                FROM quiz_history
-            ''')
-            first_quiz = cursor.fetchone()
-            if first_quiz and first_quiz[0]:
-                # Temporarily get a row_factory cursor to calculate current stats
-                conn.row_factory = sqlite3.Row
-                cursor = conn.cursor()
-                coverage, mastery = self.controller.adaptive_engine.get_total_coverage_and_mastery(cursor)
-                daily_data = [(datetime.now().date().isoformat(), coverage, mastery)]
-        
-        conn.close()
-        
-        if not daily_data:
-            no_data_label = ctk.CTkLabel(self.timeline_frame, 
-                                         text="No progress data yet.\nComplete a quiz to start tracking your progress!", 
-                                         font=ctk.CTkFont(size=14))
-            no_data_label.pack(expand=True, pady=30)
-            return
-        
-        # Parse dates and values
-        dates = []
-        coverage_values = []
-        mastery_values = []
-        
-        # Add a starting point (day before first data)
-        first_date = datetime.fromisoformat(daily_data[0][0])
-        start_date = first_date - timedelta(days=1)
-        dates.append(start_date)
-        coverage_values.append(0)
-        mastery_values.append(0)
-        
-        # Add actual data
-        for date_str, coverage, mastery in daily_data:
-            dates.append(datetime.fromisoformat(date_str))
-            coverage_values.append(coverage * 100)  # Convert to percentage
-            mastery_values.append(mastery * 100)
-        
-        # Create the plot
-        fig, ax = plt.subplots(figsize=(10, 5), facecolor="#F0F0F0")
-        
-        # Plot coverage line with blue fill
-        ax.fill_between(dates, 0, coverage_values, alpha=0.5, color='#1F6AA5', zorder=1)
-        ax.plot(dates, coverage_values, color='#1F6AA5', linewidth=2, zorder=2)
-        
-        # Plot mastery line with gold fill (on top)
-        ax.fill_between(dates, 0, mastery_values, alpha=0.7, color='#FFD700', zorder=3)
-        ax.plot(dates, mastery_values, color='#FFD700', linewidth=2, zorder=4)
-        
-        # Format the plot
-        ax.set_xlabel("Date", color="black", fontsize=11)
-        ax.set_ylabel("Percentage (%)", color="black", fontsize=11)
-        
-        # Autoscale y-axis with some padding
-        if coverage_values or mastery_values:
-            max_value = max(max(coverage_values) if coverage_values else 0, 
-                           max(mastery_values) if mastery_values else 0)
-            min_value = min(min(coverage_values) if coverage_values else 0,
-                           min(mastery_values) if mastery_values else 0)
-            
-            # Add 10% padding above and below, but keep 0 as minimum if data starts from 0
-            padding = (max_value - min_value) * 0.1 if max_value > min_value else 5
-            y_min = max(0, min_value - padding)  # Don't go below 0
-            y_max = min(105, max_value + padding)  # Don't exceed 105% (since it's percentage)
-            
-            # If values are very small, ensure we have a reasonable scale
-            if y_max < 10:
-                y_max = 10
-                
-            ax.set_ylim(y_min, y_max)
-        else:
-            ax.set_ylim(0, 10)  # Default for no data
-        
-        ax.set_facecolor("#FFFFFF")
-        
-        # Format x-axis dates
-        ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d'))
-        ax.xaxis.set_major_locator(mdates.DayLocator(interval=max(1, len(dates) // 10)))
-        fig.autofmt_xdate()
-        
-        # Grid
-        ax.grid(True, which='major', linestyle='--', linewidth=0.5, color='gray', alpha=0.3)
-        
-        # Spines
-        for spine in ax.spines.values():
-            spine.set_color('black')
-            spine.set_linewidth(1)
-        
-        ax.tick_params(axis='x', colors='black')
-        ax.tick_params(axis='y', colors='black')
-        
-        # Create horizontal legend above the plot
-        from matplotlib.patches import Patch
-        legend_elements = [
-            Patch(facecolor='#1F6AA5', alpha=0.7, label='Coverage'),
-            Patch(facecolor='#FFD700', alpha=0.7, label='Mastery')
-        ]
-        ax.legend(handles=legend_elements, loc='upper center', bbox_to_anchor=(0.5, 1.15),
-                  ncol=2, frameon=False)
-        
-        canvas = FigureCanvasTkAgg(fig, master=self.timeline_frame)
-        canvas.draw()
-        canvas.get_tk_widget().pack(side="top", fill="both", expand=True, pady=10)
-
-    def update_progress_timeline(self):
-        """Create the new Progress Timeline plot with linear time-spaced ticks"""
-        for widget in self.timeline_frame.winfo_children():
-            widget.destroy()
-        
-        title_label = ctk.CTkLabel(self.timeline_frame, text="Progress Timeline", 
-                                   font=ctk.CTkFont(size=18, weight="bold"))
-        title_label.pack(pady=(15, 10))
-        
-        conn = sqlite3.connect('italian_quiz.db')
-        cursor = conn.cursor()
-        
-        # Get all daily stats
-        cursor.execute('''
-            SELECT date, total_coverage, total_mastery 
-            FROM daily_stats 
-            ORDER BY date
-        ''')
-        daily_data = cursor.fetchall()
-        
-        # Get the first quiz date if no daily stats exist yet
-        if not daily_data:
-            cursor.execute('''
-                SELECT MIN(DATE(timestamp)) as first_date 
-                FROM quiz_history
-            ''')
-            first_quiz = cursor.fetchone()
-            if first_quiz and first_quiz[0]:
-                # Temporarily get a row_factory cursor to calculate current stats
-                conn.row_factory = sqlite3.Row
-                cursor = conn.cursor()
-                coverage, mastery = self.controller.adaptive_engine.get_total_coverage_and_mastery(cursor)
-                daily_data = [(datetime.now().date().isoformat(), coverage, mastery)]
-        
-        conn.close()
-        
-        if not daily_data:
-            no_data_label = ctk.CTkLabel(self.timeline_frame, 
-                                         text="No progress data yet.\nComplete a quiz to start tracking your progress!", 
-                                         font=ctk.CTkFont(size=14))
-            no_data_label.pack(expand=True, pady=30)
-            return
-        
-        # Parse dates and values
-        dates = []
-        coverage_values = []
-        mastery_values = []
-        
-        # Add a starting point (day before first data) to make the graph look nicer
-        first_date = datetime.fromisoformat(daily_data[0][0])
-        start_date = first_date - timedelta(days=1)
-        dates.append(start_date)
-        coverage_values.append(0)
-        mastery_values.append(0)
-        
-        # Add actual data
-        for date_str, coverage, mastery in daily_data:
-            dates.append(datetime.fromisoformat(date_str))
-            coverage_values.append(coverage * 100)  # Convert to percentage
-            mastery_values.append(mastery * 100)
-        
-        # Create the plot
-        # Increased DPI slightly for better text rendering on scaling
-        fig, ax = plt.subplots(figsize=(10, 5), facecolor="#F0F0F0", dpi=100)
-        
-        # Plot coverage line with blue fill
-        ax.fill_between(dates, 0, coverage_values, alpha=0.5, color='#1F6AA5', zorder=1)
-        ax.plot(dates, coverage_values, color='#1F6AA5', linewidth=2, zorder=2)
-        
-        # Plot mastery line with gold fill (on top)
-        ax.fill_between(dates, 0, mastery_values, alpha=0.7, color='#FFD700', zorder=3)
-        ax.plot(dates, mastery_values, color='#FFD700', linewidth=2, zorder=4)
-        
-        # Format the plot
-        ax.set_xlabel("Date", color="black", fontsize=11)
-        ax.set_ylabel("Percentage (%)", color="black", fontsize=11)
-        
-        # Autoscale y-axis with some padding
-        if coverage_values or mastery_values:
-            max_value = max(max(coverage_values) if coverage_values else 0, 
-                           max(mastery_values) if mastery_values else 0)
-            
-            # Always show at least 0-10, but scale up if user progresses
-            y_max = max(10, min(105, max_value * 1.2))
-            ax.set_ylim(0, y_max)
-        else:
-            ax.set_ylim(0, 10)
-        
-        ax.set_facecolor("#FFFFFF")
-        
-        # --- FIXED X-AXIS LOGIC ---
-        # 1. Use AutoDateLocator: This automatically finds the best "Even" spacing 
-        # (e.g., every 3 days, every week) regardless of gaps in your data.
-        locator = mdates.AutoDateLocator(minticks=5, maxticks=12)
-        ax.xaxis.set_major_locator(locator)
-        
-        # 2. Format the date text
-        ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d'))
-        
-        # 3. Rotate dates slightly to prevent overlap
-        fig.autofmt_xdate()
-        # -------------------------------
-        
-        # Grid
-        ax.grid(True, which='major', linestyle='--', linewidth=0.5, color='gray', alpha=0.3)
-        
-        # Spines
-        for spine in ax.spines.values():
-            spine.set_color('black')
-            spine.set_linewidth(1)
-        
-        ax.tick_params(axis='x', colors='black')
-        ax.tick_params(axis='y', colors='black')
-        
-        # Create horizontal legend above the plot
-        from matplotlib.patches import Patch
-        legend_elements = [
-            Patch(facecolor='#1F6AA5', alpha=0.7, label='Coverage'),
-            Patch(facecolor='#FFD700', alpha=0.7, label='Mastery')
-        ]
-        ax.legend(handles=legend_elements, loc='upper center', bbox_to_anchor=(0.5, 1.15),
-                  ncol=2, frameon=False)
-        
-        canvas = FigureCanvasTkAgg(fig, master=self.timeline_frame)
-        canvas.draw()
-        canvas.get_tk_widget().pack(side="top", fill="both", expand=True, pady=10)
 
 if __name__ == "__main__":
     app = QuizApp()
