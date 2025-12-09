@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 """
-Safe update of existing Italian Quiz database - COMPREHENSIVE VERSION
-Preserves all user progress while updating questions from CSV files.
-Handles the comprehensive CSV format with all fields including complete_sentence.
+Update Italian Quiz Database from CSV Files
+Matches setup_new_database.py hash function exactly.
 
-Compatible with comprehensive dataset generator (217 total topics):
-- A1: 46 topics
-- A2: 48 topics  
-- B1: 42 topics
-- B2: 43 topics
-- C1: 38 topics
+Purpose:
+- Update existing questions (preserves progress on unchanged questions)
+- Add new questions from CSV
+- Remove questions no longer in CSV (archives with progress data)
+- Handle topic name changes gracefully
 
-Usage: python update_existing_database.py
+Usage: python update_database.py
 """
 
 import sqlite3
@@ -20,147 +18,175 @@ import os
 import hashlib
 import shutil
 from datetime import datetime
+from pathlib import Path
 
 # Configuration
 DB_FILE = "italian_quiz.db"
 BACKUP_DIR = "backups"
-CSV_FILES = [
-    "data/italian_A1.csv",
-    "data/italian_A2.csv", 
-    "data/italian_B1.csv",
-    "data/italian_B2.csv",
-    "data/italian_C1.csv"
-]
+DATA_DIR = "data"
+LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1']
 REPORT_FILE = "UPDATE_REPORT.txt"
 
-# Expected topic counts from comprehensive generator
-EXPECTED_TOPIC_COUNTS = {
-    'A1': 46,
-    'A2': 48,
-    'B1': 42,
-    'B2': 43,
-    'C1': 38
-}
-
-def generate_question_hash(question_text, english_translation, option_a, option_b, option_c, option_d, correct_option, cefr_level, topic):
+def generate_hash(level: str, question_text: str) -> str:
     """
-    Generate a stable hash for a question based on its core content.
-    Note: complete_sentence is NOT included in hash as it's derived from question_text + correct_option.
+    Generate hash exactly like setup_new_database.py does.
+    Hash = MD5 of "level:question_text" (first 16 chars)
     """
-    content_parts = [
-        question_text.strip().lower(),
-        english_translation.strip().lower(),
-        option_a.strip().lower(),
-        option_b.strip().lower(), 
-        option_c.strip().lower(),
-        option_d.strip().lower(),
-        correct_option.strip().upper(),
-        cefr_level.strip().upper(),
-        topic.strip().lower()
-    ]
-    
-    content_string = "|".join(content_parts)
-    return hashlib.sha256(content_string.encode('utf-8')).hexdigest()[:16]
+    return hashlib.md5(f"{level}:{question_text}".encode()).hexdigest()[:16]
 
-def create_backup():
-    """Create a backup of the current database."""
+def create_backup() -> str:
+    """Create timestamped backup of database."""
     if not os.path.exists(DB_FILE):
-        print(f"No database file '{DB_FILE}' found to backup.")
+        print(f"⚠️  No database file found: {DB_FILE}")
         return None
     
-    # Create backup directory if it doesn't exist
     os.makedirs(BACKUP_DIR, exist_ok=True)
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    backup_file = f"{BACKUP_DIR}/italian_quiz_backup_{timestamp}.db"
     
-    backup_name = f"{BACKUP_DIR}/italian_quiz_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.db"
-    try:
-        shutil.copy2(DB_FILE, backup_name)
-        print(f"Database backed up to: {backup_name}")
-        return backup_name
-    except Exception as e:
-        print(f"Failed to create backup: {e}")
-        return None
+    shutil.copy2(DB_FILE, backup_file)
+    print(f"✅ Backup created: {backup_file}")
+    return backup_file
 
-def check_database_compatibility():
-    """Check if the database has the required schema for safe updates."""
-    if not os.path.exists(DB_FILE):
-        print(f"Database file '{DB_FILE}' not found!")
-        print("Use setup_database.py to create a new database.")
-        return False
+def find_csv_files() -> dict:
+    """Find CSV files for each level."""
+    files = {}
     
+    for level in LEVELS:
+        # Try both Italian_A1.csv and italian_A1.csv
+        for filename in [f"Italian_{level}.csv", f"italian_{level}.csv"]:
+            filepath = Path(DATA_DIR) / filename
+            if filepath.exists():
+                files[level] = filepath
+                break
+    
+    return files
+
+def load_csv_questions(csv_files: dict) -> dict:
+    """
+    Load all questions from CSV files with validation.
+    Returns: {hash: {question_data}}
+    Skips invalid questions like setup script does.
+    """
+    csv_questions = {}
+    stats = {
+        'total_rows': 0,
+        'valid_questions': 0,
+        'skipped_missing_fields': 0,
+        'skipped_invalid_option': 0,
+        'skipped_duplicates': 0
+    }
+    
+    for level, filepath in csv_files.items():
+        print(f"📂 Reading {filepath}...")
+        
+        with open(filepath, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            
+            for row in reader:
+                stats['total_rows'] += 1
+                
+                # 1. Basic Validation - same as setup script
+                required = ['question_text', 'correct_option', 'option_a', 'topic']
+                if any(not row.get(field) for field in required):
+                    stats['skipped_missing_fields'] += 1
+                    continue
+                
+                # 2. Validate Correct Option - same as setup script
+                correct = row['correct_option'].strip().upper()
+                if correct not in ['A', 'B', 'C', 'D']:
+                    stats['skipped_invalid_option'] += 1
+                    continue
+                
+                # 3. Generate hash using setup script's method
+                q_text = row['question_text'].strip()
+                question_hash = generate_hash(level, q_text)
+                
+                # 4. Skip duplicates within CSV
+                if question_hash in csv_questions:
+                    stats['skipped_duplicates'] += 1
+                    continue
+                
+                # Store all question data
+                csv_questions[question_hash] = {
+                    'complete_sentence': row.get('complete_sentence', '').strip(),
+                    'question_text': q_text,
+                    'english_translation': row.get('english_translation', '').strip(),
+                    'hint': row.get('hint', '').strip(),
+                    'alternate_correct_responses': row.get('alternate_correct_responses', '').strip(),
+                    'option_a': row.get('option_a', '').strip(),
+                    'option_b': row.get('option_b', '').strip(),
+                    'option_c': row.get('option_c', '').strip(),
+                    'option_d': row.get('option_d', '').strip(),
+                    'correct_option': correct,
+                    'cefr_level': level,
+                    'topic': row.get('topic', '').strip(),
+                    'explanation': row.get('explanation', '').strip(),
+                    'resource': row.get('resource', '').strip(),
+                }
+                
+                stats['valid_questions'] += 1
+    
+    # Print validation summary
+    print(f"\n📊 CSV Validation Summary:")
+    print(f"   Total rows processed: {stats['total_rows']}")
+    print(f"   Valid questions: {stats['valid_questions']}")
+    if stats['skipped_missing_fields'] > 0:
+        print(f"   ⚠️  Skipped (missing fields): {stats['skipped_missing_fields']}")
+    if stats['skipped_invalid_option'] > 0:
+        print(f"   ⚠️  Skipped (invalid correct_option): {stats['skipped_invalid_option']}")
+    if stats['skipped_duplicates'] > 0:
+        print(f"   ⚠️  Skipped (duplicates): {stats['skipped_duplicates']}")
+    
+    return csv_questions
+
+def load_db_questions() -> dict:
+    """
+    Load all questions from database.
+    Returns: {hash: {id, question_data}}
+    """
+    conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT id, hash_id, complete_sentence, question_text, english_translation,
+               hint, alternate_correct_responses, option_a, option_b, option_c, option_d,
+               correct_option, cefr_level, topic, explanation, resource, created_at
+        FROM questions
+    """)
+    
+    db_questions = {}
+    for row in cursor.fetchall():
+        db_questions[row['hash_id']] = dict(row)
+    
+    conn.close()
+    return db_questions
+
+def compare_questions(csv_data: dict, db_data: dict) -> bool:
+    """Check if question data has changed (excluding id and hash)."""
+    # Compare all fields except id and hash_id
+    fields = ['complete_sentence', 'question_text', 'english_translation', 'hint',
+              'alternate_correct_responses', 'option_a', 'option_b', 'option_c', 'option_d',
+              'correct_option', 'cefr_level', 'topic', 'explanation', 'resource']
+    
+    for field in fields:
+        if csv_data.get(field, '') != db_data.get(field, ''):
+            return False
+    
+    return True
+
+def check_and_add_columns():
+    """Ensure archive tables exist."""
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     
-    try:
-        # Check if questions table has required columns
-        cursor.execute("PRAGMA table_info(questions)")
-        columns = [col[1] for col in cursor.fetchall()]
-        
-        required_columns = ['question_hash', 'created_at', 'updated_at']
-        missing_columns = [col for col in required_columns if col not in columns]
-        
-        if missing_columns:
-            print(f"Database is missing required columns: {missing_columns}")
-            print("The database needs to be migrated for safe updates.")
-            print("Please run the migration script first.")
-            return False
-        
-        # Check if question_update_log table exists
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='question_update_log'")
-        if not cursor.fetchone():
-            print("Database is missing the question_update_log table.")
-            print("The database needs to be migrated for safe updates.")
-            return False
-        
-        # Add new columns if they don't exist
-        columns_added = False
-        
-        if 'hint' not in columns:
-            print("Adding missing 'hint' column to questions table...")
-            cursor.execute("ALTER TABLE questions ADD COLUMN hint TEXT")
-            columns_added = True
-            print("Hint column added successfully.")
-        
-        if 'alternate_correct_responses' not in columns:
-            print("Adding missing 'alternate_correct_responses' column to questions table...")
-            cursor.execute("ALTER TABLE questions ADD COLUMN alternate_correct_responses TEXT")
-            columns_added = True
-            print("Alternate correct responses column added successfully.")
-        
-        if 'resource' not in columns:
-            print("Adding missing 'resource' column to questions table...")
-            cursor.execute("ALTER TABLE questions ADD COLUMN resource TEXT")
-            columns_added = True
-            print("Resource column added successfully.")
-        
-        if 'complete_sentence' not in columns:
-            print("Adding missing 'complete_sentence' column to questions table...")
-            cursor.execute("ALTER TABLE questions ADD COLUMN complete_sentence TEXT")
-            columns_added = True
-            print("Complete sentence column added successfully.")
-        
-        if columns_added:
-            conn.commit()
-        
-        return True
-        
-    except Exception as e:
-        print(f"Error checking database compatibility: {e}")
-        return False
-    finally:
-        conn.close()
-
-def create_archive_tables_if_needed():
-    """Create archive tables for removed questions and their progress data."""
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    
-    try:
-        # Archive table for removed questions
-        cursor.execute('''
+    # Ensure archive tables exist
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS archived_questions (
-            id INTEGER PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             original_question_id INTEGER NOT NULL,
-            question_hash TEXT NOT NULL,
+            hash_id TEXT NOT NULL,
             complete_sentence TEXT,
             question_text TEXT NOT NULL,
             english_translation TEXT NOT NULL,
@@ -176,37 +202,35 @@ def create_archive_tables_if_needed():
             explanation TEXT,
             resource TEXT,
             created_at TIMESTAMP,
-            updated_at TIMESTAMP,
             archived_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             removal_reason TEXT
         )
-        ''')
-        
-        # Archive table for enhanced performance data
-        cursor.execute('''
+    """)
+    
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS archived_enhanced_performance (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             original_question_id INTEGER NOT NULL,
-            question_hash TEXT NOT NULL,
+            hash_id TEXT NOT NULL,
             correct_count INTEGER DEFAULT 0,
             incorrect_count INTEGER DEFAULT 0,
-            last_seen TIMESTAMP,
-            next_review TIMESTAMP,
-            mastery_level INTEGER DEFAULT 0,
-            freeform_correct_count INTEGER DEFAULT 0,
-            freeform_incorrect_count INTEGER DEFAULT 0,
             partial_correct_count INTEGER DEFAULT 0,
+            freeform_correct_count INTEGER DEFAULT 0,
+            last_seen TIMESTAMP,
+            last_answered_at TIMESTAMP,
+            next_review_at TIMESTAMP,
+            mastery_level REAL DEFAULT 0.0,
+            history_string TEXT DEFAULT '',
             archived_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-        ''')
-        
-        # Archive table for answer history
-        cursor.execute('''
+    """)
+    
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS archived_answer_history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             original_answer_id INTEGER NOT NULL,
             original_question_id INTEGER NOT NULL,
-            question_hash TEXT NOT NULL,
+            hash_id TEXT NOT NULL,
             user_answer TEXT,
             correct_answer TEXT,
             is_correct BOOLEAN,
@@ -215,601 +239,353 @@ def create_archive_tables_if_needed():
             cefr_level TEXT NOT NULL,
             archived_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-        ''')
-        
-        conn.commit()
-        print("Archive tables created/verified.")
-        
-    except Exception as e:
-        print(f"Error creating archive tables: {e}")
-        return False
-    finally:
-        conn.close()
+    """)
     
-    return True
+    conn.commit()
+    conn.close()
 
-def archive_removed_questions(csv_hashes):
-    """Archive questions and their progress data that are no longer in CSV files."""
+def update_database(csv_questions: dict, db_questions: dict) -> dict:
+    """
+    Update database with CSV data.
+    Returns statistics about changes.
+    """
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     
     stats = {
-        'questions_archived': 0,
-        'performance_archived': 0,
-        'answers_archived': 0,
+        'unchanged': 0,
+        'updated': 0,
+        'added': 0,
+        'removed': 0,
         'errors': 0
     }
     
-    try:
-        # Find questions that exist in database but not in CSV files
-        cursor.execute('SELECT question_hash, id FROM questions')
-        db_questions = cursor.fetchall()
-        
-        questions_to_archive = []
-        for hash_val, question_id in db_questions:
-            if hash_val not in csv_hashes:
-                questions_to_archive.append((hash_val, question_id))
-        
-        if not questions_to_archive:
-            print("No questions need to be removed.")
-            return stats
-        
-        print(f"Found {len(questions_to_archive)} questions to archive/remove...")
-        
-        for question_hash, question_id in questions_to_archive:
-            try:
-                # Archive the question itself (with complete_sentence if it exists)
-                cursor.execute('''
-                INSERT INTO archived_questions 
-                (original_question_id, question_hash, complete_sentence, question_text, english_translation, 
-                 hint, alternate_correct_responses,
-                 option_a, option_b, option_c, option_d, correct_option, cefr_level, 
-                 topic, explanation, resource, created_at, updated_at, removal_reason)
-                SELECT id, question_hash, complete_sentence, question_text, english_translation, 
-                       hint, alternate_correct_responses,
-                       option_a, option_b, option_c, option_d, correct_option, cefr_level, 
-                       topic, explanation, resource, created_at, updated_at, 'No longer in CSV files'
-                FROM questions WHERE id = ?
-                ''', (question_id,))
-                
-                # Archive enhanced performance data if it exists
-                cursor.execute('''
-                INSERT INTO archived_enhanced_performance 
-                (original_question_id, question_hash, correct_count, incorrect_count, 
-                 last_seen, next_review, mastery_level, freeform_correct_count, 
-                 freeform_incorrect_count, partial_correct_count)
-                SELECT question_id, ?, correct_count, incorrect_count, 
-                       last_seen, next_review, mastery_level, 
-                       IFNULL(freeform_correct_count, 0), 
-                       IFNULL(freeform_incorrect_count, 0), 
-                       IFNULL(partial_correct_count, 0)
-                FROM enhanced_performance WHERE question_id = ?
-                ''', (question_hash, question_id))
-                
-                if cursor.rowcount > 0:
-                    stats['performance_archived'] += 1
-                
-                # Archive answer history if it exists
-                cursor.execute('''
-                INSERT INTO archived_answer_history 
-                (original_answer_id, original_question_id, question_hash, user_answer, 
-                 correct_answer, is_correct, timestamp, quiz_session_id, cefr_level)
-                SELECT id, question_id, ?, user_answer, correct_answer, is_correct, 
-                       timestamp, quiz_session_id, cefr_level
-                FROM answer_history WHERE question_id = ?
-                ''', (question_hash, question_id))
-                
-                if cursor.rowcount > 0:
-                    stats['answers_archived'] += cursor.rowcount
-                
-                # Now remove from active tables
-                cursor.execute('DELETE FROM answer_history WHERE question_id = ?', (question_id,))
-                cursor.execute('DELETE FROM enhanced_performance WHERE question_id = ?', (question_id,))
-                cursor.execute('DELETE FROM questions WHERE id = ?', (question_id,))
-                
-                # Log the removal
-                cursor.execute('''
-                INSERT INTO question_update_log 
-                (question_hash, old_question_id, new_question_id, update_type, timestamp, notes)
-                VALUES (?, ?, ?, ?, ?, ?)
-                ''', (question_hash, question_id, None, 'archived', 
-                     datetime.now().isoformat(), f'Question no longer in CSV files, archived with progress data'))
-                
-                stats['questions_archived'] += 1
-                print(f"   Archived question {question_id} (hash: {question_hash[:8]}...)")
-                
-            except Exception as e:
-                print(f"Error archiving question {question_id}: {e}")
-                stats['errors'] += 1
-                continue
-        
-        conn.commit()
-        
-    except Exception as e:
-        print(f"Error during archive process: {e}")
-        stats['errors'] += 1
-    finally:
-        conn.close()
+    current_time = datetime.now().isoformat()
     
-    return stats
-
-def safe_update_from_csv():
-    """Safely update the database from CSV files while preserving user progress."""
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-
-    stats = {
-        'new_questions': 0,
-        'updated_questions': 0,
-        'unchanged_questions': 0,
-        'errors': 0,
-        'files_processed': 0,
-        'duplicates_skipped': 0
-    }
-    
-    topic_counts = {}  # For report generation
-    
-    # Get existing questions for comparison
-    cursor.execute('''
-        SELECT question_hash, id, complete_sentence, question_text, english_translation, 
-               hint, alternate_correct_responses, option_a, option_b, option_c, option_d, 
-               correct_option, cefr_level, topic, explanation, resource 
-        FROM questions
-    ''')
-    existing_questions = {row[0]: row for row in cursor.fetchall()}  # hash -> full_record
-    
-    print("Starting safe database update...")
-    print(f"Found {len(existing_questions)} existing questions")
-    
-    # Keep track of all question hashes found in CSV files
-    csv_question_hashes = set()
-    
-    for filename in CSV_FILES:
-        if not os.path.exists(filename):
-            print(f"Warning: '{filename}' not found. Skipping.")
-            continue
-
-        print(f"\nProcessing '{filename}'...")
-        stats['files_processed'] += 1
-        
+    # Process CSV questions
+    for question_hash, csv_data in csv_questions.items():
         try:
-            with open(filename, mode='r', encoding='utf-8') as file:
-                csv_reader = csv.DictReader(file)
+            if question_hash in db_questions:
+                # Question exists - check if it needs updating
+                db_data = db_questions[question_hash]
                 
-                # Verify expected columns are present (comprehensive format)
-                expected_columns = [
-                    'complete_sentence', 'question_text', 'english_translation', 'hint', 
-                    'alternate_correct_responses', 'option_a', 'option_b', 'option_c', 
-                    'option_d', 'correct_option', 'cefr_level', 'topic', 'explanation', 'resource'
-                ]
+                if compare_questions(csv_data, db_data):
+                    stats['unchanged'] += 1
+                else:
+                    # Update existing question
+                    cursor.execute("""
+                        UPDATE questions
+                        SET complete_sentence = ?, question_text = ?, english_translation = ?,
+                            hint = ?, alternate_correct_responses = ?,
+                            option_a = ?, option_b = ?, option_c = ?, option_d = ?,
+                            correct_option = ?, cefr_level = ?, topic = ?,
+                            explanation = ?, resource = ?
+                        WHERE hash_id = ?
+                    """, (
+                        csv_data['complete_sentence'],
+                        csv_data['question_text'],
+                        csv_data['english_translation'],
+                        csv_data['hint'],
+                        csv_data['alternate_correct_responses'],
+                        csv_data['option_a'],
+                        csv_data['option_b'],
+                        csv_data['option_c'],
+                        csv_data['option_d'],
+                        csv_data['correct_option'],
+                        csv_data['cefr_level'],
+                        csv_data['topic'],
+                        csv_data['explanation'],
+                        csv_data['resource'],
+                        question_hash
+                    ))
+                    
+                    stats['updated'] += 1
+                    print(f"  ✏️  Updated: {csv_data['question_text'][:50]}...")
+            else:
+                # New question - add it
+                cursor.execute("""
+                    INSERT INTO questions (
+                        hash_id, complete_sentence, question_text, english_translation,
+                        hint, alternate_correct_responses,
+                        option_a, option_b, option_c, option_d,
+                        correct_option, cefr_level, topic,
+                        explanation, resource, created_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    question_hash,
+                    csv_data['complete_sentence'],
+                    csv_data['question_text'],
+                    csv_data['english_translation'],
+                    csv_data['hint'],
+                    csv_data['alternate_correct_responses'],
+                    csv_data['option_a'],
+                    csv_data['option_b'],
+                    csv_data['option_c'],
+                    csv_data['option_d'],
+                    csv_data['correct_option'],
+                    csv_data['cefr_level'],
+                    csv_data['topic'],
+                    csv_data['explanation'],
+                    csv_data['resource'],
+                    current_time
+                ))
                 
-                missing_columns = [col for col in expected_columns if col not in csv_reader.fieldnames]
+                question_id = cursor.lastrowid
                 
-                if missing_columns:
-                    print(f"Warning: '{filename}' missing columns: {missing_columns}")
-                    print(f"   Expected: {expected_columns}")
-                    print(f"   Found: {csv_reader.fieldnames}")
-                    # Continue anyway - we'll handle missing columns gracefully
+                # Initialize performance tracking
+                cursor.execute("""
+                    INSERT INTO enhanced_performance (question_id) VALUES (?)
+                """, (question_id,))
                 
-                for row_num, row in enumerate(csv_reader, start=2):  # Start at 2 for header
-                    try:
-                        # Validate required fields (core fields only)
-                        required_fields = ['question_text', 'english_translation', 'option_a', 
-                                         'option_b', 'option_c', 'option_d', 'correct_option', 
-                                         'cefr_level', 'topic', 'explanation']
-                        
-                        if not all(row.get(col, '').strip() for col in required_fields):
-                            print(f"Warning: Row {row_num} in '{filename}' has empty required fields. Skipping.")
-                            stats['errors'] += 1
-                            continue
-                        
-                        # Validate correct_option
-                        if row['correct_option'].upper() not in ['A', 'B', 'C', 'D']:
-                            print(f"Warning: Row {row_num} in '{filename}' has invalid correct_option '{row['correct_option']}'. Skipping.")
-                            stats['errors'] += 1
-                            continue
-                        
-                        # Generate hash for this question
-                        question_hash = generate_question_hash(
-                            row['question_text'], row['english_translation'], 
-                            row['option_a'], row['option_b'], row['option_c'], row['option_d'],
-                            row['correct_option'], row['cefr_level'], row['topic']
-                        )
-                        
-                        # Add to set of CSV hashes
-                        csv_question_hashes.add(question_hash)
-                        
-                        # Track for report
-                        level = row['cefr_level'].strip()
-                        topic = row['topic'].strip()
-                        if level not in topic_counts:
-                            topic_counts[level] = {}
-                        if topic not in topic_counts[level]:
-                            topic_counts[level][topic] = 0
-                        topic_counts[level][topic] += 1
-                        
-                        # Normalize values (handle optional fields gracefully)
-                        complete_sentence_value = row.get('complete_sentence', '').strip()
-                        hint_value = row.get('hint', '').strip()
-                        alternate_value = row.get('alternate_correct_responses', '').strip()
-                        resource_value = row.get('resource', '').strip()
-                        
-                        values = (
-                            complete_sentence_value,
-                            row['question_text'].strip(),
-                            row['english_translation'].strip(),
-                            hint_value,
-                            alternate_value,
-                            row['option_a'].strip(),
-                            row['option_b'].strip(),
-                            row['option_c'].strip(),
-                            row['option_d'].strip(),
-                            row['correct_option'].upper().strip(),
-                            row['cefr_level'].strip(),
-                            row['topic'].strip(),
-                            row['explanation'].strip(),
-                            resource_value
-                        )
-                        
-                        if question_hash in existing_questions:
-                            # Question exists - check if it needs updating
-                            existing_record = existing_questions[question_hash]
-                            existing_values = existing_record[2:]  # Skip hash and id
-                            
-                            if existing_values == values:
-                                # Identical - no update needed
-                                stats['unchanged_questions'] += 1
-                            else:
-                                # Content changed - update existing record (preserving ID and progress)
-                                cursor.execute('''
-                                UPDATE questions 
-                                SET complete_sentence=?, question_text=?, english_translation=?, hint=?, 
-                                    alternate_correct_responses=?, option_a=?, option_b=?, option_c=?, 
-                                    option_d=?, correct_option=?, cefr_level=?, topic=?, explanation=?, 
-                                    resource=?, updated_at=?
-                                WHERE question_hash=?
-                                ''', values + (datetime.now().isoformat(), question_hash))
-                                
-                                # Log the update
-                                cursor.execute('''
-                                INSERT INTO question_update_log 
-                                (question_hash, old_question_id, new_question_id, update_type, timestamp, notes)
-                                VALUES (?, ?, ?, ?, ?, ?)
-                                ''', (question_hash, existing_record[1], existing_record[1], 'updated', 
-                                     datetime.now().isoformat(), f'Updated content from {filename} row {row_num}'))
-                                
-                                stats['updated_questions'] += 1
-                                print(f"   Updated question {existing_record[1]} (hash: {question_hash[:8]}...)")
-                        else:
-                            # New question - try to insert with new ID
-                            try:
-                                current_time = datetime.now().isoformat()
-                                cursor.execute('''
-                                INSERT INTO questions 
-                                (question_hash, complete_sentence, question_text, english_translation, 
-                                 hint, alternate_correct_responses, option_a, option_b, option_c, option_d, 
-                                 correct_option, cefr_level, topic, explanation, resource, created_at, updated_at)
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                                ''', (question_hash,) + values + (current_time, current_time))
-                                
-                                new_id = cursor.lastrowid
-                                
-                                # Log the creation
-                                cursor.execute('''
-                                INSERT INTO question_update_log 
-                                (question_hash, old_question_id, new_question_id, update_type, timestamp, notes)
-                                VALUES (?, ?, ?, ?, ?, ?)
-                                ''', (question_hash, None, new_id, 'created', 
-                                     current_time, f'New question from {filename} row {row_num}'))
-                                
-                                stats['new_questions'] += 1
-                                print(f"   Added new question {new_id} (hash: {question_hash[:8]}...)")
-                                
-                            except sqlite3.IntegrityError as e:
-                                if "UNIQUE constraint failed" in str(e):
-                                    # This is a duplicate based on (question_text, cefr_level, topic)
-                                    stats['duplicates_skipped'] += 1
-                                    # Silently skip - this is expected behavior
-                                else:
-                                    print(f"Database error on row {row_num} in '{filename}': {e}")
-                                    stats['errors'] += 1
-                        
-                    except Exception as e:
-                        print(f"Error processing row {row_num} in '{filename}': {e}")
-                        stats['errors'] += 1
-                        continue
-                
+                stats['added'] += 1
+                print(f"  ➕ Added: {csv_data['question_text'][:50]}...")
+        
         except Exception as e:
-            print(f"Error reading '{filename}': {e}")
+            print(f"❌ Error processing {csv_data.get('question_text', 'unknown')}: {e}")
             stats['errors'] += 1
-            continue
-
-    # Commit changes from CSV processing
+    
+    # Find removed questions (in DB but not in CSV)
+    removed_hashes = set(db_questions.keys()) - set(csv_questions.keys())
+    
+    if removed_hashes:
+        print(f"\n⚠️  Found {len(removed_hashes)} questions to remove")
+        
+        # Safety check - don't remove more than 50% of questions
+        if len(removed_hashes) > len(db_questions) * 0.5:
+            print(f"❌ SAFETY: Refusing to remove {len(removed_hashes)}/{len(db_questions)} questions (>50%)")
+            print(f"   This seems like an error. No questions will be removed.")
+        else:
+            for removed_hash in removed_hashes:
+                db_data = db_questions[removed_hash]
+                
+                # Archive the question and its progress
+                try:
+                    # Archive question
+                    cursor.execute("""
+                        INSERT INTO archived_questions (
+                            original_question_id, hash_id, complete_sentence, question_text,
+                            english_translation, hint, alternate_correct_responses,
+                            option_a, option_b, option_c, option_d, correct_option,
+                            cefr_level, topic, explanation, resource,
+                            created_at, archived_at, removal_reason
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (
+                        db_data['id'], removed_hash,
+                        db_data['complete_sentence'], db_data['question_text'],
+                        db_data['english_translation'], db_data['hint'],
+                        db_data['alternate_correct_responses'],
+                        db_data['option_a'], db_data['option_b'],
+                        db_data['option_c'], db_data['option_d'],
+                        db_data['correct_option'], db_data['cefr_level'],
+                        db_data['topic'], db_data['explanation'],
+                        db_data['resource'], db_data.get('created_at'),
+                        current_time, 'No longer in CSV files'
+                    ))
+                    
+                    # Archive performance data
+                    cursor.execute("""
+                        INSERT INTO archived_enhanced_performance (
+                            original_question_id, hash_id, correct_count, incorrect_count,
+                            partial_correct_count, freeform_correct_count,
+                            last_seen, last_answered_at, next_review_at,
+                            mastery_level, history_string, archived_at
+                        )
+                        SELECT question_id, ?, correct_count, incorrect_count,
+                               partial_correct_count, freeform_correct_count,
+                               last_seen, last_answered_at, next_review_at,
+                               mastery_level, history_string, ?
+                        FROM enhanced_performance
+                        WHERE question_id = ?
+                    """, (removed_hash, current_time, db_data['id']))
+                    
+                    # Archive answer history
+                    cursor.execute("""
+                        INSERT INTO archived_answer_history (
+                            original_answer_id, original_question_id, hash_id,
+                            user_answer, correct_answer, is_correct,
+                            timestamp, quiz_session_id, cefr_level, archived_at
+                        )
+                        SELECT id, question_id, ?, user_answer, correct_answer,
+                               is_correct, timestamp, quiz_session_id, cefr_level, ?
+                        FROM answer_history
+                        WHERE question_id = ?
+                    """, (removed_hash, current_time, db_data['id']))
+                    
+                    # Delete from active tables
+                    cursor.execute("DELETE FROM answer_history WHERE question_id = ?", (db_data['id'],))
+                    cursor.execute("DELETE FROM enhanced_performance WHERE question_id = ?", (db_data['id'],))
+                    cursor.execute("DELETE FROM questions WHERE id = ?", (db_data['id'],))
+                    
+                    stats['removed'] += 1
+                    print(f"  🗑️  Removed: {db_data['question_text'][:50]}...")
+                
+                except Exception as e:
+                    print(f"❌ Error removing question {db_data['id']}: {e}")
+                    stats['errors'] += 1
+    
     conn.commit()
     conn.close()
     
-    return stats, csv_question_hashes, topic_counts
+    return stats
 
-def generate_update_report(stats, topic_counts):
-    """Generate a report of the update process."""
-    with open(REPORT_FILE, 'w', encoding='utf-8') as report:
-        report.write("ITALIAN QUIZ DATABASE UPDATE REPORT\n")
-        report.write("COMPREHENSIVE DATASET (217 Total Topics)\n")
-        report.write("=" * 80 + "\n")
-        report.write(f"Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-        report.write("=" * 80 + "\n\n")
-        
-        report.write("EXPECTED TOPIC COVERAGE\n")
-        report.write("-" * 40 + "\n")
-        for level, count in EXPECTED_TOPIC_COUNTS.items():
-            report.write(f"  {level}: {count} topics expected\n")
-        report.write(f"  TOTAL: {sum(EXPECTED_TOPIC_COUNTS.values())} topics\n\n")
-        
-        report.write("UPDATE STATISTICS\n")
-        report.write("-" * 40 + "\n")
-        report.write(f"Files processed: {stats['files_processed']}\n")
-        report.write(f"New questions added: {stats['new_questions']}\n")
-        report.write(f"Questions updated: {stats['updated_questions']}\n")
-        report.write(f"Questions unchanged: {stats['unchanged_questions']}\n")
-        report.write(f"Questions archived: {stats.get('questions_archived', 0)}\n")
-        report.write(f"Performance records archived: {stats.get('performance_archived', 0)}\n")
-        report.write(f"Answer history records archived: {stats.get('answers_archived', 0)}\n")
-        report.write(f"Duplicate questions skipped: {stats.get('duplicates_skipped', 0)}\n")
-        report.write(f"Errors encountered: {stats['errors']}\n")
-        report.write("\n")
-        
-        # Question counts by level and topic
-        report.write("CURRENT QUESTION COUNTS BY LEVEL AND TOPIC\n")
-        report.write("-" * 40 + "\n")
-        
-        level_order = ['A1', 'A2', 'B1', 'B2', 'C1']
-        
-        for level in level_order:
-            if level in topic_counts:
-                report.write(f"\nLEVEL {level} (Expected: {EXPECTED_TOPIC_COUNTS.get(level, '?')} topics)\n")
-                report.write("-" * 20 + "\n")
-                
-                sorted_topics = sorted(topic_counts[level].items())
-                total_for_level = 0
-                unique_topics = len(sorted_topics)
-                
-                for topic, count in sorted_topics:
-                    report.write(f"  {topic}: {count} questions\n")
-                    total_for_level += count
-                
-                report.write(f"  TOTAL FOR {level}: {total_for_level} questions across {unique_topics} topics\n")
-                
-                # Show topic coverage vs expected
-                expected = EXPECTED_TOPIC_COUNTS.get(level, 0)
-                if unique_topics < expected:
-                    report.write(f"  ⚠️  WARNING: Only {unique_topics} topics found, expected {expected}\n")
-                elif unique_topics > expected:
-                    report.write(f"  ℹ️  INFO: {unique_topics} topics found, expected {expected} (may include new topics)\n")
-                else:
-                    report.write(f"  ✓ Complete topic coverage: {unique_topics}/{expected}\n")
-        
-        # Overall summary
-        report.write("\n" + "=" * 80 + "\n")
-        report.write("OVERALL SUMMARY\n")
-        report.write("-" * 40 + "\n")
-        
-        grand_total = 0
-        total_topics = 0
-        for level in level_order:
-            if level in topic_counts:
-                level_total = sum(topic_counts[level].values())
-                level_topics = len(topic_counts[level])
-                report.write(f"  {level}: {level_total} questions across {level_topics} topics\n")
-                grand_total += level_total
-                total_topics += level_topics
-        
-        report.write(f"\n  GRAND TOTAL: {grand_total} active questions across {total_topics} topics\n")
-        report.write(f"  Expected: 217 total topics across all levels\n")
-        report.write("=" * 80 + "\n")
+def verify_integrity() -> bool:
+    """Verify database integrity after update."""
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
     
-    print(f"\nUpdate report generated: {REPORT_FILE}")
+    # Check for orphaned performance records
+    cursor.execute("""
+        SELECT COUNT(*) FROM enhanced_performance ep
+        LEFT JOIN questions q ON ep.question_id = q.id
+        WHERE q.id IS NULL
+    """)
+    orphaned = cursor.fetchone()[0]
+    
+    conn.close()
+    
+    if orphaned > 0:
+        print(f"⚠️  Warning: {orphaned} orphaned performance records found")
+        return False
+    
+    return True
 
-def main():
-    """Main function to update an existing database."""
-    print("ITALIAN QUIZ - DATABASE UPDATE (COMPREHENSIVE)")
-    print("=" * 50)
-    print("Comprehensive Dataset: 217 topics total")
-    print("  A1: 46 | A2: 48 | B1: 42 | B2: 43 | C1: 38")
-    print("=" * 50)
-    print("This will safely update your database while preserving all progress.")
-    print("Questions no longer in CSV files will be archived (not deleted).")
-    print("=" * 50)
-    
-    # Check if database exists and is compatible
-    if not check_database_compatibility():
-        return
-    
-    # Create archive tables
-    if not create_archive_tables_if_needed():
-        print("Failed to create archive tables. Aborting update.")
-        return
-    
-    # Create backup
-    backup_path = create_backup()
-    if not backup_path:
-        response = input("Failed to create backup. Continue anyway? (yes/no): ")
-        if response.lower() not in ['yes', 'y']:
-            print("Update cancelled.")
-            return
-    
-    try:
-        # Perform the safe update and get CSV hashes
-        update_stats, csv_hashes, topic_counts = safe_update_from_csv()
+def generate_report(stats: dict, csv_files: dict):
+    """Generate update report."""
+    with open(REPORT_FILE, 'w', encoding='utf-8') as f:
+        f.write("=" * 70 + "\n")
+        f.write("ITALIAN QUIZ DATABASE UPDATE REPORT\n")
+        f.write("=" * 70 + "\n")
+        f.write(f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
         
-        # Archive questions no longer in CSV files
-        print(f"\nChecking for questions to archive...")
-        archive_stats = archive_removed_questions(csv_hashes)
+        f.write("FILES PROCESSED:\n")
+        for level, filepath in csv_files.items():
+            f.write(f"  {level}: {filepath}\n")
         
-        # Combine stats
-        combined_stats = {**update_stats, **archive_stats}
-        
-        # Generate report
-        generate_update_report(combined_stats, topic_counts)
-        
-        # Verify integrity
-        if verify_progress_integrity():
-            print("\nSUCCESS! Database updated successfully.")
-        else:
-            print("\nWARNING: Update completed but integrity check failed.")
-            print("Consider restoring from backup if you notice issues.")
-        
-        # Print summary
-        print("\n" + "="*70)
-        print("DATABASE UPDATE SUMMARY (COMPREHENSIVE DATASET)")
-        print("="*70)
-        print(f"Files processed: {combined_stats['files_processed']}")
-        print(f"New questions added: {combined_stats['new_questions']}")
-        print(f"Questions updated: {combined_stats['updated_questions']}")
-        print(f"Questions unchanged: {combined_stats['unchanged_questions']}")
-        print(f"Questions archived: {combined_stats['questions_archived']}")
-        print(f"Performance records archived: {combined_stats['performance_archived']}")
-        print(f"Answer history records archived: {combined_stats['answers_archived']}")
-        print(f"Duplicate questions skipped: {combined_stats['duplicates_skipped']}")
-        print(f"Errors encountered: {combined_stats['errors']}")
+        f.write(f"\nSTATISTICS:\n")
+        f.write(f"  Unchanged questions: {stats['unchanged']}\n")
+        f.write(f"  Updated questions: {stats['updated']}\n")
+        f.write(f"  Added questions: {stats['added']}\n")
+        f.write(f"  Removed questions: {stats['removed']}\n")
+        f.write(f"  Errors: {stats['errors']}\n")
         
         # Get final counts
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
+        
         cursor.execute("SELECT COUNT(*) FROM questions")
-        active_questions = cursor.fetchone()[0]
+        total_questions = cursor.fetchone()[0]
+        
         cursor.execute("SELECT COUNT(*) FROM archived_questions")
-        archived_questions = cursor.fetchone()[0]
+        total_archived = cursor.fetchone()[0]
         
-        # Count unique topics per level
         cursor.execute("""
-            SELECT cefr_level, COUNT(DISTINCT topic) as topic_count
-            FROM questions
-            GROUP BY cefr_level
-            ORDER BY cefr_level
+            SELECT COUNT(*) FROM enhanced_performance
+            WHERE correct_count > 0 OR incorrect_count > 0
         """)
-        topic_coverage = cursor.fetchall()
+        questions_with_progress = cursor.fetchone()[0]
         
         conn.close()
         
-        print(f"\nActive questions in database: {active_questions}")
-        print(f"Archived questions: {archived_questions}")
+        f.write(f"\nCURRENT DATABASE:\n")
+        f.write(f"  Active questions: {total_questions}\n")
+        f.write(f"  Archived questions: {total_archived}\n")
+        f.write(f"  Questions with progress: {questions_with_progress}\n")
         
-        print(f"\nTopic Coverage:")
-        total_topics_found = 0
-        for level, count in topic_coverage:
-            expected = EXPECTED_TOPIC_COUNTS.get(level, 0)
-            status = "✓" if count >= expected else "⚠️"
-            print(f"  {status} {level}: {count} topics (expected: {expected})")
-            total_topics_found += count
-        
-        print(f"\nTotal unique topics: {total_topics_found}/217")
-        
-        print("\nUSER PROGRESS PRESERVED - All progress data has been maintained!")
-        print("Removed questions are archived and can be recovered if needed.")
-        print("="*70)
-        
-        # Show recent changes
-        show_recent_changes()
-        
-        print(f"\nYour updated database is ready to use with app.py")
-        print(f"Check '{REPORT_FILE}' for detailed update information.")
-        if backup_path:
-            print(f"Backup saved at: {backup_path}")
-        
-    except Exception as e:
-        print(f"\nERROR: Database update failed: {e}")
-        if backup_path:
-            print(f"You can restore from backup: {backup_path}")
+        f.write("=" * 70 + "\n")
+    
+    print(f"✅ Report saved to: {REPORT_FILE}")
 
-def verify_progress_integrity():
-    """Verify that user progress is still intact after the update."""
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
+def main():
+    print("=" * 70)
+    print("ITALIAN QUIZ DATABASE UPDATE")
+    print("=" * 70)
+    print()
     
-    print("\nVerifying progress integrity...")
+    # Find CSV files
+    csv_files = find_csv_files()
     
-    try:
-        # Check for orphaned performance records
-        cursor.execute('''
-        SELECT COUNT(*) FROM enhanced_performance ep 
-        LEFT JOIN questions q ON ep.question_id = q.id 
-        WHERE q.id IS NULL
-        ''')
-        orphaned_performance = cursor.fetchone()[0]
-        
-        # Check for orphaned answer history
-        cursor.execute('''
-        SELECT COUNT(*) FROM answer_history ah 
-        LEFT JOIN questions q ON ah.question_id = q.id 
-        WHERE q.id IS NULL
-        ''')
-        orphaned_history = cursor.fetchone()[0]
-        
-        # Get performance stats
-        cursor.execute('SELECT COUNT(*) FROM enhanced_performance WHERE correct_count > 0 OR incorrect_count > 0 OR freeform_correct_count > 0')
-        progress_records = cursor.fetchone()[0]
-        
-        cursor.execute('SELECT COUNT(*) FROM answer_history')
-        answer_records = cursor.fetchone()[0]
-        
-        cursor.execute('SELECT COUNT(*) FROM archived_enhanced_performance')
-        archived_progress = cursor.fetchone()[0]
-        
-        cursor.execute('SELECT COUNT(*) FROM archived_answer_history')
-        archived_answers = cursor.fetchone()[0]
-        
-        print(f"Active performance records with progress: {progress_records}")
-        print(f"Active answer history records: {answer_records}")
-        print(f"Archived performance records: {archived_progress}")
-        print(f"Archived answer history records: {archived_answers}")
-        print(f"Orphaned performance records: {orphaned_performance}")
-        print(f"Orphaned answer history records: {orphaned_history}")
-        
-        if orphaned_performance == 0 and orphaned_history == 0:
-            print("INTEGRITY CHECK PASSED - No broken progress links!")
-            return True
-        else:
-            print("INTEGRITY CHECK FAILED - Some progress data is orphaned!")
-            return False
-            
-    except Exception as e:
-        print(f"Error during integrity check: {e}")
-        return False
-    finally:
-        conn.close()
-
-def show_recent_changes(limit=15):
-    """Show recent changes to the database."""
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
+    if not csv_files:
+        print(f"❌ No CSV files found in {DATA_DIR}/")
+        print(f"   Looking for: Italian_A1.csv, Italian_A2.csv, etc.")
+        return
     
-    print(f"\nRecent changes (last {limit}):")
-    print("-" * 80)
+    print(f"Found CSV files for levels: {', '.join(csv_files.keys())}\n")
     
-    try:
-        cursor.execute('''
-        SELECT timestamp, update_type, question_hash, old_question_id, new_question_id, notes
-        FROM question_update_log 
-        ORDER BY timestamp DESC 
-        LIMIT ?
-        ''', (limit,))
-        
-        changes = cursor.fetchall()
-        
-        if not changes:
-            print("No recent changes logged.")
-        else:
-            for change in changes:
-                timestamp, update_type, q_hash, old_id, new_id, notes = change
-                print(f"{timestamp[:19]} | {update_type:8} | Hash: {q_hash[:8]}... | ID: {old_id or 'N/A'} -> {new_id or 'N/A'}")
-                if notes:
-                    print(f"                     | Notes: {notes}")
-                print("-" * 80)
-                
-    except Exception as e:
-        print(f"Error retrieving change log: {e}")
-    finally:
-        conn.close()
+    # Ensure archive tables exist
+    check_and_add_columns()
+    
+    # Create backup
+    backup_file = create_backup()
+    if not backup_file:
+        response = input("No backup created. Continue anyway? (yes/no): ")
+        if response.lower() not in ['yes', 'y']:
+            print("Update cancelled.")
+            return
+    
+    print()
+    
+    # Load data
+    print("📖 Loading CSV questions...")
+    csv_questions = load_csv_questions(csv_files)
+    print(f"   Found {len(csv_questions)} questions in CSV files\n")
+    
+    print("📖 Loading database questions...")
+    db_questions = load_db_questions()
+    print(f"   Found {len(db_questions)} questions in database\n")
+    
+    # Show preview
+    print("PREVIEW:")
+    matching = len(set(csv_questions.keys()) & set(db_questions.keys()))
+    new = len(set(csv_questions.keys()) - set(db_questions.keys()))
+    removed = len(set(db_questions.keys()) - set(csv_questions.keys()))
+    
+    print(f"  Matching questions: {matching}")
+    print(f"  New questions: {new}")
+    print(f"  Removed questions: {removed}")
+    print()
+    
+    # Confirm
+    if removed > 0:
+        print(f"⚠️  Warning: {removed} questions will be archived (not deleted)")
+        print("   Their progress will be preserved in archived tables")
+        print()
+    
+    response = input("Proceed with update? (yes/no): ")
+    if response.lower() not in ['yes', 'y']:
+        print("Update cancelled.")
+        return
+    
+    print("\n" + "=" * 70)
+    print("UPDATING DATABASE...")
+    print("=" * 70 + "\n")
+    
+    # Perform update
+    stats = update_database(csv_questions, db_questions)
+    
+    print("\n" + "=" * 70)
+    print("UPDATE COMPLETE")
+    print("=" * 70)
+    print(f"  Unchanged: {stats['unchanged']}")
+    print(f"  Updated: {stats['updated']}")
+    print(f"  Added: {stats['added']}")
+    print(f"  Removed: {stats['removed']}")
+    print(f"  Errors: {stats['errors']}")
+    print()
+    
+    # Verify integrity
+    if verify_integrity():
+        print("✅ Database integrity verified")
+    else:
+        print("⚠️  Database integrity issues detected")
+        if backup_file:
+            print(f"   You can restore from: {backup_file}")
+    
+    # Generate report
+    generate_report(stats, csv_files)
+    
+    print("\n✅ Update complete!")
+    if backup_file:
+        print(f"💾 Backup: {backup_file}")
 
 if __name__ == "__main__":
     main()
