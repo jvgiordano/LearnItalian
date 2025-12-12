@@ -1,24 +1,24 @@
 ======================================================================
 ITALIAN QUIZ DATABASE UPDATE REPORT
 ======================================================================
-Date: 2025-12-11 23:11:49
+Date: 2025-12-12 20:38:23
 
 FILES PROCESSED:
-  A1: data/Italian_A1.csv
-  A2: data/Italian_A2.csv
-  B1: data/Italian_B1.csv
-  B2: data/Italian_B2.csv
-  C1: data/Italian_C1.csv
+  A1: data\Italian_A1.csv
+  A2: data\Italian_A2.csv
+  B1: data\Italian_B1.csv
+  B2: data\Italian_B2.csv
+  C1: data\Italian_C1.csv
 
 STATISTICS:
-  Unchanged questions: 7153
-  Updated questions: 4
-  Added questions: 0
-  Removed questions: 0
+  Unchanged questions: 7112
+  Updated questions: 0
+  Added questions: 879
+  Removed questions: 45
   Errors: 0
 
 CURRENT DATABASE:
-  Active questions: 7157
-  Archived questions: 12
-  Questions with progress: 187
+  Active questions: 7991
+  Archived questions: 57
+  Questions with progress: 184
 ======================================================================
