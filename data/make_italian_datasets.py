@@ -40,7 +40,7 @@ from datetime import datetime
 # --------------------------------
 # Config
 # --------------------------------
-DEFAULT_BATCH_SIZE = 6  # Start with 10, can reduce to 5 for quality
+DEFAULT_BATCH_SIZE = 5  # Start with 10, can reduce to 5 for quality
 TARGET_PER_LEVEL = 2500
 OUTDIR = Path(".")
 STATE_PATH = Path("state_progress_comprehensive.json")

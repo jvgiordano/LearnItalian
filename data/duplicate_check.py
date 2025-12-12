@@ -57,7 +57,7 @@ class ItalianDuplicateChecker:
         self.verbose = verbose
         self.level = level  # Optional: restrict to specific CEFR level
         self.check_topics = check_topics
-        self.duplicates = []
+        self.duplicates = {'hash_duplicates': [], 'fuzzy_duplicates': []}  # Initialize as dict
         self.validation_errors = []
         self.stats = {
             'total_processed': 0,
@@ -97,6 +97,10 @@ class ItalianDuplicateChecker:
         Validate row using same logic as setup_new_database.py
         Returns (is_valid, error_message)
         """
+        # Check for header row accidentally included in data
+        if str(row.get('question_text', '')).strip().lower() == 'question_text':
+            return False, "Duplicate header row detected"
+        
         # Check required fields
         for field in REQUIRED_FIELDS:
             if field not in row.index or pd.isna(row[field]) or not str(row[field]).strip():
@@ -256,6 +260,8 @@ class ItalianDuplicateChecker:
         seen_hashes = set()
         unique_questions = []
         unique_indices = []
+        hash_duplicates = []
+        fuzzy_duplicates = []
         
         for idx, row in df.iterrows():
             self.stats['total_processed'] += 1
@@ -285,6 +291,12 @@ class ItalianDuplicateChecker:
             if question_hash in seen_hashes:
                 self.stats['hash_duplicates'] += 1
                 self.stats['duplicates_found'] += 1
+                hash_duplicates.append({
+                    'row': idx,
+                    'question': q_text[:60],
+                    'hash': question_hash,
+                    'level': level
+                })
                 continue
             
             seen_hashes.add(question_hash)
@@ -299,12 +311,25 @@ class ItalianDuplicateChecker:
                         is_fuzzy_duplicate = True
                         self.stats['fuzzy_duplicates'] += 1
                         self.stats['duplicates_found'] += 1
+                        fuzzy_duplicates.append({
+                            'row': idx,
+                            'question': q_text[:60],
+                            'similar_to_row': unique_q['index'],
+                            'similar_to': unique_q['question_text'][:60],
+                            'level': level
+                        })
                         break
             
             if not is_fuzzy_duplicate:
                 unique_questions.append(question_data)
                 unique_indices.append(idx)
                 self.stats['unique_questions'] += 1
+        
+        # Store duplicates in proper format
+        self.duplicates = {
+            'hash_duplicates': hash_duplicates,
+            'fuzzy_duplicates': fuzzy_duplicates
+        }
         
         # Save deduplicated data
         df_clean = df.loc[unique_indices]
@@ -344,6 +369,8 @@ class ItalianDuplicateChecker:
         seen_hashes = set()
         unique_questions = []
         unique_indices = []
+        hash_duplicates = []
+        fuzzy_duplicates = []
         
         for idx, row in df_combined.iterrows():
             self.stats['total_processed'] += 1
@@ -355,6 +382,11 @@ class ItalianDuplicateChecker:
             is_valid, error_msg = self.validate_row(row, idx)
             if not is_valid:
                 self.stats['validation_errors'] += 1
+                self.validation_errors.append({
+                    'row': idx,
+                    'error': error_msg,
+                    'question': str(row.get('question_text', 'N/A'))[:60]
+                })
                 continue
             
             # Generate hash
@@ -366,6 +398,12 @@ class ItalianDuplicateChecker:
             if question_hash in seen_hashes:
                 self.stats['hash_duplicates'] += 1
                 self.stats['duplicates_found'] += 1
+                hash_duplicates.append({
+                    'row': idx,
+                    'question': q_text[:60],
+                    'hash': question_hash,
+                    'level': level
+                })
                 continue
             
             seen_hashes.add(question_hash)
@@ -380,12 +418,25 @@ class ItalianDuplicateChecker:
                         is_fuzzy_duplicate = True
                         self.stats['fuzzy_duplicates'] += 1
                         self.stats['duplicates_found'] += 1
+                        fuzzy_duplicates.append({
+                            'row': idx,
+                            'question': q_text[:60],
+                            'similar_to_row': unique_q['index'],
+                            'similar_to': unique_q['question_text'][:60],
+                            'level': level
+                        })
                         break
             
             if not is_fuzzy_duplicate:
                 unique_questions.append(question_data)
                 unique_indices.append(idx)
                 self.stats['unique_questions'] += 1
+        
+        # Store duplicates in proper format
+        self.duplicates = {
+            'hash_duplicates': hash_duplicates,
+            'fuzzy_duplicates': fuzzy_duplicates
+        }
         
         # Save merged and deduplicated data
         df_clean = df_combined.loc[unique_indices]
@@ -533,17 +584,23 @@ class ItalianDuplicateChecker:
                 print(f"  {i}. Row {error['row']}: {error['error']}")
                 print(f"     Question: {error['question']}...")
         
+        # Ensure duplicates is a dict
+        duplicates = report.get('duplicates', {})
+        if not isinstance(duplicates, dict):
+            duplicates = {'hash_duplicates': [], 'fuzzy_duplicates': []}
+        
         # Show hash duplicates
-        if report['duplicates'].get('hash_duplicates'):
-            hash_dups = report['duplicates']['hash_duplicates']
+        hash_dups = duplicates.get('hash_duplicates', [])
+        if hash_dups:
             print(f"\n🔑 HASH DUPLICATES (exact matches, first {min(10, len(hash_dups))}):")
             for i, dup in enumerate(hash_dups[:10], 1):
                 print(f"  {i}. Row {dup['row']} [{dup['level']}]: {dup['question']}...")
-                print(f"     Duplicate of row {dup['duplicate_of_row']}")
+                if 'duplicate_of_row' in dup:
+                    print(f"     Duplicate of row {dup['duplicate_of_row']}")
         
         # Show fuzzy duplicates
-        if report['duplicates'].get('fuzzy_duplicates'):
-            fuzzy_dups = report['duplicates']['fuzzy_duplicates']
+        fuzzy_dups = duplicates.get('fuzzy_duplicates', [])
+        if fuzzy_dups:
             print(f"\n🔍 FUZZY DUPLICATES (similar, first {min(10, len(fuzzy_dups))}):")
             for i, dup in enumerate(fuzzy_dups[:10], 1):
                 print(f"  {i}. Row {dup['row']} [{dup['level']}]: {dup['question']}...")
