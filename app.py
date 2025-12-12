@@ -46,20 +46,36 @@ def enable_trackpad_scroll(scrollable_frame):
     scrollable_frame._mousewheel_handler = on_mousewheel
 
 
-def bind_children_scroll(parent_widget, mousewheel_handler):
-    """Recursively bind scroll events to all children of a widget."""
+def bind_children_scroll(parent_widget, mousewheel_handler, max_depth=3):
+    """Recursively bind scroll events to all children of a widget with limited depth."""
+    if max_depth <= 0:
+        return
     for child in parent_widget.winfo_children():
         child.bind("<Button-4>", mousewheel_handler)
         child.bind("<Button-5>", mousewheel_handler)
         child.bind("<MouseWheel>", mousewheel_handler)
-        bind_children_scroll(child, mousewheel_handler)
+        bind_children_scroll(child, mousewheel_handler, max_depth - 1)
+
+
+class StatsCache:
+    """Simple cache for stats that resets on each refresh."""
+    def __init__(self):
+        self.clear()
+    
+    def clear(self):
+        self.level_stats = {}
+        self.total_coverage = None
+        self.total_mastery = None
+        self.assessment = None
 
 
 class ImprovedAdaptiveLearningEngine:
     def __init__(self):
         self.levels = ['A0', 'A1', 'A2', 'B1', 'B2', 'C1']
         self.MIN_COVERAGE_FOR_PROGRESSION = 0.30
+        self._stats_cache = StatsCache()
         self.ensure_database_schema()
+        self.ensure_database_indexes()
 
     def get_recent_quiz_performance(self, level, last_n_quizzes=5):
         """Calculate average performance from the last N quizzes for a specific level."""
@@ -146,11 +162,44 @@ class ImprovedAdaptiveLearningEngine:
                 )
             ''')
 
+            cursor.execute('PRAGMA table_info(answer_history)')
+            answer_columns = [col[1] for col in cursor.fetchall()]
+            
+            if 'is_freeform' not in answer_columns:
+                cursor.execute('ALTER TABLE answer_history ADD COLUMN is_freeform INTEGER DEFAULT 0')
+            if 'is_partial' not in answer_columns:
+                cursor.execute('ALTER TABLE answer_history ADD COLUMN is_partial INTEGER DEFAULT 0')
+            if 'is_unanswered' not in answer_columns:
+                cursor.execute('ALTER TABLE answer_history ADD COLUMN is_unanswered INTEGER DEFAULT 0')
+
             conn.commit()
         except Exception as e:
             print(f"Database schema update/check error: {e}")
         finally:
             conn.close()
+
+    def ensure_database_indexes(self):
+        """Add indexes for frequently queried columns."""
+        conn = sqlite3.connect('italian_quiz.db')
+        cursor = conn.cursor()
+        
+        indexes = [
+            "CREATE INDEX IF NOT EXISTS idx_answer_history_question ON answer_history(question_id)",
+            "CREATE INDEX IF NOT EXISTS idx_answer_history_level ON answer_history(cefr_level)",
+            "CREATE INDEX IF NOT EXISTS idx_answer_history_timestamp ON answer_history(timestamp DESC)",
+            "CREATE INDEX IF NOT EXISTS idx_questions_level ON questions(cefr_level)",
+            "CREATE INDEX IF NOT EXISTS idx_questions_topic ON questions(topic)",
+            "CREATE INDEX IF NOT EXISTS idx_enhanced_perf_question ON enhanced_performance(question_id)",
+        ]
+        
+        for idx_sql in indexes:
+            try:
+                cursor.execute(idx_sql)
+            except Exception:
+                pass
+        
+        conn.commit()
+        conn.close()
 
     def get_next_level(self, current_level):
         """Gets the next CEFR level, handles the max level case."""
@@ -260,29 +309,36 @@ class ImprovedAdaptiveLearningEngine:
         return False
 
     def get_sustained_success_streak(self, level):
-        """Returns the current sustained success streak for a given level."""
-        if level == 'A0': return 0
+        """Returns the current sustained success streak for a given level (optimized)."""
+        if level == 'A0':
+            return 0
+        
         conn = sqlite3.connect('italian_quiz.db')
         cursor = conn.cursor()
         
-        cursor.execute(
-            "SELECT is_correct FROM answer_history WHERE cefr_level = ? ORDER BY timestamp DESC LIMIT 100",
-            (level,)
-        )
+        cursor.execute("""
+            SELECT is_correct FROM answer_history 
+            WHERE cefr_level = ? 
+            ORDER BY timestamp DESC 
+            LIMIT 100
+        """, (level,))
+        
         results = [row[0] for row in cursor.fetchall()]
-        results.reverse()
         conn.close()
-
+        
+        results.reverse()
         if len(results) < 50:
             return 0
-
+        
+        # Sliding window calculation
+        window_sum = sum(results[:50])
         sustain_counter = 0
         
-        for i in range(49, len(results)):
-            window = results[i-49 : i+1]
-            success_rate = sum(window) / 50.0
+        for i in range(50, len(results) + 1):
+            if i > 50:
+                window_sum = window_sum - results[i-51] + results[i-1]
             
-            if success_rate >= 0.85:
+            if window_sum / 50.0 >= 0.85:
                 sustain_counter += 1
             else:
                 sustain_counter = 0
@@ -367,7 +423,6 @@ class ImprovedAdaptiveLearningEngine:
         user_level_index = self.levels.index(user_level) if user_level in self.levels else 0
         distribution = {level: 0 for level in self.levels if level != 'A0'}
 
-        # UPDATED: Check if user has achieved 25% mastery of current level
         current_mastery = self.get_level_mastery_score(user_level)
         can_introduce_next_level = current_mastery >= 0.25
 
@@ -385,7 +440,6 @@ class ImprovedAdaptiveLearningEngine:
         distribution[user_level] = min(total_questions, user_level_count)
         remaining = total_questions - distribution[user_level]
 
-        # UPDATED: Distribute remaining questions with 25% mastery gate
         if remaining > 0:
             if user_level == 'A1':
                 if can_introduce_next_level:
@@ -823,91 +877,214 @@ class ImprovedAdaptiveLearningEngine:
         coverage = (answered_q / total_q) if total_q > 0 else 0
         return coverage
     
- 
-    def get_total_coverage_and_mastery(self, cursor):
-        """Calculate total coverage and mastery across all levels with 1.15 multiplier and 100% cap."""
-        cursor.execute("SELECT COUNT(*) AS total FROM questions")
-        total_questions = cursor.fetchone()['total']
+    def calculate_single_question_mastery(self, question_id, cursor):
+        """
+        Calculate mastery score for a single question using rolling window approach.
+        Returns None if question has no attempts.
+        """
+        cursor.execute("""
+            SELECT is_correct, is_freeform, is_partial, is_unanswered
+            FROM answer_history
+            WHERE question_id = ?
+            ORDER BY timestamp DESC
+            LIMIT 5
+        """, (question_id,))
         
-        try:
-            cursor.execute('''
-                SELECT COUNT(DISTINCT q.id) AS answered 
-                FROM questions q 
-                JOIN enhanced_performance ep ON q.id = ep.question_id 
-                WHERE ep.correct_count > 0 OR ep.freeform_correct_count > 0 OR ep.partial_correct_count > 0
-            ''')
-        except:
-            cursor.execute('''
-                SELECT COUNT(DISTINCT q.id) AS answered 
-                FROM questions q 
-                JOIN enhanced_performance ep ON q.id = ep.question_id 
-                WHERE ep.correct_count > 0
-            ''')
+        attempts = cursor.fetchall()
         
-        answered_questions = cursor.fetchone()['answered'] or 0
-        mastery_value = 0
-        if total_questions > 0:
-            coverage = answered_questions / total_questions
+        if not attempts:
+            return None
+        
+        total_score = 0.0
+        for attempt in attempts:
             try:
-                cursor.execute('''
-                    SELECT q.topic, q.cefr_level,
-                        COUNT(DISTINCT q.id) as questions_in_topic,
-                        SUM(IFNULL(ep.correct_count, 0)) as mc_correct,
-                        SUM(IFNULL(ep.incorrect_count, 0)) as mc_incorrect,
-                        SUM(IFNULL(ep.freeform_correct_count, 0)) as ff_correct,
-                        SUM(IFNULL(ep.freeform_incorrect_count, 0)) as ff_incorrect,
-                        SUM(IFNULL(ep.partial_correct_count, 0)) as partial_correct,
-                        SUM(IFNULL(ep.unanswered_count, 0)) as unanswered
-                    FROM questions q
-                    LEFT JOIN enhanced_performance ep ON q.id = ep.question_id
-                    GROUP BY q.topic, q.cefr_level
-                ''')
-            except:
-                cursor.execute('''
-                    SELECT q.topic, q.cefr_level,
-                        COUNT(DISTINCT q.id) as questions_in_topic,
-                        SUM(IFNULL(ep.correct_count, 0)) as mc_correct,
-                        SUM(IFNULL(ep.incorrect_count, 0)) as mc_incorrect,
-                        SUM(IFNULL(ep.freeform_correct_count, 0)) as ff_correct,
-                        SUM(IFNULL(ep.freeform_incorrect_count, 0)) as ff_incorrect,
-                        SUM(IFNULL(ep.partial_correct_count, 0)) as partial_correct,
-                        0 as unanswered
-                    FROM questions q
-                    LEFT JOIN enhanced_performance ep ON q.id = ep.question_id
-                    GROUP BY q.topic, q.cefr_level
-                ''')
-            topic_data = cursor.fetchall()
-            total_weighted_score = 0
-            total_possible_score = 0
-            for topic_row in topic_data:
+                correct, freeform, partial, unanswered = attempt
+            except (ValueError, TypeError):
                 try:
-                    unanswered_count = topic_row['unanswered']
-                except (IndexError, KeyError):
-                    unanswered_count = 0
-                    
-                topic_attempts = (topic_row['mc_correct'] + topic_row['mc_incorrect'] + 
-                                topic_row['ff_correct'] + topic_row['ff_incorrect'] + 
-                                topic_row['partial_correct'] + unanswered_count)
-                if topic_attempts >= 4:
-                    # UPDATED SCORING VALUES
-                    score = (topic_row['ff_correct'] * 1.95 +
-                            topic_row['mc_correct'] * 0.95 + 
-                            topic_row['partial_correct'] * 1.4 - 
-                            topic_row['ff_incorrect'] * 2.2 -
-                            topic_row['mc_incorrect'] * 2.65 -
-                            unanswered_count * 0.2)
-                    max_score = topic_row['questions_in_topic'] * 1.75
-                    total_weighted_score += max(0, score)
-                    total_possible_score += max_score
-            if total_possible_score > 0:
-                # Apply 1.15 multiplier to mastery calculation
-                mastery_value = ((total_weighted_score / total_possible_score) * coverage) * 1.15
-                # CAP at 100%
-                mastery_value = min(mastery_value, 1.0)
+                    correct = attempt[0]
+                    freeform = attempt[1] if len(attempt) > 1 else 0
+                    partial = attempt[2] if len(attempt) > 2 else 0
+                    unanswered = attempt[3] if len(attempt) > 3 else 0
+                except:
+                    continue
+            
+            if unanswered:
+                total_score += -0.25
+            elif not correct and freeform:
+                total_score += -1.8
+            elif not correct and not freeform:
+                total_score += -2.2
+            elif correct and freeform and partial:
+                total_score += 0.9
+            elif correct and freeform:
+                total_score += 1.65
+            else:
+                total_score += 0.6
+        
+        avg_score = total_score / len(attempts)
+        
+        num_attempts = len(attempts)
+        if num_attempts == 1:
+            confidence = 0.60
+        elif num_attempts == 2:
+            confidence = 0.75
+        elif num_attempts == 3:
+            confidence = 0.90
+        elif num_attempts == 4:
+            confidence = 0.98
         else:
-            coverage = 0
-        return coverage, mastery_value
-    
+            confidence = 1.00
+        
+        score_with_confidence = avg_score * confidence
+        
+        final_score = max(-1.5, min(1.2, score_with_confidence))
+        
+        return final_score
+
+    def calculate_all_question_masteries_batch(self, question_ids, cursor):
+        """
+        OPTIMIZED: Calculate mastery scores for multiple questions in a SINGLE query.
+        Returns dict: {question_id: mastery_score or None}
+        """
+        if not question_ids:
+            return {}
+        
+        placeholders = ','.join('?' for _ in question_ids)
+        
+        # Single query to get last 5 attempts for ALL questions at once
+        cursor.execute(f"""
+            SELECT question_id, is_correct, is_freeform, is_partial, is_unanswered
+            FROM (
+                SELECT question_id, is_correct, is_freeform, is_partial, is_unanswered,
+                       ROW_NUMBER() OVER (PARTITION BY question_id ORDER BY timestamp DESC) as rn
+                FROM answer_history
+                WHERE question_id IN ({placeholders})
+            )
+            WHERE rn <= 5
+        """, question_ids)
+        
+        # Group attempts by question_id
+        attempts_by_question = {}
+        for row in cursor.fetchall():
+            qid = row[0]
+            if qid not in attempts_by_question:
+                attempts_by_question[qid] = []
+            attempts_by_question[qid].append(row[1:])  # (is_correct, is_freeform, is_partial, is_unanswered)
+        
+        # Calculate mastery for each question
+        results = {}
+        for qid in question_ids:
+            attempts = attempts_by_question.get(qid, [])
+            if not attempts:
+                results[qid] = None
+                continue
+            
+            total_score = 0.0
+            for attempt in attempts:
+                correct, freeform, partial, unanswered = attempt
+                if unanswered:
+                    total_score += -0.25
+                elif not correct and freeform:
+                    total_score += -1.8
+                elif not correct and not freeform:
+                    total_score += -2.2
+                elif correct and freeform and partial:
+                    total_score += 0.9
+                elif correct and freeform:
+                    total_score += 1.65
+                else:
+                    total_score += 0.6
+            
+            avg_score = total_score / len(attempts)
+            confidence = min(1.0, 0.45 + 0.15 * len(attempts))  # 0.6, 0.75, 0.9, 0.98, 1.0
+            results[qid] = max(-1.5, min(1.2, avg_score * confidence))
+        
+        return results
+
+    def _calculate_mastery_for_level(self, level, cursor):
+        """OPTIMIZED: Calculate coverage and mastery for a specific level using batch query."""
+        cursor.execute("SELECT COUNT(*) AS total FROM questions WHERE cefr_level = ?", (level,))
+        total_q = cursor.fetchone()[0]
+        
+        if total_q == 0:
+            return {
+                "coverage": "0%", 
+                "mastery": "0%", 
+                "coverage_value": 0, 
+                "mastery_value": 0
+            }
+        
+        cursor.execute("SELECT id FROM questions WHERE cefr_level = ?", (level,))
+        all_question_ids = [row[0] for row in cursor.fetchall()]
+        
+        # BATCH QUERY instead of loop
+        mastery_scores = self.calculate_all_question_masteries_batch(all_question_ids, cursor)
+        
+        question_scores = [s for s in mastery_scores.values() if s is not None]
+        attempted_count = len(question_scores)
+        
+        coverage = attempted_count / total_q if total_q > 0 else 0
+        
+        if question_scores:
+            avg_mastery = sum(question_scores) / len(question_scores)
+        else:
+            avg_mastery = 0
+        
+        mastery_with_coverage = avg_mastery * coverage
+        
+        final_mastery = mastery_with_coverage * 1.4
+        
+        final_mastery = max(0.0, min(1.0, final_mastery))
+        
+        return {
+            "coverage": f"{coverage*100:.0f}%",
+            "mastery": f"{final_mastery*100:.0f}%",
+            "coverage_value": coverage,
+            "mastery_value": final_mastery
+        }
+
+    def get_all_level_stats_cached(self, cursor):
+        """OPTIMIZED: Get all level stats in one pass, cached for the refresh cycle."""
+        if self._stats_cache.level_stats:
+            return self._stats_cache.level_stats
+        
+        levels = ['A1', 'A2', 'B1', 'B2', 'C1']
+        for level in levels:
+            self._stats_cache.level_stats[level] = self._calculate_mastery_for_level(level, cursor)
+        
+        return self._stats_cache.level_stats
+
+    def get_total_coverage_and_mastery(self, cursor):
+        """Calculate total coverage and mastery across all levels using rolling window."""
+        cursor.execute("SELECT COUNT(*) AS total FROM questions")
+        total_questions = cursor.fetchone()[0]
+        
+        if total_questions == 0:
+            return 0.0, 0.0
+        
+        cursor.execute("SELECT id FROM questions")
+        all_question_ids = [row[0] for row in cursor.fetchall()]
+        
+        # Use batch query
+        mastery_scores = self.calculate_all_question_masteries_batch(all_question_ids, cursor)
+        
+        question_scores = [s for s in mastery_scores.values() if s is not None]
+        attempted_count = len(question_scores)
+        
+        coverage = attempted_count / total_questions if total_questions > 0 else 0
+        
+        if question_scores:
+            avg_mastery = sum(question_scores) / len(question_scores)
+        else:
+            avg_mastery = 0
+        
+        mastery_with_coverage = avg_mastery * coverage
+        final_mastery = mastery_with_coverage * 1.4
+        
+        final_mastery = max(0.0, min(1.0, final_mastery))
+        
+        return coverage, final_mastery
+
     def update_daily_stats(self, cursor):
         """Update daily statistics for Progress Timeline"""
         coverage, mastery = self.get_total_coverage_and_mastery(cursor)
@@ -989,7 +1166,6 @@ class ImprovedAdaptiveLearningEngine:
         text = re.sub(r'^[.!?,:;"\'\-\(\)]+', '', text)
         text = re.sub(r'\s+', ' ', text).strip()
         return text
-    
     
     def has_single_letter_mistake(self, user_text, correct_text):
         """Check for a single non-vowel letter mistake."""
@@ -1091,6 +1267,20 @@ class ImprovedAdaptiveLearningEngine:
                         IFNULL((SELECT mastery_level FROM enhanced_performance WHERE question_id = ?), 0) + ?)
             ''', (question_id, question_id, 1 if is_correct else 0, question_id, 0 if is_correct else 1, now, question_id, 1 if is_correct else -1))
         
+        cursor.execute("""
+            INSERT INTO answer_history 
+            (question_id, cefr_level, is_correct, is_freeform, is_partial, is_unanswered, timestamp) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (
+            question_id, 
+            cefr_level, 
+            1 if (is_correct or is_partial) else 0,
+            1 if is_freeform else 0,
+            1 if is_partial else 0,
+            1 if is_unanswered else 0,
+            now
+        ))
+        
         weight = 1.5 if is_freeform and not is_partial else 1
         cursor.execute('''
             INSERT OR REPLACE INTO topic_performance (topic, cefr_level, correct_count, incorrect_count, last_updated)
@@ -1099,84 +1289,6 @@ class ImprovedAdaptiveLearningEngine:
                     IFNULL((SELECT incorrect_count FROM topic_performance WHERE topic = ? AND cefr_level = ?), 0) + ?,
                     ?)
         ''', (topic, cefr_level, topic, cefr_level, weight if is_correct else 0, topic, cefr_level, 0 if is_correct else weight, now))
-
-    def _calculate_mastery_for_level(self, level, cursor):
-        """Helper method to calculate coverage and mastery with updated scoring, 1.15 multiplier, and 100% cap."""
-        cursor.execute("SELECT COUNT(*) AS total FROM questions WHERE cefr_level = ?", (level,))
-        total_q = cursor.fetchone()['total']
-        if total_q == 0:
-            return {"coverage": "0%", "mastery": "0%", "coverage_value": 0, "mastery_value": 0}
-        
-        cursor.execute('''
-            SELECT COUNT(DISTINCT q.id) AS answered 
-            FROM questions q JOIN enhanced_performance ep ON q.id = ep.question_id 
-            WHERE q.cefr_level = ? AND (ep.correct_count > 0 OR ep.freeform_correct_count > 0 OR ep.partial_correct_count > 0)
-        ''', (level,))
-        answered_q = cursor.fetchone()['answered'] or 0
-        coverage = (answered_q / total_q) if total_q > 0 else 0
-        
-        try:
-            cursor.execute('''
-                SELECT q.topic, COUNT(DISTINCT q.id) as questions_in_topic, 
-                    SUM(IFNULL(ep.correct_count, 0)) as mc_correct,
-                    SUM(IFNULL(ep.incorrect_count, 0)) as mc_incorrect,
-                    SUM(IFNULL(ep.freeform_correct_count, 0)) as ff_correct,
-                    SUM(IFNULL(ep.freeform_incorrect_count, 0)) as ff_incorrect,
-                    SUM(IFNULL(ep.partial_correct_count, 0)) as partial_correct,
-                    SUM(IFNULL(ep.unanswered_count, 0)) as unanswered
-                FROM questions q LEFT JOIN enhanced_performance ep ON q.id = ep.question_id
-                WHERE q.cefr_level = ? GROUP BY q.topic
-            ''', (level,))
-        except:
-            cursor.execute('''
-                SELECT q.topic, COUNT(DISTINCT q.id) as questions_in_topic,
-                    SUM(IFNULL(ep.correct_count, 0)) as mc_correct,
-                    SUM(IFNULL(ep.incorrect_count, 0)) as mc_incorrect,
-                    SUM(IFNULL(ep.freeform_correct_count, 0)) as ff_correct,
-                    SUM(IFNULL(ep.freeform_incorrect_count, 0)) as ff_incorrect,
-                    SUM(IFNULL(ep.partial_correct_count, 0)) as partial_correct,
-                    0 as unanswered
-                FROM questions q LEFT JOIN enhanced_performance ep ON q.id = ep.question_id
-                WHERE q.cefr_level = ? GROUP BY q.topic
-            ''', (level,))
-        
-        topic_data = cursor.fetchall()
-        total_weighted_score, total_possible_score = 0, 0
-        
-        for topic_row in topic_data:
-            try:
-                unanswered_count = topic_row['unanswered']
-            except (IndexError, KeyError):
-                unanswered_count = 0
-            
-            topic_attempts = (topic_row['mc_correct'] + topic_row['mc_incorrect'] + 
-                            topic_row['ff_correct'] + topic_row['ff_incorrect'] + 
-                            topic_row['partial_correct'] + unanswered_count)
-            
-            if topic_attempts >= 4:
-                # UPDATED SCORING VALUES
-                score = (topic_row['ff_correct'] * 1.95 +
-                        topic_row['mc_correct'] * 0.95 + 
-                        topic_row['partial_correct'] * 1.4 - 
-                        topic_row['ff_incorrect'] * 2.2 -
-                        topic_row['mc_incorrect'] * 2.65 -
-                        unanswered_count * 0.2)
-                max_score = topic_row['questions_in_topic'] * 1.75
-                total_weighted_score += max(0, score)
-                total_possible_score += max_score
-        
-        # Apply 1.15 multiplier to mastery calculation
-        mastery = ((total_weighted_score / total_possible_score) * coverage * 1.15) if total_possible_score > 0 else 0
-        
-        # CAP at 100%
-        mastery = min(mastery, 1.0)
-        
-        return {
-            "coverage": f"{coverage*100:.0f}%",
-            "mastery": f"{mastery*100:.0f}%",
-            "coverage_value": coverage,
-            "mastery_value": mastery
-        }
 
 
 class QuizApp(ctk.CTk):
@@ -1219,7 +1331,7 @@ class QuizApp(ctk.CTk):
         """Displays a congratulatory pop-up when the user's level increases."""
         dialog = ctk.CTkToplevel(self)
         dialog.title("🎉 Level Up!")
-        dialog.geometry("400x200")
+        dialog.geometry("1200x800")
         dialog.transient(self)
         dialog.grab_set()
         dialog.attributes("-topmost", True)
@@ -1253,7 +1365,7 @@ class HomeScreen(ctk.CTkFrame):
         title_label = ctk.CTkLabel(self, text=APP_NAME, font=ctk.CTkFont(size=40, weight="bold"))
         title_label.pack(pady=(40, 10))
 
-        attribution_label = ctk.CTkLabel(self, text="(V1.2.0 - Made by jvgiordano using Claude 4.0 Sonnet, Claude 4.5 Opus, Gemini 2.5 Pro, Gemini 3.0 Pro, and Grok 4)", 
+        attribution_label = ctk.CTkLabel(self, text="(V1.3.0 - Made by jvgiordano using Claude 4.0 Sonnet, Claude 4.5 Opus, Gemini 2.5 Pro, Gemini 3.0 Pro, and Grok 4)", 
                                          font=ctk.CTkFont(size=14), text_color="gray60")
         attribution_label.pack(pady=(0, 20))
 
@@ -1396,7 +1508,6 @@ class HomeScreen(ctk.CTkFrame):
         self.coverage_label.configure(text=f"{working_on_level} Topic Coverage: {topic_coverage:.1%}")
         self.streak_label.configure(text=f"{working_on_level} Sustained Success: {success_streak}/25")
 
-
 class HowToUseScreen(ctk.CTkFrame):
     def __init__(self, parent, controller):
         super().__init__(parent)
@@ -1412,7 +1523,6 @@ class HowToUseScreen(ctk.CTkFrame):
         scrollable_frame.pack(pady=10, padx=20, fill="both", expand=True)
         enable_trackpad_scroll(scrollable_frame)
 
-        # UPDATED: Documentation reflects new scoring and 25% mastery gate
         how_to_use_text = """
 Welcome to Progress with Italian! (by jvgiordano - December, 2025)
 
@@ -1479,9 +1589,9 @@ The difference now besides teaching you the lesson explicitly is your brain has 
 Concerning the depth and difficulty: 
 
 There are 5 levels of Italian provided, based on the CEFR framework. A1 and A2 are for beginners, B1 and B2 are intermediate, and C1 is advanced. To progress between levels, you need to satisfy ALL THREE criteria:
-• **Sustained Success:** Achieve an average of 85% correct answers in the last 50 questions, and sustain this for 25 consecutive additional questions from that level.
-• **Broad Coverage:** Attempt at least 85% of the available topics within that level (only one question per topic).
-• **Minimum Mastery:** Attain a mastery score of at least 50% for the level. (Mastery scoring explained below).
+- **Sustained Success:** Achieve an average of 85% correct answers in the last 50 questions, and sustain this for 25 consecutive additional questions from that level.
+- **Broad Coverage:** Attempt at least 85% of the available topics within that level (only one question per topic).
+- **Minimum Mastery:** Attain a mastery score of at least 50% for the level. (Mastery scoring explained below).
 
 All new beginners actually start at A0 (there are no A0 questions.)
 
@@ -1494,18 +1604,25 @@ The system also allows non-sequential progression - if you start practicing B1 a
 The program has two response formats: Multiple Choice and Free Form (fill in). By default, the program uses a mix of these. As you advance, more questions will become free-form, including those you may have previously answered as multiple choice. But the program offers other response modes.
 
 The app includes three response modes:
-• **Adaptive Free Form Responses (Default):** Questions become free form (type your answer) based on your mastery level. Higher coverage = more free form questions. This prevents memorization and increases challenge as you improve.
-• **Only Free Form Responses:** All questions require typing the correct answer.
-• **No Free Form Responses:** Traditional multiple choice only.
+- **Adaptive Free Form Responses (Default):** Questions become free form (type your answer) based on your mastery level. Higher coverage = more free form questions. This prevents memorization and increases challenge as you improve.
+- **Only Free Form Responses:** All questions require typing the correct answer.
+- **No Free Form Responses:** Traditional multiple choice only.
 
 Mastery Scoring is separate from coverage scoring. Mastery scoring aims to demonstrate how well you have "mastered" a level.
 
+**NEW ROLLING WINDOW SYSTEM:**
+The system now uses only your last 5 attempts per question. This means:
+- Early mistakes fade away as you practice
+- Recent performance matters most
+- You can't "grind" old questions for false mastery
+- Taking a break and forgetting material will accurately reflect in your score
+
 Free form answers are worth more points! The system uses intelligent matching with the following rules:
-• **Accents:** Not required but recommended (marked as partial if missing)
-• **Spelling:** Single non-vowel letter mistakes are accepted (marked as partial)
-• **Case:** Not case-sensitive
-• **Punctuation:** Ignored in grading
-• **Articles:** must be included if part of the answer
+- **Accents:** Not required but recommended (marked as partial if missing)
+- **Spelling:** Single non-vowel letter mistakes are accepted (marked as partial)
+- **Case:** Not case-sensitive
+- **Punctuation:** Ignored in grading
+- **Articles:** must be included if part of the answer
 
 Examples of Partial Credit:
 ✓ "caffe" instead of "caffè" (missing accent)
@@ -1513,14 +1630,23 @@ Examples of Partial Credit:
 ✗ "bella" instead of "bello" (vowel difference is not allowed)
 ✗ "cafe" instead of "caffè" (multiple errors)
 
-Response modes provide different points towards this score:
-• Free-form correct: +1.95 points
-• Multiple choice correct: +0.95 points
-• Free-form (partially correct): +1.4 points
-• Unanswered questions: -0.2 points
-• Free-form wrong: -2.2 points
-• Multiple choice wrong: -2.65 points
-• Topics must be seen 4+ times to count toward mastery (that is 4 questions from a given topic)
+Response modes provide different points (per attempt):
+- Free-form correct: +1.65 points
+- Multiple choice correct: +0.6 points
+- Free-form (partially correct): +0.9 points
+- Free-form wrong: -1.8 points
+- Multiple choice wrong: -2.2 points
+- Unanswered questions: -0.2 points
+
+Your score is averaged across your last 5 attempts per question, with a confidence multiplier applied:
+- 1 attempt: 60% confidence
+- 2 attempts: 75% confidence
+- 3 attempts: 90% confidence
+- 4 attempts: 98% confidence
+- 5+ attempts: 100% confidence
+
+Each question's score is capped at +1.2 to -1.5, ensuring fairness.
+Your level mastery is the average of all attempted questions, multiplied by coverage, with a 1.4× bonus to reward thoroughness without requiring perfection for all possible questions in a level.
 
 There is an "Adaptive" algorithm which adjusts the difficulty and level of questions based on your usage and competency.
 
@@ -2086,12 +2212,6 @@ class QuizScreen(ctk.CTkFrame):
                     cursor, item["question_id"], item["cefr_level"], item["topic"], 
                     is_correct, item["is_freeform"], is_partial, is_unanswered
                 )
-
-                is_success_for_recency = 1 if (is_correct or is_partial) else 0
-                cursor.execute(
-                    "INSERT INTO answer_history (question_id, cefr_level, is_correct, timestamp) VALUES (?, ?, ?, ?)",
-                    (item["question_id"], item["cefr_level"], is_success_for_recency, datetime.now().isoformat())
-                )
             
             score = len(correct_answers) + len(partial_answers)
             total = len(self.quiz_items)
@@ -2384,13 +2504,29 @@ class StatsScreen(ctk.CTkFrame):
         clear_button.pack()
 
     def refresh_data(self):
-        self.update_summary()
-        self.update_progress_timeline()
-        self.update_stats_table()
-        self.update_level_details()
-        self.update_graph()
-        self.update_weaknesses()
-        self.update_explanations()
+        """OPTIMIZED: Single connection for entire refresh with caching."""
+        # Clear cache at start of refresh
+        self.controller.adaptive_engine._stats_cache.clear()
+        
+        # Use single connection for entire refresh
+        conn = sqlite3.connect('italian_quiz.db')
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        try:
+            # Pre-fetch all stats once
+            self.controller.adaptive_engine.get_all_level_stats_cached(cursor)
+            
+            self.update_summary()
+            self.update_progress_timeline(cursor)
+            self.update_stats_table(cursor)
+            self.update_level_details()
+            self.update_graph(cursor)
+            self.update_weaknesses()
+            self.update_explanations()
+        finally:
+            conn.close()
+        
         self.main_scroll._parent_canvas.yview_moveto(0)
         
         if hasattr(self.main_scroll, '_mousewheel_handler'):
@@ -2407,8 +2543,14 @@ class StatsScreen(ctk.CTkFrame):
 
         self.summary_label.configure(text=summary_text)
 
-    def update_progress_timeline(self):
-        """Create the new Progress Timeline plot with linear time-spaced ticks."""
+    def update_progress_timeline(self, cursor=None):
+        """OPTIMIZED: Progress Timeline with proper matplotlib cleanup."""
+        # CRITICAL: Close old figures to prevent memory leak
+        if hasattr(self, '_timeline_fig'):
+            plt.close(self._timeline_fig)
+        if hasattr(self, '_timeline_canvas'):
+            self._timeline_canvas.get_tk_widget().destroy()
+        
         for widget in self.timeline_frame.winfo_children():
             widget.destroy()
         
@@ -2416,8 +2558,11 @@ class StatsScreen(ctk.CTkFrame):
                                    font=ctk.CTkFont(size=18, weight="bold"))
         title_label.pack(pady=(15, 10))
         
-        conn = sqlite3.connect('italian_quiz.db')
-        cursor = conn.cursor()
+        conn_owned = False
+        if cursor is None:
+            conn = sqlite3.connect('italian_quiz.db')
+            cursor = conn.cursor()
+            conn_owned = True
         
         cursor.execute('''
             SELECT date, total_coverage, total_mastery 
@@ -2433,12 +2578,11 @@ class StatsScreen(ctk.CTkFrame):
             ''')
             first_quiz = cursor.fetchone()
             if first_quiz and first_quiz[0]:
-                conn.row_factory = sqlite3.Row
-                cursor = conn.cursor()
                 coverage, mastery = self.controller.adaptive_engine.get_total_coverage_and_mastery(cursor)
                 daily_data = [(datetime.now().date().isoformat(), coverage, mastery)]
         
-        conn.close()
+        if conn_owned:
+            conn.close()
         
         if not daily_data:
             no_data_label = ctk.CTkLabel(self.timeline_frame, 
@@ -2535,26 +2679,20 @@ class StatsScreen(ctk.CTkFrame):
         self._timeline_fig = fig
 
     def _calculate_mastery_for_level(self, level, cursor):
-        """Helper method to calculate coverage and new mastery with updated scoring."""
+        """Helper method using optimized batch calculation."""
         return self.controller.adaptive_engine._calculate_mastery_for_level(level, cursor)
 
-
-
-
-    def update_stats_table(self):
+    def update_stats_table(self, cursor=None):
+        """OPTIMIZED: Use cached stats."""
         for widget in self.stats_frame.winfo_children():
             widget.destroy()
         
-        # 1. Main Row Container
         row_container = ctk.CTkFrame(self.stats_frame, fg_color="transparent")
         row_container.pack(fill="both", expand=True, pady=10)
         
-        # 2. Centering Wrapper
-        # Wraps the Chart and Table to keep them centered together
         wrapper = ctk.CTkFrame(row_container, fg_color="transparent")
         wrapper.pack(expand=True, anchor="center")
 
-        # --- LEFT SIDE: CEFR Chart ---
         cefr_frame = ctk.CTkFrame(wrapper)
         cefr_frame.grid(row=0, column=0, padx=(0, 10), sticky="n") 
         
@@ -2563,28 +2701,18 @@ class StatsScreen(ctk.CTkFrame):
         
         self.create_cefr_completion_chart(cefr_frame)
         
-        # --- RIGHT SIDE: Level Progress Table ---
         table_container = ctk.CTkFrame(wrapper)
         table_container.grid(row=0, column=1, sticky="n") 
         
         title_label = ctk.CTkLabel(table_container, text="Level Progress", font=ctk.CTkFont(size=18, weight="bold"))
         title_label.pack(pady=(15, 20))
         
-        # RESTORED BACKGROUND: 
-        # Removed fg_color="transparent". This creates the dark frame background behind the text.
         table_frame = ctk.CTkFrame(table_container)
         table_frame.pack(fill="both", expand=True, padx=15, pady=(0, 15))
         
-        # DATA FETCHING
-        conn = sqlite3.connect('italian_quiz.db')
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        cursor.execute("SELECT DISTINCT cefr_level FROM questions ORDER BY cefr_level")
-        levels = [row['cefr_level'] for row in cursor.fetchall()]
-        stats = {lvl: self._calculate_mastery_for_level(lvl, cursor) for lvl in levels}
-        conn.close()
+        # Use cached stats
+        stats = self.controller.adaptive_engine._stats_cache.level_stats
 
-        # TABLE GENERATION
         headers = ["Level", "Coverage", "Mastery"]
         for col, header in enumerate(headers):
             lbl = ctk.CTkLabel(table_frame, text=header, font=ctk.CTkFont(size=14, weight="bold"))
@@ -2597,8 +2725,6 @@ class StatsScreen(ctk.CTkFrame):
                 row=row, column=1, padx=15, pady=5)
             ctk.CTkLabel(table_frame, text=data['mastery'], font=ctk.CTkFont(size=14)).grid(
                 row=row, column=2, padx=15, pady=5)
-
-
 
     def update_level_details(self):
         """Displays detailed Mastery, Coverage, and Success Streak for each level."""
@@ -2640,7 +2766,14 @@ class StatsScreen(ctk.CTkFrame):
             streak_label = ctk.CTkLabel(metrics_frame, text=f"Sustained Success: {success_streak}/25", font=ctk.CTkFont(size=16))
             streak_label.pack(side="left", padx=15)
 
-    def update_graph(self):
+    def update_graph(self, cursor=None):
+        """OPTIMIZED: Graph with proper matplotlib cleanup."""
+        # CRITICAL: Close old figures to prevent memory leak
+        if hasattr(self, '_graph_fig'):
+            plt.close(self._graph_fig)
+        if hasattr(self, '_graph_canvas'):
+            self._graph_canvas.get_tk_widget().destroy()
+        
         for widget in self.graph_frame.winfo_children():
             widget.destroy()
         
@@ -2648,14 +2781,20 @@ class StatsScreen(ctk.CTkFrame):
                                    font=ctk.CTkFont(size=18, weight="bold"))
         title_label1.pack(pady=(15, 10))
         
-        conn = sqlite3.connect('italian_quiz.db')
-        cursor = conn.cursor()
+        conn_owned = False
+        if cursor is None:
+            conn = sqlite3.connect('italian_quiz.db')
+            cursor = conn.cursor()
+            conn_owned = True
+        
         try:
             cursor.execute("SELECT score, total_questions FROM quiz_history ORDER BY timestamp DESC LIMIT 20")
             history = cursor.fetchall()
         except sqlite3.OperationalError:
             history = []
-        conn.close()
+        
+        if conn_owned:
+            conn.close()
         
         history.reverse()
 
@@ -2706,21 +2845,17 @@ class StatsScreen(ctk.CTkFrame):
             self._graph_fig = fig1
     
     def create_cefr_completion_chart(self, parent_frame):
-        """Create the CEFR Level Completion bar chart with updated legend."""
-        conn = sqlite3.connect('italian_quiz.db')
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
+        """OPTIMIZED: CEFR chart with cleanup and cached data."""
+        # CRITICAL: Close old figure
+        if hasattr(self, '_cefr_fig'):
+            plt.close(self._cefr_fig)
+        
+        # Use cached stats
+        stats = self.controller.adaptive_engine._stats_cache.level_stats
         
         levels = ['A1', 'A2', 'B1', 'B2', 'C1']
-        coverage_data = []
-        mastery_data = []
-        
-        for level in levels:
-            stats = self._calculate_mastery_for_level(level, cursor)
-            coverage_data.append(stats['coverage_value'] * 100)
-            mastery_data.append(stats['mastery_value'] * 100)
-        
-        conn.close()
+        coverage_data = [stats[level]['coverage_value'] * 100 for level in levels]
+        mastery_data = [stats[level]['mastery_value'] * 100 for level in levels]
         
         fig2, ax2 = plt.subplots(figsize=(8, 5), facecolor="#F0F0F0", dpi=100)
         
@@ -2835,12 +2970,12 @@ class StatsScreen(ctk.CTkFrame):
         mastery_frame = ctk.CTkFrame(scrollable_explanations, fg_color="transparent")
         mastery_frame.pack(fill="x", pady=(10, 10))
         
-        mastery_title = ctk.CTkLabel(mastery_frame, text="🏆 Mastery", 
+        mastery_title = ctk.CTkLabel(mastery_frame, text="🏆 Mastery (NEW ROLLING WINDOW)", 
                                      font=ctk.CTkFont(size=14, weight="bold"), text_color="#FFD700")
         mastery_title.pack(anchor="w")
         
         mastery_text = ctk.CTkLabel(mastery_frame, 
-                                    text="Calculated from your Coverage and weighted performance. Topics must be attempted at least 4 times to count toward mastery. Free-form answers are worth more than multiple choice, with penalties for incorrect answers.",
+                                    text="Uses ONLY your last 5 attempts per question! Early mistakes fade away. Each attempt gets scored: FF correct +1.65, MC correct +0.6, Partial +0.9, FF wrong -1.4, MC wrong -2.2, Unanswered -0.2. A confidence multiplier (60%-100%) is applied based on attempt count. Final score per question is capped at +1.2 to -1.5.",
                                     font=ctk.CTkFont(size=12), wraplength=400, justify="left")
         mastery_text.pack(anchor="w", pady=(2, 0))
         
@@ -2859,13 +2994,12 @@ class StatsScreen(ctk.CTkFrame):
         requirements_frame = ctk.CTkFrame(scrollable_explanations, fg_color="transparent")
         requirements_frame.pack(fill="x", pady=(10, 10))
         
-        requirements_title = ctk.CTkLabel(requirements_frame, text="📋 Scoring System", 
+        requirements_title = ctk.CTkLabel(requirements_frame, text="📋 Scoring System (Per Attempt)", 
                                          font=ctk.CTkFont(size=14, weight="bold"), text_color="#FF5722")
         requirements_title.pack(anchor="w")
         
-        # UPDATED: Show new scoring values
         requirements_text = ctk.CTkLabel(requirements_frame, 
-                                         text="• Free-form correct: +1.95 points\n• Multiple choice correct: +0.95 points\n• Partially correct (free-form): +1.4 points\n• Unanswered questions: -0.2 points\n• Free-form wrong: -2.2 points\n• Multiple choice wrong: -2.65 points\n• Topics must be seen 4+ times to count toward mastery",
+                                         text="• Free-form correct: +1.2 points\n• Multiple choice correct: +0.6 points\n• Partially correct (free-form): +0.8 points\n• Free-form wrong: -1.4 points\n• Multiple choice wrong: -1.8 points\n• Unanswered: -0.2 points\n• Confidence multiplier: 60% (1 attempt) → 100% (5+ attempts)\n• Per-question cap: -1.5 to +1.2",
                                          font=ctk.CTkFont(size=12), wraplength=400, justify="left")
         requirements_text.pack(anchor="w", pady=(2, 0))
         
@@ -2889,7 +3023,7 @@ class StatsScreen(ctk.CTkFrame):
         level_up_title.pack(anchor="w")
 
         level_up_text = ctk.CTkLabel(level_up_frame,
-                                     text="To advance a CEFR level, you must meet three conditions: 1. Sustained success (85% correct over 50 questions, for 25 consecutive windows). 2. Broad topic coverage (85% of topics in that level attempted). 3. A minimum overall mastery score of 50%. Questions from the next level are only introduced once you achieve 25% mastery of your current level.",
+                                     text="To advance a CEFR level, you must meet three conditions: 1. Sustained success (85% correct over 50 questions, for 25 consecutive windows). 2. Broad topic coverage (85% of topics in that level attempted). 3. A minimum overall mastery score of 50%. Questions from the next level are only introduced once you achieve 25% mastery of your current level. Level mastery = (avg question scores × coverage × 1.3), capped at 0-100%.",
                                      font=ctk.CTkFont(size=12), wraplength=400, justify="left")
         level_up_text.pack(anchor="w", pady=(2, 0))
         
