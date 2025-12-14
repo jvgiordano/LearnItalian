@@ -189,30 +189,6 @@ class ImprovedAdaptiveLearningEngine:
             if 'is_unanswered' not in answer_columns:
                 cursor.execute('ALTER TABLE answer_history ADD COLUMN is_unanswered INTEGER DEFAULT 0')
 
-            # NEW: User progress tracking table
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS user_progress (
-                    id INTEGER PRIMARY KEY CHECK (id = 1),
-                    achieved_level TEXT DEFAULT 'A0',
-                    last_updated DATETIME
-                )
-            ''')
-            
-            # Check if columns exist, add if missing (without non-constant defaults)
-            cursor.execute('PRAGMA table_info(user_progress)')
-            user_progress_columns = [col[1] for col in cursor.fetchall()]
-            
-            if 'achieved_level' not in user_progress_columns:
-                cursor.execute('ALTER TABLE user_progress ADD COLUMN achieved_level TEXT DEFAULT "A0"')
-            if 'last_updated' not in user_progress_columns:
-                cursor.execute('ALTER TABLE user_progress ADD COLUMN last_updated DATETIME')
-            
-            # Initialize with A0 if empty
-            cursor.execute('SELECT COUNT(*) FROM user_progress')
-            if cursor.fetchone()[0] == 0:
-                cursor.execute('INSERT INTO user_progress (id, achieved_level, last_updated) VALUES (1, "A0", ?)',
-                             (datetime.now().isoformat(),))
-
             conn.commit()
         except Exception as e:
             print(f"Database schema update/check error: {e}")
@@ -323,48 +299,138 @@ class ImprovedAdaptiveLearningEngine:
             'coverage_percentages': coverage_percentages
         }
 
-    def calculate_estimated_level(self):
-        """
-        Calculates user's CEFR level based purely on mastery score.
-        - Advancement: Achieve 50% mastery in the next level
-        - Regression: Mastery drops below 48% in current level
-        """
+    def _check_sustained_success(self, cursor, level):
+        """Check for 85% success over last 50 Qs, sustained for 25 consecutive checks."""
+        cursor.execute(
+            "SELECT is_correct FROM answer_history WHERE cefr_level = ? ORDER BY timestamp DESC LIMIT 100",
+            (level,)
+        )
+        results = [row[0] for row in cursor.fetchall()]
+        results.reverse()
+
+        if len(results) < 50:
+            return False
+
+        sustain_counter = 0
+        for i in range(49, len(results)):
+            window = results[i-49 : i+1]
+            success_rate = sum(window) / 50.0
+            
+            if success_rate >= 0.85:
+                sustain_counter += 1
+                if sustain_counter >= 25:
+                    return True
+            else:
+                sustain_counter = 0
+        
+        return False
+
+    def get_sustained_success_streak(self, level):
+        """Returns the current sustained success streak for a given level (optimized)."""
+        if level == 'A0':
+            return 0
+        
+        conn = sqlite3.connect('italian_quiz.db')
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT is_correct FROM answer_history 
+            WHERE cefr_level = ? 
+            ORDER BY timestamp DESC 
+            LIMIT 100
+        """, (level,))
+        
+        results = [row[0] for row in cursor.fetchall()]
+        conn.close()
+        
+        results.reverse()
+        if len(results) < 50:
+            return 0
+        
+        # Sliding window calculation
+        window_sum = sum(results[:50])
+        sustain_counter = 0
+        
+        for i in range(50, len(results) + 1):
+            if i > 50:
+                window_sum = window_sum - results[i-51] + results[i-1]
+            
+            if window_sum / 50.0 >= 0.85:
+                sustain_counter += 1
+            else:
+                sustain_counter = 0
+        
+        return sustain_counter
+
+    def _check_topic_coverage(self, cursor, level):
+        """Check if at least 85% of topics in a level have been attempted."""
+        coverage_percentage = self.get_level_topic_coverage(level, cursor)
+        return coverage_percentage >= 0.85
+
+    def get_level_topic_coverage(self, level, cursor_obj=None):
+        """Returns the topic coverage percentage for a given level."""
+        if level == 'A0': return 0.0
+        conn = None
+        if cursor_obj is None:
+            conn = sqlite3.connect('italian_quiz.db')
+            cursor = conn.cursor()
+        else:
+            cursor = cursor_obj
+
+        cursor.execute("SELECT COUNT(DISTINCT topic) FROM questions WHERE cefr_level = ?", (level,))
+        total_topics = cursor.fetchone()[0]
+        
+        if total_topics == 0:
+            if conn: conn.close()
+            return 1.0
+
+        cursor.execute("""
+            SELECT COUNT(DISTINCT q.topic) 
+            FROM questions q 
+            JOIN answer_history ah ON q.id = ah.question_id 
+            WHERE q.cefr_level = ?
+        """, (level,))
+        answered_topics = cursor.fetchone()[0]
+
+        if conn: conn.close()
+        
+        return answered_topics / total_topics if total_topics > 0 else 0
+
+    def _check_mastery_score(self, cursor, level):
+        """Check if the overall Mastery Score for a level is at least 50%."""
+        stats = self._calculate_mastery_for_level(level, cursor)
+        return stats['mastery_value'] >= 0.50
+    
+    def get_level_mastery_score(self, level):
+        """Returns the mastery score for a given level."""
+        if level == 'A0': return 0.0
         conn = sqlite3.connect('italian_quiz.db')
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
-        
-        # Get current achieved level
-        cursor.execute('SELECT achieved_level FROM user_progress WHERE id = 1')
-        result = cursor.fetchone()
-        current_level = result['achieved_level'] if result else 'A0'
-        
-        # Check for regression (mastery < 48% for current level)
-        if current_level != 'A0':
-            current_mastery_score = self.get_level_mastery_score(current_level)
-            if current_mastery_score < 0.48:  # Dropped below 48%
-                # Regress one level
-                current_index = self.levels.index(current_level)
-                if current_index > 0:
-                    current_level = self.levels[current_index - 1]
-                    cursor.execute('UPDATE user_progress SET achieved_level = ?, last_updated = ? WHERE id = 1',
-                                 (current_level, datetime.now().isoformat()))
-                    conn.commit()
-        
-        # Check for advancement (50% mastery in next level)
-        current_index = self.levels.index(current_level)
-        if current_index < len(self.levels) - 1:
-            next_level = self.levels[current_index + 1]
+        stats = self._calculate_mastery_for_level(level, cursor)
+        conn.close()
+        return stats['mastery_value']
+
+    def calculate_estimated_level(self):
+        """Calculates user's CEFR level based on the 3-criteria model."""
+        highest_mastered = 'A0'
+        conn = sqlite3.connect('italian_quiz.db')
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        for level in self.levels:
+            if level == 'A0': continue
             
-            if next_level != 'A0':
-                next_level_mastery = self.get_level_mastery_score(next_level)
-                if next_level_mastery >= 0.50:  # Achieved 50% mastery in next level
-                    current_level = next_level
-                    cursor.execute('UPDATE user_progress SET achieved_level = ?, last_updated = ? WHERE id = 1',
-                                 (current_level, datetime.now().isoformat()))
-                    conn.commit()
+            cond1_sustained_success = self._check_sustained_success(cursor, level)
+            cond2_topic_coverage = self._check_topic_coverage(cursor, level)
+            cond3_mastery_score = self._check_mastery_score(cursor, level)
+
+            if cond1_sustained_success and cond2_topic_coverage and cond3_mastery_score:
+                if self.levels.index(level) >= self.levels.index(highest_mastered):
+                    highest_mastered = level
         
         conn.close()
-        return current_level
+        return highest_mastered
 
     def get_level_distribution(self, user_level, total_questions=10, user_assessment=None):
         """
@@ -827,7 +893,7 @@ class ImprovedAdaptiveLearningEngine:
         
         coverage = (answered_q / total_q) if total_q > 0 else 0
         return coverage
-
+    
     def calculate_single_question_mastery(self, question_id, cursor):
         """
         Calculate mastery score for a single question using rolling window approach.
@@ -1031,7 +1097,7 @@ class ImprovedAdaptiveLearningEngine:
         level_mastery = sum(topic_mastery_scores) / len(topic_mastery_scores) if topic_mastery_scores else 0
         
         # *** SIGMOID COVERAGE MULTIPLIER ***
-        # Using the params you provided: steepness=8
+        # Using the params you provided: steepness=1
         steepness = 8
         sigmoid = 1 / (1 + math.exp(-steepness * (coverage - 0.5)))
         coverage_multiplier = 0.5 + sigmoid  # Range: 0.5x to 1.5x
@@ -1104,16 +1170,6 @@ class ImprovedAdaptiveLearningEngine:
             INSERT OR REPLACE INTO daily_stats (date, total_coverage, total_mastery, last_updated)
             VALUES (?, ?, ?, ?)
         ''', (today, coverage, mastery, datetime.now()))
-
-    def get_level_mastery_score(self, level):
-        """Returns the mastery score for a given level."""
-        if level == 'A0': return 0.0
-        conn = sqlite3.connect('italian_quiz.db')
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        stats = self._calculate_mastery_for_level(level, cursor)
-        conn.close()
-        return stats['mastery_value']
 
     def determine_freeform_probability(self, cefr_level, freeform_mode):
         """Determine probability with significantly increased freeform chances."""
@@ -1311,6 +1367,7 @@ class ImprovedAdaptiveLearningEngine:
                     ?)
         ''', (topic, cefr_level, topic, cefr_level, weight if is_correct else 0, topic, cefr_level, 0 if is_correct else weight, now))
 
+
 class QuizApp(ctk.CTk):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1385,7 +1442,7 @@ class HomeScreen(ctk.CTkFrame):
         title_label = ctk.CTkLabel(self, text=APP_NAME, font=ctk.CTkFont(size=40, weight="bold"))
         title_label.pack(pady=(40, 10))
 
-        attribution_label = ctk.CTkLabel(self, text="(V1.5.0 - Made by jvgiordano using Claude 4.0 Sonnet, Claude 4.5 Opus, Gemini 2.5 Pro, Gemini 3.0 Pro, and Grok 4)", 
+        attribution_label = ctk.CTkLabel(self, text="(V1.4.0 - Made by jvgiordano using Claude 4.0 Sonnet, Claude 4.5 Opus, Gemini 2.5 Pro, Gemini 3.0 Pro, and Grok 4)", 
                                          font=ctk.CTkFont(size=14), text_color="gray60")
         attribution_label.pack(pady=(0, 20))
 
@@ -1403,6 +1460,9 @@ class HomeScreen(ctk.CTkFrame):
         
         self.coverage_label = ctk.CTkLabel(self.progress_metrics_frame, text="Topic Coverage: -", font=ctk.CTkFont(size=16))
         self.coverage_label.pack(side="left", padx=15)
+        
+        self.streak_label = ctk.CTkLabel(self.progress_metrics_frame, text="Sustained Success: -", font=ctk.CTkFont(size=16))
+        self.streak_label.pack(side="left", padx=15)
 
         adaptive_quiz_button = ctk.CTkButton(self, text="Start Adaptive Quiz", 
                                              command=self.start_adaptive_quiz, 
@@ -1518,11 +1578,12 @@ class HomeScreen(ctk.CTkFrame):
         self.working_on_label.configure(text=f"Working on: {working_on_level}")
 
         mastery_score = self.controller.adaptive_engine.get_level_mastery_score(working_on_level)
-        coverage_percentage = self.controller.adaptive_engine.get_coverage_percentage(working_on_level)
+        topic_coverage = self.controller.adaptive_engine.get_level_topic_coverage(working_on_level)
+        success_streak = self.controller.adaptive_engine.get_sustained_success_streak(working_on_level)
 
         self.mastery_label.configure(text=f"{working_on_level} Mastery: {mastery_score:.1%}")
-        self.coverage_label.configure(text=f"{working_on_level} Coverage: {coverage_percentage:.1%}")
-
+        self.coverage_label.configure(text=f"{working_on_level} Topic Coverage: {topic_coverage:.1%}")
+        self.streak_label.configure(text=f"{working_on_level} Sustained Success: {success_streak}/25")
 
 class HowToUseScreen(ctk.CTkFrame):
     def __init__(self, parent, controller):
@@ -1604,19 +1665,12 @@ The difference now besides teaching you the lesson explicitly is your brain has 
 
 Concerning the depth and difficulty: 
 
-There are 5 levels of Italian provided, based on the CEFR framework. A1 and A2 are for beginners, B1 and B2 are intermediate, and C1 is advanced. 
+There are 5 levels of Italian provided, based on the CEFR framework. A1 and A2 are for beginners, B1 and B2 are intermediate, and C1 is advanced. To progress between levels, you need to satisfy ALL THREE criteria:
+- **Sustained Success:** Achieve an average of 85% correct answers in the last 50 questions, and sustain this for 25 consecutive additional questions from that level.
+- **Broad Coverage:** Attempt at least 85% of the available topics within that level (only one question per topic).
+- **Minimum Mastery:** Attain a mastery score of at least 50% for the level. (Mastery scoring explained below).
 
-**NEW IN V1.5.0 - SIMPLIFIED PROGRESSION:**
-Level progression is now based purely on mastery scores:
-- **Advancement:** Achieve 50% mastery in the next level to advance
-- **Regression:** Only if your mastery drops below 48% in your current level
-- **All new users start at A0** (there are no A0 questions)
-
-The mastery score already accounts for:
-- Topic coverage (unseen topics = 0%, which lowers your mastery)
-- Recent performance (rolling 5-attempt window per question)
-- Question difficulty (wrong answers are heavily penalized)
-- Confidence weighting (requires multiple attempts for full confidence)
+All new beginners actually start at A0 (there are no A0 questions.)
 
 THIS PROGRAM AIMS TO BE CONSERVATIVE IN ITS CEFR ESTIMATION. DO NOT BE DISCOURAGED.
 
@@ -1631,7 +1685,9 @@ The app includes three response modes:
 - **Only Free Form Responses:** All questions require typing the correct answer.
 - **No Free Form Responses:** Traditional multiple choice only.
 
-## TOPIC-BASED MASTERY SYSTEM (V1.4.0) ##
+## NEW TOPIC-BASED MASTERY SYSTEM (V1.4.0) ##
+
+**Major Update:** The mastery calculation has been completely redesigned to be fairer and more pedagogically sound!
 
 **How It Works:**
 1. **Topic Mastery:** Each topic (e.g., "Present Tense", "Possessive Adjectives") gets its own mastery score
@@ -1722,7 +1778,6 @@ Good luck!
                                     command=lambda: controller.show_frame(HomeScreen),
                                     height=40)
         back_button.pack(pady=20)
-
 
 class TopicSelectionScreen(ctk.CTkFrame):
     def __init__(self, parent, controller):
@@ -2487,7 +2542,7 @@ class QuizScreen(ctk.CTkFrame):
         elif percentage >= 80:
             message = "👍 Molto bene! Great job!"
         elif percentage >= 70:
-            message = "👏 Bene! Good work, keep practicing!"
+            message = "👍 Bene! Good work, keep practicing!"
         elif percentage >= 60:
             message = "📚 Non male! Not bad, room for improvement."
         else:
@@ -2497,6 +2552,7 @@ class QuizScreen(ctk.CTkFrame):
                                      font=ctk.CTkFont(size=14), text_color="gray70")
         message_label.pack(pady=(0, 15))
         return row + 1
+
 
 class StatsScreen(ctk.CTkFrame):
     def __init__(self, parent, controller):
@@ -2774,7 +2830,7 @@ class StatsScreen(ctk.CTkFrame):
                 row=row, column=2, padx=15, pady=5)
 
     def update_level_details(self):
-        """Displays detailed Mastery and Coverage for each level."""
+        """Displays detailed Mastery, Coverage, and Success Streak for each level."""
         for widget in self.level_details_frame.winfo_children():
             widget.destroy()
 
@@ -2792,7 +2848,8 @@ class StatsScreen(ctk.CTkFrame):
                 continue
 
             mastery_score = self.controller.adaptive_engine.get_level_mastery_score(level)
-            coverage_percentage = self.controller.adaptive_engine.get_coverage_percentage(level)
+            topic_coverage = self.controller.adaptive_engine.get_level_topic_coverage(level)
+            success_streak = self.controller.adaptive_engine.get_sustained_success_streak(level)
             
             row_frame = ctk.CTkFrame(details_container, fg_color="transparent")
             row_frame.pack(fill="x", expand=True, pady=5)
@@ -2806,8 +2863,11 @@ class StatsScreen(ctk.CTkFrame):
             mastery_label = ctk.CTkLabel(metrics_frame, text=f"Mastery: {mastery_score:.1%}", font=ctk.CTkFont(size=16))
             mastery_label.pack(side="left", padx=15)
             
-            coverage_label = ctk.CTkLabel(metrics_frame, text=f"Coverage: {coverage_percentage:.1%}", font=ctk.CTkFont(size=16))
+            coverage_label = ctk.CTkLabel(metrics_frame, text=f"Topic Coverage: {topic_coverage:.1%}", font=ctk.CTkFont(size=16))
             coverage_label.pack(side="left", padx=15)
+            
+            streak_label = ctk.CTkLabel(metrics_frame, text=f"Sustained Success: {success_streak}/25", font=ctk.CTkFont(size=16))
+            streak_label.pack(side="left", padx=15)
 
     def update_graph(self, cursor=None):
         """OPTIMIZED: Graph with proper matplotlib cleanup."""
@@ -2986,7 +3046,7 @@ class StatsScreen(ctk.CTkFrame):
         self.controller.frames[QuizScreen].start_quiz(adaptive=False, level=level, topics=[topic], freeform_mode=freeform_mode)
 
     def update_explanations(self):
-        """Add explanation box for metrics - UPDATED with simplified progression."""
+        """Add explanation box for metrics - UPDATED with new topic-based system."""
         for widget in self.explanation_frame.winfo_children():
             widget.destroy()
         
@@ -3006,14 +3066,14 @@ class StatsScreen(ctk.CTkFrame):
         coverage_title.pack(anchor="w")
         
         coverage_text = ctk.CTkLabel(coverage_frame, 
-                                     text="Shows the percentage of questions you've attempted in each level. Blue bars in the CEFR chart represent this metric.",
+                                     text="Shows the percentage of topics you've attempted in each level. Blue bars in the CEFR chart represent this metric.",
                                      font=ctk.CTkFont(size=12), wraplength=400, justify="left")
         coverage_text.pack(anchor="w", pady=(2, 0))
         
         mastery_frame = ctk.CTkFrame(scrollable_explanations, fg_color="transparent")
         mastery_frame.pack(fill="x", pady=(10, 10))
         
-        mastery_title = ctk.CTkLabel(mastery_frame, text="🏆 Mastery (TOPIC-BASED V1.4.0)", 
+        mastery_title = ctk.CTkLabel(mastery_frame, text="🏆 Mastery (NEW TOPIC-BASED V1.4.0)", 
                                      font=ctk.CTkFont(size=14, weight="bold"), text_color="#FFD700")
         mastery_title.pack(anchor="w")
         
@@ -3021,18 +3081,6 @@ class StatsScreen(ctk.CTkFrame):
                                     text="Each topic gets its own mastery score based on your last 5 attempts per question (normalized 0-1). A confidence multiplier (15%-100%) is applied based on questions answered in that topic. Level mastery = average of ALL topic masteries (unseen topics = 0%). This ensures fair progression regardless of question count per level.",
                                     font=ctk.CTkFont(size=12), wraplength=400, justify="left")
         mastery_text.pack(anchor="w", pady=(2, 0))
-        
-        progression_frame = ctk.CTkFrame(scrollable_explanations, fg_color="transparent")
-        progression_frame.pack(fill="x", pady=(10, 10))
-        
-        progression_title = ctk.CTkLabel(progression_frame, text="🚀 Level Progression (NEW V1.5.0)", 
-                                        font=ctk.CTkFont(size=14, weight="bold"), text_color="#2196F3")
-        progression_title.pack(anchor="w")
-        
-        progression_text = ctk.CTkLabel(progression_frame, 
-                                       text="SIMPLIFIED! Progression is now based purely on mastery scores:\n• Advance: Achieve 50% mastery in the next level\n• Regress: Only if mastery drops below 48% in your current level\n\nThe mastery score already accounts for topic coverage, recent performance, and confidence weighting, making additional criteria redundant.",
-                                       font=ctk.CTkFont(size=12), wraplength=400, justify="left")
-        progression_text.pack(anchor="w", pady=(2, 0))
         
         adaptive_frame = ctk.CTkFrame(scrollable_explanations, fg_color="transparent")
         adaptive_frame.pack(fill="x", pady=(10, 10))
@@ -3059,16 +3107,28 @@ class StatsScreen(ctk.CTkFrame):
         requirements_text.pack(anchor="w", pady=(2, 0))
         
         progress_frame = ctk.CTkFrame(scrollable_explanations, fg_color="transparent")
-        progress_frame.pack(fill="x", pady=(10, 0))
+        progress_frame.pack(fill="x", pady=(10, 10))
         
         progress_title = ctk.CTkLabel(progress_frame, text="📈 Progress Timeline", 
                                       font=ctk.CTkFont(size=14, weight="bold"), text_color="#4CAF50")
         progress_title.pack(anchor="w")
         
         progress_text = ctk.CTkLabel(progress_frame, 
-                                     text="The timeline shows your daily progress. Blue area shows question coverage (questions attempted), gold area shows mastery (average topic mastery with confidence weighting and coverage multiplier). Your goal is to reach high mastery scores across all levels.",
+                                     text="The timeline shows your daily progress. Blue area shows topic coverage (topics attempted), gold area shows mastery (average topic mastery with confidence weighting). Your goal is to reach 100% coverage, then have mastery catch up.",
                                      font=ctk.CTkFont(size=12), wraplength=400, justify="left")
         progress_text.pack(anchor="w", pady=(2, 0))
+        
+        level_up_frame = ctk.CTkFrame(scrollable_explanations, fg_color="transparent")
+        level_up_frame.pack(fill="x", pady=(10, 0))
+
+        level_up_title = ctk.CTkLabel(level_up_frame, text="🚀 Level Advancement",
+                                      font=ctk.CTkFont(size=14, weight="bold"), text_color="#2196F3")
+        level_up_title.pack(anchor="w")
+
+        level_up_text = ctk.CTkLabel(level_up_frame,
+                                     text="To advance a CEFR level, you must meet three conditions: 1. Sustained success (85% correct over 50 questions, for 25 consecutive windows). 2. Broad topic coverage (85% of topics in that level attempted). 3. A minimum overall mastery score of 50%. Questions from the next level are only introduced once you achieve 25% mastery of your current level.",
+                                     font=ctk.CTkFont(size=12), wraplength=400, justify="left")
+        level_up_text.pack(anchor="w", pady=(2, 0))
         
         if hasattr(scrollable_explanations, '_mousewheel_handler'):
             bind_children_scroll(scrollable_explanations, scrollable_explanations._mousewheel_handler)
@@ -3108,15 +3168,12 @@ class StatsScreen(ctk.CTkFrame):
             'topic_performance',
             'quiz_history',
             'daily_stats',
-            'answer_history',
-            'user_progress'
+            'answer_history'
         ]
         
         try:
             for table in tables_to_clear:
                 cursor.execute(f"DELETE FROM {table};")
-            # Re-initialize user_progress with A0
-            cursor.execute('INSERT INTO user_progress (id, achieved_level) VALUES (1, "A0")')
             conn.commit()
         except Exception as e:
             print(f"Error clearing progress: {e}")
