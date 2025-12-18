@@ -1048,6 +1048,65 @@ class ImprovedAdaptiveLearningEngine:
             "mastery_value": level_mastery
         }
 
+    def get_topic_masteries_for_level(self, level, cursor=None):
+        """
+        Returns topic mastery data for a specific CEFR level.
+        Returns: {topic_name: {'mastery': float, 'question_count': int}}
+        """
+        conn_owned = False
+        if cursor is None:
+            conn = sqlite3.connect('italian_quiz.db')
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            conn_owned = True
+        
+        # Get all topics for this level
+        cursor.execute("SELECT DISTINCT topic FROM questions WHERE cefr_level = ?", (level,))
+        all_topics = [row[0] for row in cursor.fetchall()]
+        
+        topic_data = {}
+        
+        for topic in all_topics:
+            # Get all question IDs for this topic in this level
+            cursor.execute(
+                "SELECT id FROM questions WHERE cefr_level = ? AND topic = ?", 
+                (level, topic)
+            )
+            topic_question_ids = [row[0] for row in cursor.fetchall()]
+            question_count = len(topic_question_ids)
+            
+            if not topic_question_ids:
+                topic_data[topic] = {'mastery': 0.0, 'question_count': 0}
+                continue
+            
+            # Get mastery scores for all questions in this topic
+            raw_mastery_scores = self.calculate_all_question_masteries_batch(topic_question_ids, cursor)
+            
+            # Filter out None (unanswered questions)
+            raw_scores = [score for score in raw_mastery_scores.values() if score is not None]
+            
+            if not raw_scores:
+                # Topic hasn't been attempted yet
+                mastery = 0.0
+            else:
+                # Calculate average mastery and apply confidence multiplier
+                avg_raw_score = sum(raw_scores) / len(raw_scores)
+                confidence = self.calculate_topic_confidence(len(raw_scores))
+                mastery = avg_raw_score * confidence
+                
+                # Ensure final mastery stays within expected bounds
+                mastery = max(-1.5, min(1.2, mastery))
+            
+            topic_data[topic] = {
+                'mastery': mastery,
+                'question_count': question_count
+            }
+        
+        if conn_owned:
+            conn.close()
+        
+        return topic_data
+
     def get_all_level_stats_cached(self, cursor):
         """OPTIMIZED: Get all level stats in one pass, cached for the refresh cycle."""
         if self._stats_cache.level_stats:
@@ -2529,14 +2588,11 @@ class StatsScreen(ctk.CTkFrame):
         self.stats_frame = ctk.CTkFrame(self.main_scroll)
         self.stats_frame.pack(fill="x", pady=(0, 20), padx=50)
         
-        self.level_details_frame = ctk.CTkFrame(self.main_scroll)
-        self.level_details_frame.pack(fill="x", pady=(0, 20), padx=50)
+        self.weaknesses_frame = ctk.CTkFrame(self.main_scroll)
+        self.weaknesses_frame.pack(fill="x", pady=(0, 20), padx=50)
         
         self.graph_frame = ctk.CTkFrame(self.main_scroll)
         self.graph_frame.pack(fill="x", pady=(0, 20), padx=50)
-        
-        self.weaknesses_frame = ctk.CTkFrame(self.main_scroll)
-        self.weaknesses_frame.pack(fill="x", pady=(0, 20), padx=50)
         
         self.explanation_frame = ctk.CTkFrame(self.main_scroll)
         self.explanation_frame.pack(fill="x", pady=(0, 20), padx=50)
@@ -2552,24 +2608,20 @@ class StatsScreen(ctk.CTkFrame):
 
     def refresh_data(self):
         """OPTIMIZED: Single connection for entire refresh with caching."""
-        # Clear cache at start of refresh
         self.controller.adaptive_engine._stats_cache.clear()
         
-        # Use single connection for entire refresh
         conn = sqlite3.connect('italian_quiz.db')
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
         try:
-            # Pre-fetch all stats once
             self.controller.adaptive_engine.get_all_level_stats_cached(cursor)
             
             self.update_summary()
             self.update_progress_timeline(cursor)
             self.update_stats_table(cursor)
-            self.update_level_details()
-            self.update_graph(cursor)
             self.update_weaknesses()
+            self.update_graph(cursor)
             self.update_explanations()
         finally:
             conn.close()
@@ -2592,7 +2644,6 @@ class StatsScreen(ctk.CTkFrame):
 
     def update_progress_timeline(self, cursor=None):
         """OPTIMIZED: Progress Timeline with proper matplotlib cleanup."""
-        # CRITICAL: Close old figures to prevent memory leak
         if hasattr(self, '_timeline_fig'):
             plt.close(self._timeline_fig)
         if hasattr(self, '_timeline_canvas'):
@@ -2653,7 +2704,7 @@ class StatsScreen(ctk.CTkFrame):
             coverage_values.append(coverage * 100)
             mastery_values.append(mastery * 100)
         
-        fig, ax = plt.subplots(figsize=(10, 5), facecolor="#F0F0F0", dpi=100)
+        fig, ax = plt.subplots(figsize=(14, 7), facecolor="#F0F0F0", dpi=100)
         
         ax.fill_between(dates, 0, coverage_values, alpha=0.5, color='#1F6AA5', zorder=1)
         ax.plot(dates, coverage_values, color='#1F6AA5', linewidth=2, zorder=2)
@@ -2661,8 +2712,8 @@ class StatsScreen(ctk.CTkFrame):
         ax.fill_between(dates, 0, mastery_values, alpha=0.7, color='#FFD700', zorder=3)
         ax.plot(dates, mastery_values, color='#FFD700', linewidth=2, zorder=4)
         
-        ax.set_xlabel("Date", color="black", fontsize=11)
-        ax.set_ylabel("Percentage (%)", color="black", fontsize=11)
+        ax.set_xlabel("Date", color="black", fontsize=18)
+        ax.set_ylabel("Percentage (%)", color="black", fontsize=18)
         
         if coverage_values or mastery_values:
             max_value = max(max(coverage_values) if coverage_values else 0, 
@@ -2701,8 +2752,8 @@ class StatsScreen(ctk.CTkFrame):
             spine.set_color('black')
             spine.set_linewidth(1)
         
-        ax.tick_params(axis='x', colors='black')
-        ax.tick_params(axis='y', colors='black')
+        ax.tick_params(axis='x', colors='black', labelsize=16)
+        ax.tick_params(axis='y', colors='black', labelsize=16)
         
         from matplotlib.patches import Patch
         legend_elements = [
@@ -2710,7 +2761,7 @@ class StatsScreen(ctk.CTkFrame):
             Patch(facecolor='#FFD700', alpha=0.7, label='Mastery')
         ]
         ax.legend(handles=legend_elements, loc='upper center', bbox_to_anchor=(0.5, 1.15),
-                  ncol=2, frameon=False)
+                  ncol=2, frameon=False, fontsize=16)
         
         fig.tight_layout()
         
@@ -2757,7 +2808,6 @@ class StatsScreen(ctk.CTkFrame):
         table_frame = ctk.CTkFrame(table_container)
         table_frame.pack(fill="both", expand=True, padx=15, pady=(0, 15))
         
-        # Use cached stats
         stats = self.controller.adaptive_engine._stats_cache.level_stats
 
         headers = ["Level", "Coverage", "Mastery"]
@@ -2773,45 +2823,8 @@ class StatsScreen(ctk.CTkFrame):
             ctk.CTkLabel(table_frame, text=data['mastery'], font=ctk.CTkFont(size=14)).grid(
                 row=row, column=2, padx=15, pady=5)
 
-    def update_level_details(self):
-        """Displays detailed Mastery and Coverage for each level."""
-        for widget in self.level_details_frame.winfo_children():
-            widget.destroy()
-
-        title_label = ctk.CTkLabel(self.level_details_frame, text="Detailed Level Progress",
-                                   font=ctk.CTkFont(size=18, weight="bold"))
-        title_label.pack(pady=(15, 10))
-        
-        levels = self.controller.adaptive_engine.levels
-        
-        details_container = ctk.CTkFrame(self.level_details_frame, fg_color="transparent")
-        details_container.pack(pady=(0, 15))
-
-        for level in levels:
-            if level == 'A0':
-                continue
-
-            mastery_score = self.controller.adaptive_engine.get_level_mastery_score(level)
-            coverage_percentage = self.controller.adaptive_engine.get_coverage_percentage(level)
-            
-            row_frame = ctk.CTkFrame(details_container, fg_color="transparent")
-            row_frame.pack(fill="x", expand=True, pady=5)
-            
-            level_label = ctk.CTkLabel(row_frame, text=f"{level}:", font=ctk.CTkFont(size=16, weight="bold"), width=40)
-            level_label.pack(side="left", padx=(0, 15))
-            
-            metrics_frame = ctk.CTkFrame(row_frame, fg_color="transparent")
-            metrics_frame.pack(side="left", expand=True)
-
-            mastery_label = ctk.CTkLabel(metrics_frame, text=f"Mastery: {mastery_score:.1%}", font=ctk.CTkFont(size=16))
-            mastery_label.pack(side="left", padx=15)
-            
-            coverage_label = ctk.CTkLabel(metrics_frame, text=f"Coverage: {coverage_percentage:.1%}", font=ctk.CTkFont(size=16))
-            coverage_label.pack(side="left", padx=15)
-
     def update_graph(self, cursor=None):
         """OPTIMIZED: Graph with proper matplotlib cleanup."""
-        # CRITICAL: Close old figures to prevent memory leak
         if hasattr(self, '_graph_fig'):
             plt.close(self._graph_fig)
         if hasattr(self, '_graph_canvas'):
@@ -2851,13 +2864,13 @@ class StatsScreen(ctk.CTkFrame):
             
             recent_average = sum(scores) / len(scores) if scores else 0
             
-            fig1, ax1 = plt.subplots(figsize=(10, 4), facecolor="#F0F0F0", dpi=100)
+            fig1, ax1 = plt.subplots(figsize=(12, 6), facecolor="#F0F0F0", dpi=100)
             ax1.plot(quiz_numbers, scores, marker='o', linestyle='-', color='#1F6AA5', linewidth=2, markersize=6)
             
-            ax1.set_xlabel("Quiz Session", color="black", fontsize=11)
-            ax1.set_ylabel("Score (%)", color="black", fontsize=11)
-            ax1.tick_params(axis='x', colors='black')
-            ax1.tick_params(axis='y', colors='black')
+            ax1.set_xlabel("Quiz Session", color="black", fontsize=18)
+            ax1.set_ylabel("Score (%)", color="black", fontsize=18)
+            ax1.tick_params(axis='x', colors='black', labelsize=16)
+            ax1.tick_params(axis='y', colors='black', labelsize=16)
             ax1.set_facecolor("#FFFFFF")
             
             for spine in ax1.spines.values():
@@ -2889,18 +2902,16 @@ class StatsScreen(ctk.CTkFrame):
     
     def create_cefr_completion_chart(self, parent_frame):
         """OPTIMIZED: CEFR chart with cleanup and cached data."""
-        # CRITICAL: Close old figure
         if hasattr(self, '_cefr_fig'):
             plt.close(self._cefr_fig)
         
-        # Use cached stats
         stats = self.controller.adaptive_engine._stats_cache.level_stats
         
         levels = ['A1', 'A2', 'B1', 'B2', 'C1']
         coverage_data = [stats[level]['coverage_value'] * 100 for level in levels]
         mastery_data = [stats[level]['mastery_value'] * 100 for level in levels]
         
-        fig2, ax2 = plt.subplots(figsize=(8, 5), facecolor="#F0F0F0", dpi=100)
+        fig2, ax2 = plt.subplots(figsize=(12, 6), facecolor="#F0F0F0", dpi=100)
         
         x_pos = range(len(levels))
         bar_width = 0.6
@@ -2910,8 +2921,8 @@ class StatsScreen(ctk.CTkFrame):
         bars_mastery = ax2.bar(x_pos, mastery_data, bar_width, label='Mastery', 
                                color='#FFD700', alpha=0.9, zorder=2)
         
-        ax2.set_xlabel("CEFR Level", color="black", fontsize=11)
-        ax2.set_ylabel("Completion (%)", color="black", fontsize=11)
+        ax2.set_xlabel("CEFR Level", color="black", fontsize=18)
+        ax2.set_ylabel("Completion (%)", color="black", fontsize=18)
         ax2.set_xticks(x_pos)
         ax2.set_xticklabels(levels)
         ax2.set_ylim(0, 105)
@@ -2926,8 +2937,8 @@ class StatsScreen(ctk.CTkFrame):
             spine.set_color('black')
             spine.set_linewidth(1)
         
-        ax2.tick_params(axis='x', colors='black')
-        ax2.tick_params(axis='y', colors='black')
+        ax2.tick_params(axis='x', colors='black', labelsize=16)
+        ax2.tick_params(axis='y', colors='black', labelsize=16)
         
         ax2.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=2, frameon=False)
         
@@ -2942,44 +2953,261 @@ class StatsScreen(ctk.CTkFrame):
         self._cefr_fig = fig2
 
     def update_weaknesses(self):
+        """Now displays interactive Voronoi topic visualization instead of weaknesses list."""
         for widget in self.weaknesses_frame.winfo_children():
             widget.destroy()
         
-        title_label = ctk.CTkLabel(self.weaknesses_frame, text="Areas for Improvement", 
+        title_label = ctk.CTkLabel(self.weaknesses_frame, text="Progress by Topic", 
                                    font=ctk.CTkFont(size=18, weight="bold"))
-        title_label.pack(pady=(15, 15))
+        title_label.pack(pady=(15, 10))
         
-        assessment = self.controller.adaptive_engine.assess_user_level_and_topics()
-        weaknesses = assessment['topic_weaknesses']
+        button_frame = ctk.CTkFrame(self.weaknesses_frame, fg_color="transparent")
+        button_frame.pack(pady=(0, 15))
         
-        if not weaknesses:
-            no_weakness_label = ctk.CTkLabel(self.weaknesses_frame, 
-                                             text="Great job! No significant weaknesses detected.\nKeep practicing to maintain your skills!", 
-                                             font=ctk.CTkFont(size=14))
-            no_weakness_label.pack(pady=20)
+        if not hasattr(self, 'selected_voronoi_level'):
+            self.selected_voronoi_level = 'A1'
+        
+        levels = ['A1', 'A2', 'B1', 'B2', 'C1']
+        self.level_buttons = {}
+        
+        for level in levels:
+            btn = ctk.CTkButton(
+                button_frame, 
+                text=level,
+                command=lambda l=level: self.on_level_button_click(l),
+                width=80,
+                height=35,
+                fg_color="#1F6AA5" if level == self.selected_voronoi_level else "#4A4A4A",
+                hover_color="#1854A0" if level == self.selected_voronoi_level else "#5A5A5A"
+            )
+            btn.pack(side="left", padx=5)
+            self.level_buttons[level] = btn
+        
+        self.voronoi_tooltip_label = ctk.CTkLabel(
+            self.weaknesses_frame, 
+            text="Hover over a topic to see details • Click to practice",
+            font=ctk.CTkFont(size=14, slant="italic"),
+            text_color="gray60"
+        )
+        self.voronoi_tooltip_label.pack(pady=(0, 10))
+        
+        self.voronoi_chart_frame = ctk.CTkFrame(self.weaknesses_frame)
+        self.voronoi_chart_frame.pack(fill="both", expand=True, pady=(0, 15))
+        
+        self.create_topic_voronoi_chart(self.voronoi_chart_frame, self.selected_voronoi_level)
+
+    def on_level_button_click(self, level):
+        """Handle level button clicks - update selection and refresh chart."""
+        self.selected_voronoi_level = level
+        
+        for lvl, btn in self.level_buttons.items():
+            if lvl == level:
+                btn.configure(fg_color="#1F6AA5", hover_color="#1854A0")
+            else:
+                btn.configure(fg_color="#4A4A4A", hover_color="#5A5A5A")
+        
+        for widget in self.voronoi_chart_frame.winfo_children():
+            widget.destroy()
+        
+        self.create_topic_voronoi_chart(self.voronoi_chart_frame, level)
+
+    def create_topic_voronoi_chart(self, parent_frame, level):
+        """Create interactive Voronoi diagram showing topic mastery."""
+        from scipy.spatial import Voronoi
+        import matplotlib.patches as mpatches
+        
+        if hasattr(self, '_voronoi_fig'):
+            plt.close(self._voronoi_fig)
+        if hasattr(self, '_voronoi_canvas'):
+            self._voronoi_canvas.get_tk_widget().destroy()
+        
+        topic_data = self.controller.adaptive_engine.get_topic_masteries_for_level(level)
+        
+        if not topic_data:
+            no_data_label = ctk.CTkLabel(parent_frame, 
+                                         text=f"No topics found for level {level}",
+                                         font=ctk.CTkFont(size=14))
+            no_data_label.pack(expand=True, pady=30)
             return
         
-        scrollable_weaknesses = ctk.CTkScrollableFrame(self.weaknesses_frame, height=150)
-        scrollable_weaknesses.pack(fill="both", expand=True, pady=(0, 15))
-        enable_trackpad_scroll(scrollable_weaknesses)
+        min_area = 0.5
+        areas = {}
+        for topic, data in topic_data.items():
+            q_count = data['question_count']
+            areas[topic] = max(min_area, np.sqrt(q_count))
         
-        for weakness in weaknesses[:10]:
-            weakness_frame = ctk.CTkFrame(scrollable_weaknesses, fg_color="transparent")
-            weakness_frame.pack(fill="x", pady=5)
-            
-            topic_label = ctk.CTkLabel(weakness_frame, 
-                                       text=f"{weakness['level']} - {weakness['topic']}: {weakness['success_rate']*100:.0f}% success rate", 
-                                       font=ctk.CTkFont(size=14))
-            topic_label.pack(side="left")
-            
-            practice_button = ctk.CTkButton(weakness_frame, text="Practice Now", 
-                                            command=lambda l=weakness['level'], t=weakness['topic']: self.practice_topic(t, l),
-                                            width=100, height=28)
-            practice_button.pack(side="right")
+        num_topics = len(topic_data)
+        points = self._generate_voronoi_points(topic_data, areas, num_topics)
         
-        if hasattr(scrollable_weaknesses, '_mousewheel_handler'):
-            bind_children_scroll(scrollable_weaknesses, scrollable_weaknesses._mousewheel_handler)
-    
+        vor = Voronoi(points)
+        
+        # Increased figure size significantly
+        fig, ax = plt.subplots(figsize=(30, 9), facecolor="#F0F0F0", dpi=100)
+        ax.set_aspect('equal')
+        # Removed padding - polygons now touch the walls
+        ax.set_xlim(0, 25)
+        ax.set_ylim(0, 10)
+        ax.axis('off')
+        
+        def get_color_for_mastery(mastery):
+            if mastery < -1.0:
+                return '#8B0000'
+            elif mastery < -0.6:
+                return '#DC143C'
+            elif mastery < -0.2:
+                return '#FF6B6B'
+            elif mastery <= 0.2:
+                return '#808080'
+            elif mastery <= 0.6:
+                return '#6BB6FF'
+            elif mastery <= 0.9:
+                return '#1F6AA5'
+            else:
+                return '#0D47A1'
+        
+        self.voronoi_polygons = []
+        topic_names = list(topic_data.keys())
+        
+        for i, region_index in enumerate(vor.point_region):
+            if i >= len(topic_names):
+                break
+                
+            region = vor.regions[region_index]
+            
+            if not region or -1 in region:
+                continue
+            
+            polygon_vertices = [vor.vertices[j] for j in region]
+            polygon_vertices = self._clip_polygon_to_bounds(polygon_vertices, 0, 25, 0, 10)
+            
+            if len(polygon_vertices) < 3:
+                continue
+            
+            topic_name = topic_names[i]
+            mastery = topic_data[topic_name]['mastery']
+            color = get_color_for_mastery(mastery)
+            
+            polygon = mpatches.Polygon(polygon_vertices, closed=True, 
+                                       facecolor=color, edgecolor='white', 
+                                       linewidth=2, alpha=0.8)
+            ax.add_patch(polygon)
+            
+            self.voronoi_polygons.append({
+                'polygon': polygon,
+                'topic': topic_name,
+                'mastery': mastery,
+                'vertices': polygon_vertices
+            })
+            
+            centroid_x = np.mean([v[0] for v in polygon_vertices])
+            centroid_y = np.mean([v[1] for v in polygon_vertices])
+            
+            display_name = topic_name if len(topic_name) <= 25 else topic_name[:10] + "..."
+            
+            # Increased font size for better visibility
+            ax.text(centroid_x, centroid_y, display_name,
+                    ha='center', va='center', fontsize=12, 
+                    fontweight='bold', color='white',
+                    bbox=dict(boxstyle='round,pad=0.4', facecolor='black', alpha=0.3))
+        
+        fig.tight_layout(pad=0.2)
+        
+        canvas = FigureCanvasTkAgg(fig, master=parent_frame)
+        canvas.draw()
+        canvas_widget = canvas.get_tk_widget()
+        canvas_widget.pack(side="top", fill="both", expand=True, pady=10)
+        
+        self._setup_voronoi_interactivity(fig, ax, canvas, level)
+        
+        self._voronoi_canvas = canvas
+        self._voronoi_fig = fig
+
+    def _generate_voronoi_points(self, topic_data, areas, num_topics):
+        """Generate points for Voronoi tessellation weighted by topic areas."""
+        points = []
+        topic_names = list(topic_data.keys())
+        
+        grid_size = int(np.ceil(np.sqrt(num_topics)))
+        
+        for i, topic in enumerate(topic_names):
+            row = i // grid_size
+            col = i % grid_size
+            
+            x = (col + 0.5) * (25 / grid_size)
+            y = (row + 0.5) * (10 / grid_size)
+            
+            jitter = np.sqrt(areas[topic]) * 0.1
+            x += np.random.uniform(-jitter, jitter)
+            y += np.random.uniform(-jitter, jitter)
+            
+            # Changed to use full 0-10 range instead of 0.5-9.5
+            x = max(0, min(30, x))
+            y = max(0, min(10, y))
+            
+            points.append([x, y])
+        
+        return np.array(points)
+
+    def _clip_polygon_to_bounds(self, vertices, x_min, x_max, y_min, y_max):
+        """Clip polygon vertices to rectangular bounds."""
+        clipped = []
+        for v in vertices:
+            x = max(x_min, min(x_max, v[0]))
+            y = max(y_min, min(y_max, v[1]))
+            clipped.append([x, y])
+        return clipped
+
+    def _setup_voronoi_interactivity(self, fig, ax, canvas, level):
+        """Setup hover and click events for Voronoi polygons."""
+        
+        def on_hover(event):
+            if event.inaxes != ax:
+                self.voronoi_tooltip_label.configure(
+                    text="Hover over a topic to see details • Click to practice"
+                )
+                return
+            
+            for poly_data in self.voronoi_polygons:
+                polygon = poly_data['polygon']
+                contains, _ = polygon.contains(event)
+                
+                if contains:
+                    topic = poly_data['topic']
+                    mastery = poly_data['mastery']
+                    self.voronoi_tooltip_label.configure(
+                        text=f"📚 {topic} — Mastery: {mastery:.2f}",
+                        text_color="#1F6AA5"
+                    )
+                    canvas.draw_idle()
+                    return
+            
+            self.voronoi_tooltip_label.configure(
+                text="Hover over a topic to see details • Click to practice",
+                text_color="gray60"
+            )
+        
+        def on_click(event):
+            if event.inaxes != ax:
+                return
+            
+            for poly_data in self.voronoi_polygons:
+                polygon = poly_data['polygon']
+                contains, _ = polygon.contains(event)
+                
+                if contains:
+                    topic = poly_data['topic']
+                    freeform_mode = self.controller.frames[HomeScreen].get_freeform_mode()
+                    self.controller.frames[QuizScreen].start_quiz(
+                        adaptive=False, 
+                        level=level, 
+                        topics=[topic], 
+                        freeform_mode=freeform_mode
+                    )
+                    return
+        
+        fig.canvas.mpl_connect('motion_notify_event', on_hover)
+        fig.canvas.mpl_connect('button_press_event', on_click)
+
     def practice_topic(self, topic, level):
         """Start a quiz focused on a specific topic and level."""
         freeform_mode = self.controller.frames[HomeScreen].get_freeform_mode()
@@ -3115,7 +3343,6 @@ class StatsScreen(ctk.CTkFrame):
         try:
             for table in tables_to_clear:
                 cursor.execute(f"DELETE FROM {table};")
-            # Re-initialize user_progress with A0
             cursor.execute('INSERT INTO user_progress (id, achieved_level) VALUES (1, "A0")')
             conn.commit()
         except Exception as e:
