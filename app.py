@@ -3,6 +3,8 @@ import sqlite3
 import json
 import random
 from datetime import datetime, timedelta
+import matplotlib
+matplotlib.use("Agg")  # Use non-interactive backend to prevent lingering threads
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.dates as mdates
@@ -549,7 +551,7 @@ class ImprovedAdaptiveLearningEngine:
             selected = high_priority + mid_priority + low_priority
         
         return selected[:count]
-           
+
     def calculate_question_priority_v2(self, question_data, user_assessment, target_level):
         """Calculate priority score focusing on learning objectives."""
         topic = question_data['topic']
@@ -1370,71 +1372,6 @@ class ImprovedAdaptiveLearningEngine:
                     ?)
         ''', (topic, cefr_level, topic, cefr_level, weight if is_correct else 0, topic, cefr_level, 0 if is_correct else weight, now))
 
-class QuizApp(ctk.CTk):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.title(APP_NAME)
-        
-        screen_width = self.winfo_screenwidth()
-        screen_height = self.winfo_screenheight()
-        self.geometry(f"{screen_width}x{screen_height}")
-        
-        try:
-            self.after(0, lambda: self.state('zoomed'))
-        except:
-            self.after(0, lambda: self.attributes('-fullscreen', True))
-        
-        self.adaptive_engine = ImprovedAdaptiveLearningEngine()
-        self.current_user_level = None
-        
-        container = ctk.CTkFrame(self)
-        container.pack(side="top", fill="both", expand=True)
-        container.grid_rowconfigure(0, weight=1)
-        container.grid_columnconfigure(0, weight=1)
-        
-        self.frames = {}
-        for F in (HomeScreen, QuizScreen, StatsScreen, TopicSelectionScreen, HowToUseScreen):
-            frame = F(container, self)
-            self.frames[F] = frame
-            frame.grid(row=0, column=0, sticky="nsew")
-        
-        self.show_frame(HomeScreen)
-
-    def show_frame(self, cont):
-        frame = self.frames[cont]
-        if hasattr(frame, 'refresh_data'):
-            frame.refresh_data()
-        frame.tkraise()
-    
-    def show_level_up_popup(self, old_level, new_level):
-        """Displays a congratulatory pop-up when the user's level increases."""
-        dialog = ctk.CTkToplevel(self)
-        dialog.title("🎉 Level Up!")
-        dialog.geometry("1200x800")
-        dialog.transient(self)
-        dialog.grab_set()
-        dialog.attributes("-topmost", True)
-
-        main_frame = ctk.CTkFrame(dialog, fg_color="transparent")
-        main_frame.pack(expand=True, fill="both", padx=20, pady=20)
-        
-        message_text = f"Congratulations!\n\nYou've mastered level {old_level} and have now reached:"
-        
-        message_label = ctk.CTkLabel(main_frame, text=message_text,
-                                     font=ctk.CTkFont(size=16))
-        message_label.pack(pady=(0,10))
-        
-        new_level_label = ctk.CTkLabel(main_frame, text=new_level,
-                                     font=ctk.CTkFont(size=32, weight="bold"), text_color="#FFD700")
-        new_level_label.pack(pady=10)
-
-        ok_button = ctk.CTkButton(main_frame, text="Awesome!", command=dialog.destroy, width=120)
-        ok_button.pack(pady=10)
-        
-    def change_scaling_event(self, new_scaling: str):
-        new_scaling_float = int(new_scaling.replace("%", "")) / 100
-        ctk.set_widget_scaling(new_scaling_float)
-
 
 class HomeScreen(ctk.CTkFrame):
     def __init__(self, parent, controller):
@@ -1514,6 +1451,11 @@ class HomeScreen(ctk.CTkFrame):
                                      width=250, height=50, fg_color="#334155", hover_color="#475569")
         stats_button.pack(side="left", padx=10)
 
+        topic_progress_button = ctk.CTkButton(bottom_buttons_frame, text="Topic Progress",
+                                              command=lambda: controller.show_frame(TopicProgressScreen),
+                                              width=250, height=50, fg_color="#334155", hover_color="#475569")
+        topic_progress_button.pack(side="left", padx=10)
+
         how_to_use_button = ctk.CTkButton(bottom_buttons_frame, text="How to Use",
                                           command=lambda: controller.show_frame(HowToUseScreen),
                                           width=250, height=50, fg_color="#334155", hover_color="#475569")
@@ -1532,7 +1474,7 @@ class HomeScreen(ctk.CTkFrame):
         self.scaling_optionemenu.pack(side="left", padx=(0, 20))
 
         close_button = ctk.CTkButton(close_button_frame, text="Close Application",
-                                     command=self.controller.destroy,
+                                     command=self.controller.on_closing,
                                      width=150, height=40,
                                      fg_color="#D22B2B", hover_color="#AA2222")
         close_button.pack(side="right")
@@ -1863,6 +1805,293 @@ class TopicSelectionScreen(ctk.CTkFrame):
         
         freeform_mode = self.controller.frames[HomeScreen].get_freeform_mode()
         self.controller.frames[QuizScreen].start_quiz(adaptive=False, topics=selected_topics, freeform_mode=freeform_mode)
+
+
+class TopicProgressScreen(ctk.CTkFrame):
+    def __init__(self, parent, controller):
+        super().__init__(parent)
+        self.controller = controller
+        
+        header_frame = ctk.CTkFrame(self, fg_color="transparent")
+        header_frame.pack(fill="x", padx=20, pady=20)
+        
+        back_button = ctk.CTkButton(header_frame, text="← Back to Home", 
+                                    command=lambda: controller.show_frame(HomeScreen),
+                                    width=120, height=32)
+        back_button.pack(side="left")
+        
+        title_label = ctk.CTkLabel(header_frame, text="📚 Progress by Topic", font=ctk.CTkFont(size=28, weight="bold"))
+        title_label.pack(side="left", padx=(40, 0))
+
+        # Button frame - NOT in scroll
+        self.button_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.button_frame.pack(pady=(0, 10))
+        
+        # Tooltip - NOT in scroll
+        self.tooltip_label = ctk.CTkLabel(
+            self, 
+            text="Hover over a topic to see details • Click to practice",
+            font=ctk.CTkFont(size=14, slant="italic"),
+            text_color="gray60"
+        )
+        self.tooltip_label.pack(pady=(0, 10))
+        
+        # Chart frame - NOT in scroll, takes remaining space
+        self.chart_frame = ctk.CTkFrame(self)
+        self.chart_frame.pack(fill="both", expand=True, padx=50, pady=(0, 20))
+
+    def refresh_data(self):
+        """Initialize the topic progress screen with user's working level as default."""
+        assessment = self.controller.adaptive_engine.assess_user_level_and_topics()
+        current_level = assessment['estimated_level']
+        working_on_level = self.controller.adaptive_engine.get_next_level(current_level)
+        
+        # Set default selected level to the working level
+        if not hasattr(self, 'selected_level'):
+            self.selected_level = working_on_level
+        
+        # Clear and recreate level buttons
+        for widget in self.button_frame.winfo_children():
+            widget.destroy()
+        
+        levels = ['A1', 'A2', 'B1', 'B2', 'C1']
+        self.level_buttons = {}
+        
+        for level in levels:
+            btn = ctk.CTkButton(
+                self.button_frame, 
+                text=level,
+                command=lambda l=level: self.on_level_button_click(l),
+                width=80,
+                height=35,
+                fg_color="#1F6AA5" if level == self.selected_level else "#4A4A4A",
+                hover_color="#1854A0" if level == self.selected_level else "#5A5A5A"
+            )
+            btn.pack(side="left", padx=5)
+            self.level_buttons[level] = btn
+        
+        # Create the Voronoi chart for the selected level
+        for widget in self.chart_frame.winfo_children():
+            widget.destroy()
+        
+        self.create_topic_voronoi_chart(self.chart_frame, self.selected_level)
+
+    def on_level_button_click(self, level):
+        """Handle level button clicks - update selection and refresh chart."""
+        self.selected_level = level
+        
+        for lvl, btn in self.level_buttons.items():
+            if lvl == level:
+                btn.configure(fg_color="#1F6AA5", hover_color="#1854A0")
+            else:
+                btn.configure(fg_color="#4A4A4A", hover_color="#5A5A5A")
+        
+        for widget in self.chart_frame.winfo_children():
+            widget.destroy()
+        
+        self.create_topic_voronoi_chart(self.chart_frame, level)
+
+    def create_topic_voronoi_chart(self, parent_frame, level):
+        """Create interactive Voronoi diagram showing topic mastery."""
+        from scipy.spatial import Voronoi
+        import matplotlib.patches as mpatches
+        
+        if hasattr(self, '_voronoi_fig'):
+            plt.close(self._voronoi_fig)
+        if hasattr(self, '_voronoi_canvas'):
+            self._voronoi_canvas.get_tk_widget().destroy()
+        
+        topic_data = self.controller.adaptive_engine.get_topic_masteries_for_level(level)
+        
+        if not topic_data:
+            no_data_label = ctk.CTkLabel(parent_frame, 
+                                         text=f"No topics found for level {level}",
+                                         font=ctk.CTkFont(size=14))
+            no_data_label.pack(expand=True, pady=30)
+            return
+        
+        min_area = 0.5
+        areas = {}
+        for topic, data in topic_data.items():
+            q_count = data['question_count']
+            areas[topic] = max(min_area, np.sqrt(q_count))
+        
+        num_topics = len(topic_data)
+        points = self._generate_voronoi_points(topic_data, areas, num_topics)
+        
+        vor = Voronoi(points)
+        
+        fig, ax = plt.subplots(figsize=(30, 9), facecolor="#F0F0F0", dpi=100)
+        ax.set_aspect('equal')
+        ax.set_xlim(0, 25)
+        ax.set_ylim(0, 10)
+        ax.axis('off')
+        
+        def get_color_for_mastery(mastery):
+            # 4 shades of red (negative mastery - needs work)
+            if mastery < -1.0:
+                return '#8B0000'  # Dark Maroon - Very bad
+            elif mastery < -0.6:
+                return '#B22222'  # Firebrick - Bad
+            elif mastery < -0.3:
+                return '#DC143C'  # Crimson - Poor
+            elif mastery < -0.1:
+                return '#FF6B6B'  # Salmon Red - Slightly weak
+            # Grey (neutral zone - minimal exposure)
+            elif mastery <= 0.1:
+                return '#808080'  # Grey - Neutral
+            # 4 shades of blue (positive mastery - learning to mastered)
+            elif mastery <= 0.4:
+                return '#6EA4D5'  # Light Blue - Starting to learn
+            elif mastery <= 0.7:
+                return '#3D7EBF'  # Medium Blue - Progressing well
+            elif mastery <= 1.0:
+                return '#1F5A8E'  # Dark Blue - Strong mastery
+            else:  # > 1.0
+                return '#0D3D66'  # Navy Blue - Complete mastery
+        
+        self.voronoi_polygons = []
+        topic_names = list(topic_data.keys())
+        
+        for i, region_index in enumerate(vor.point_region):
+            if i >= len(topic_names):
+                break
+                
+            region = vor.regions[region_index]
+            
+            if not region or -1 in region:
+                continue
+            
+            polygon_vertices = [vor.vertices[j] for j in region]
+            polygon_vertices = self._clip_polygon_to_bounds(polygon_vertices, 0, 25, 0, 10)
+            
+            if len(polygon_vertices) < 3:
+                continue
+            
+            topic_name = topic_names[i]
+            mastery = topic_data[topic_name]['mastery']
+            color = get_color_for_mastery(mastery)
+            
+            polygon = mpatches.Polygon(polygon_vertices, closed=True, 
+                                       facecolor=color, edgecolor='white', 
+                                       linewidth=2, alpha=0.8)
+            ax.add_patch(polygon)
+            
+            self.voronoi_polygons.append({
+                'polygon': polygon,
+                'topic': topic_name,
+                'mastery': mastery,
+                'vertices': polygon_vertices
+            })
+            
+            centroid_x = np.mean([v[0] for v in polygon_vertices])
+            centroid_y = np.mean([v[1] for v in polygon_vertices])
+            
+            display_name = topic_name if len(topic_name) <= 25 else topic_name[:10] + "..."
+            
+            ax.text(centroid_x, centroid_y, display_name,
+                    ha='center', va='center', fontsize=12, 
+                    fontweight='bold', color='white',
+                    bbox=dict(boxstyle='round,pad=0.4', facecolor='black', alpha=0.3))
+        
+        fig.tight_layout(pad=0.2)
+        
+        canvas = FigureCanvasTkAgg(fig, master=parent_frame)
+        canvas.draw()
+        canvas_widget = canvas.get_tk_widget()
+        canvas_widget.pack(side="top", pady=10)
+        
+        self._setup_voronoi_interactivity(fig, ax, canvas, level)
+        
+        self._voronoi_canvas = canvas
+        self._voronoi_fig = fig
+
+    def _generate_voronoi_points(self, topic_data, areas, num_topics):
+        """Generate points for Voronoi tessellation weighted by topic areas."""
+        points = []
+        topic_names = list(topic_data.keys())
+        
+        grid_size = int(np.ceil(np.sqrt(num_topics)))
+        
+        for i, topic in enumerate(topic_names):
+            row = i // grid_size
+            col = i % grid_size
+            
+            x = (col + 0.5) * (25 / grid_size)
+            y = (row + 0.5) * (10 / grid_size)
+            
+            jitter = np.sqrt(areas[topic]) * 0.1
+            x += np.random.uniform(-jitter, jitter)
+            y += np.random.uniform(-jitter, jitter)
+            
+            x = max(0, min(30, x))
+            y = max(0, min(10, y))
+            
+            points.append([x, y])
+        
+        return np.array(points)
+
+    def _clip_polygon_to_bounds(self, vertices, x_min, x_max, y_min, y_max):
+        """Clip polygon vertices to rectangular bounds."""
+        clipped = []
+        for v in vertices:
+            x = max(x_min, min(x_max, v[0]))
+            y = max(y_min, min(y_max, v[1]))
+            clipped.append([x, y])
+        return clipped
+
+    def _setup_voronoi_interactivity(self, fig, ax, canvas, level):
+        """Setup hover and click events for Voronoi polygons."""
+        
+        def on_hover(event):
+            if event.inaxes != ax:
+                self.tooltip_label.configure(
+                    text="Hover over a topic to see details • Click to practice"
+                )
+                return
+            
+            for poly_data in self.voronoi_polygons:
+                polygon = poly_data['polygon']
+                contains, _ = polygon.contains(event)
+                
+                if contains:
+                    topic = poly_data['topic']
+                    mastery = poly_data['mastery']
+                    self.tooltip_label.configure(
+                        text=f"📚 {topic} — Mastery: {mastery:.2f}",
+                        text_color="#1F6AA5"
+                    )
+                    canvas.draw_idle()
+                    return
+            
+            self.tooltip_label.configure(
+                text="Hover over a topic to see details • Click to practice",
+                text_color="gray60"
+            )
+        
+        def on_click(event):
+            if event.inaxes != ax:
+                return
+            
+            for poly_data in self.voronoi_polygons:
+                polygon = poly_data['polygon']
+                contains, _ = polygon.contains(event)
+                
+                if contains:
+                    topic = poly_data['topic']
+                    freeform_mode = self.controller.frames[HomeScreen].get_freeform_mode()
+                    self.controller.frames[QuizScreen].start_quiz(
+                        adaptive=False, 
+                        level=level, 
+                        topics=[topic], 
+                        freeform_mode=freeform_mode
+                    )
+                    return
+        
+        fig.canvas.mpl_connect('motion_notify_event', on_hover)
+        fig.canvas.mpl_connect('button_press_event', on_click)
+
+#This is a break test
 
 class QuizScreen(ctk.CTkFrame):
     def __init__(self, parent, controller):
@@ -2557,6 +2786,7 @@ class QuizScreen(ctk.CTkFrame):
         message_label.pack(pady=(0, 15))
         return row + 1
 
+
 class StatsScreen(ctk.CTkFrame):
     def __init__(self, parent, controller):
         super().__init__(parent)
@@ -2588,9 +2818,6 @@ class StatsScreen(ctk.CTkFrame):
         self.stats_frame = ctk.CTkFrame(self.main_scroll)
         self.stats_frame.pack(fill="x", pady=(0, 20), padx=50)
         
-        self.weaknesses_frame = ctk.CTkFrame(self.main_scroll)
-        self.weaknesses_frame.pack(fill="x", pady=(0, 20), padx=50)
-        
         self.graph_frame = ctk.CTkFrame(self.main_scroll)
         self.graph_frame.pack(fill="x", pady=(0, 20), padx=50)
         
@@ -2620,7 +2847,6 @@ class StatsScreen(ctk.CTkFrame):
             self.update_summary()
             self.update_progress_timeline(cursor)
             self.update_stats_table(cursor)
-            self.update_weaknesses()
             self.update_graph(cursor)
             self.update_explanations()
         finally:
@@ -2952,267 +3178,6 @@ class StatsScreen(ctk.CTkFrame):
         self._cefr_canvas = canvas2
         self._cefr_fig = fig2
 
-    def update_weaknesses(self):
-        """Now displays interactive Voronoi topic visualization instead of weaknesses list."""
-        for widget in self.weaknesses_frame.winfo_children():
-            widget.destroy()
-        
-        title_label = ctk.CTkLabel(self.weaknesses_frame, text="Progress by Topic", 
-                                   font=ctk.CTkFont(size=18, weight="bold"))
-        title_label.pack(pady=(15, 10))
-        
-        button_frame = ctk.CTkFrame(self.weaknesses_frame, fg_color="transparent")
-        button_frame.pack(pady=(0, 15))
-        
-        if not hasattr(self, 'selected_voronoi_level'):
-            self.selected_voronoi_level = 'A1'
-        
-        levels = ['A1', 'A2', 'B1', 'B2', 'C1']
-        self.level_buttons = {}
-        
-        for level in levels:
-            btn = ctk.CTkButton(
-                button_frame, 
-                text=level,
-                command=lambda l=level: self.on_level_button_click(l),
-                width=80,
-                height=35,
-                fg_color="#1F6AA5" if level == self.selected_voronoi_level else "#4A4A4A",
-                hover_color="#1854A0" if level == self.selected_voronoi_level else "#5A5A5A"
-            )
-            btn.pack(side="left", padx=5)
-            self.level_buttons[level] = btn
-        
-        self.voronoi_tooltip_label = ctk.CTkLabel(
-            self.weaknesses_frame, 
-            text="Hover over a topic to see details • Click to practice",
-            font=ctk.CTkFont(size=14, slant="italic"),
-            text_color="gray60"
-        )
-        self.voronoi_tooltip_label.pack(pady=(0, 10))
-        
-        self.voronoi_chart_frame = ctk.CTkFrame(self.weaknesses_frame)
-        self.voronoi_chart_frame.pack(fill="both", expand=True, pady=(0, 15))
-        
-        self.create_topic_voronoi_chart(self.voronoi_chart_frame, self.selected_voronoi_level)
-
-    def on_level_button_click(self, level):
-        """Handle level button clicks - update selection and refresh chart."""
-        self.selected_voronoi_level = level
-        
-        for lvl, btn in self.level_buttons.items():
-            if lvl == level:
-                btn.configure(fg_color="#1F6AA5", hover_color="#1854A0")
-            else:
-                btn.configure(fg_color="#4A4A4A", hover_color="#5A5A5A")
-        
-        for widget in self.voronoi_chart_frame.winfo_children():
-            widget.destroy()
-        
-        self.create_topic_voronoi_chart(self.voronoi_chart_frame, level)
-
-    def create_topic_voronoi_chart(self, parent_frame, level):
-        """Create interactive Voronoi diagram showing topic mastery."""
-        from scipy.spatial import Voronoi
-        import matplotlib.patches as mpatches
-        
-        if hasattr(self, '_voronoi_fig'):
-            plt.close(self._voronoi_fig)
-        if hasattr(self, '_voronoi_canvas'):
-            self._voronoi_canvas.get_tk_widget().destroy()
-        
-        topic_data = self.controller.adaptive_engine.get_topic_masteries_for_level(level)
-        
-        if not topic_data:
-            no_data_label = ctk.CTkLabel(parent_frame, 
-                                         text=f"No topics found for level {level}",
-                                         font=ctk.CTkFont(size=14))
-            no_data_label.pack(expand=True, pady=30)
-            return
-        
-        min_area = 0.5
-        areas = {}
-        for topic, data in topic_data.items():
-            q_count = data['question_count']
-            areas[topic] = max(min_area, np.sqrt(q_count))
-        
-        num_topics = len(topic_data)
-        points = self._generate_voronoi_points(topic_data, areas, num_topics)
-        
-        vor = Voronoi(points)
-        
-        # Increased figure size significantly
-        fig, ax = plt.subplots(figsize=(30, 9), facecolor="#F0F0F0", dpi=100)
-        ax.set_aspect('equal')
-        # Removed padding - polygons now touch the walls
-        ax.set_xlim(0, 25)
-        ax.set_ylim(0, 10)
-        ax.axis('off')
-        
-        def get_color_for_mastery(mastery):
-            if mastery < -1.0:
-                return '#8B0000'
-            elif mastery < -0.6:
-                return '#DC143C'
-            elif mastery < -0.2:
-                return '#FF6B6B'
-            elif mastery <= 0.2:
-                return '#808080'
-            elif mastery <= 0.6:
-                return '#6BB6FF'
-            elif mastery <= 0.9:
-                return '#1F6AA5'
-            else:
-                return '#0D47A1'
-        
-        self.voronoi_polygons = []
-        topic_names = list(topic_data.keys())
-        
-        for i, region_index in enumerate(vor.point_region):
-            if i >= len(topic_names):
-                break
-                
-            region = vor.regions[region_index]
-            
-            if not region or -1 in region:
-                continue
-            
-            polygon_vertices = [vor.vertices[j] for j in region]
-            polygon_vertices = self._clip_polygon_to_bounds(polygon_vertices, 0, 25, 0, 10)
-            
-            if len(polygon_vertices) < 3:
-                continue
-            
-            topic_name = topic_names[i]
-            mastery = topic_data[topic_name]['mastery']
-            color = get_color_for_mastery(mastery)
-            
-            polygon = mpatches.Polygon(polygon_vertices, closed=True, 
-                                       facecolor=color, edgecolor='white', 
-                                       linewidth=2, alpha=0.8)
-            ax.add_patch(polygon)
-            
-            self.voronoi_polygons.append({
-                'polygon': polygon,
-                'topic': topic_name,
-                'mastery': mastery,
-                'vertices': polygon_vertices
-            })
-            
-            centroid_x = np.mean([v[0] for v in polygon_vertices])
-            centroid_y = np.mean([v[1] for v in polygon_vertices])
-            
-            display_name = topic_name if len(topic_name) <= 25 else topic_name[:10] + "..."
-            
-            # Increased font size for better visibility
-            ax.text(centroid_x, centroid_y, display_name,
-                    ha='center', va='center', fontsize=12, 
-                    fontweight='bold', color='white',
-                    bbox=dict(boxstyle='round,pad=0.4', facecolor='black', alpha=0.3))
-        
-        fig.tight_layout(pad=0.2)
-        
-        canvas = FigureCanvasTkAgg(fig, master=parent_frame)
-        canvas.draw()
-        canvas_widget = canvas.get_tk_widget()
-        canvas_widget.pack(side="top", fill="both", expand=True, pady=10)
-        
-        self._setup_voronoi_interactivity(fig, ax, canvas, level)
-        
-        self._voronoi_canvas = canvas
-        self._voronoi_fig = fig
-
-    def _generate_voronoi_points(self, topic_data, areas, num_topics):
-        """Generate points for Voronoi tessellation weighted by topic areas."""
-        points = []
-        topic_names = list(topic_data.keys())
-        
-        grid_size = int(np.ceil(np.sqrt(num_topics)))
-        
-        for i, topic in enumerate(topic_names):
-            row = i // grid_size
-            col = i % grid_size
-            
-            x = (col + 0.5) * (25 / grid_size)
-            y = (row + 0.5) * (10 / grid_size)
-            
-            jitter = np.sqrt(areas[topic]) * 0.1
-            x += np.random.uniform(-jitter, jitter)
-            y += np.random.uniform(-jitter, jitter)
-            
-            # Changed to use full 0-10 range instead of 0.5-9.5
-            x = max(0, min(30, x))
-            y = max(0, min(10, y))
-            
-            points.append([x, y])
-        
-        return np.array(points)
-
-    def _clip_polygon_to_bounds(self, vertices, x_min, x_max, y_min, y_max):
-        """Clip polygon vertices to rectangular bounds."""
-        clipped = []
-        for v in vertices:
-            x = max(x_min, min(x_max, v[0]))
-            y = max(y_min, min(y_max, v[1]))
-            clipped.append([x, y])
-        return clipped
-
-    def _setup_voronoi_interactivity(self, fig, ax, canvas, level):
-        """Setup hover and click events for Voronoi polygons."""
-        
-        def on_hover(event):
-            if event.inaxes != ax:
-                self.voronoi_tooltip_label.configure(
-                    text="Hover over a topic to see details • Click to practice"
-                )
-                return
-            
-            for poly_data in self.voronoi_polygons:
-                polygon = poly_data['polygon']
-                contains, _ = polygon.contains(event)
-                
-                if contains:
-                    topic = poly_data['topic']
-                    mastery = poly_data['mastery']
-                    self.voronoi_tooltip_label.configure(
-                        text=f"📚 {topic} — Mastery: {mastery:.2f}",
-                        text_color="#1F6AA5"
-                    )
-                    canvas.draw_idle()
-                    return
-            
-            self.voronoi_tooltip_label.configure(
-                text="Hover over a topic to see details • Click to practice",
-                text_color="gray60"
-            )
-        
-        def on_click(event):
-            if event.inaxes != ax:
-                return
-            
-            for poly_data in self.voronoi_polygons:
-                polygon = poly_data['polygon']
-                contains, _ = polygon.contains(event)
-                
-                if contains:
-                    topic = poly_data['topic']
-                    freeform_mode = self.controller.frames[HomeScreen].get_freeform_mode()
-                    self.controller.frames[QuizScreen].start_quiz(
-                        adaptive=False, 
-                        level=level, 
-                        topics=[topic], 
-                        freeform_mode=freeform_mode
-                    )
-                    return
-        
-        fig.canvas.mpl_connect('motion_notify_event', on_hover)
-        fig.canvas.mpl_connect('button_press_event', on_click)
-
-    def practice_topic(self, topic, level):
-        """Start a quiz focused on a specific topic and level."""
-        freeform_mode = self.controller.frames[HomeScreen].get_freeform_mode()
-        self.controller.frames[QuizScreen].start_quiz(adaptive=False, level=level, topics=[topic], freeform_mode=freeform_mode)
-
     def update_explanations(self):
         """Add explanation box for metrics - UPDATED with simplified progression."""
         for widget in self.explanation_frame.winfo_children():
@@ -3352,6 +3317,85 @@ class StatsScreen(ctk.CTkFrame):
         
         self.refresh_data()
         self.controller.frames[HomeScreen].refresh_data()
+
+
+class QuizApp(ctk.CTk):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.title(APP_NAME)
+        
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        self.geometry(f"{screen_width}x{screen_height}")
+        
+        try:
+            self.after(0, lambda: self.state('zoomed'))
+        except:
+            self.after(0, lambda: self.attributes('-fullscreen', True))
+        
+        self.adaptive_engine = ImprovedAdaptiveLearningEngine()
+        self.current_user_level = None
+        
+        container = ctk.CTkFrame(self)
+        container.pack(side="top", fill="both", expand=True)
+        container.grid_rowconfigure(0, weight=1)
+        container.grid_columnconfigure(0, weight=1)
+        
+        self.frames = {}
+        for F in (HomeScreen, QuizScreen, StatsScreen, TopicSelectionScreen, HowToUseScreen, TopicProgressScreen):
+            frame = F(container, self)
+            self.frames[F] = frame
+            frame.grid(row=0, column=0, sticky="nsew")
+        
+        self.show_frame(HomeScreen)
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+        
+    def on_closing(self):
+        """Properly close all matplotlib figures and terminate the process."""
+        try:
+            plt.close('all')
+        except Exception:
+            pass
+        try:
+            self.destroy()
+        except Exception:
+            pass
+        os._exit(0)    
+
+    def show_frame(self, cont):
+        frame = self.frames[cont]
+        if hasattr(frame, 'refresh_data'):
+            frame.refresh_data()
+        frame.tkraise()
+    
+    def show_level_up_popup(self, old_level, new_level):
+        """Displays a congratulatory pop-up when the user's level increases."""
+        dialog = ctk.CTkToplevel(self)
+        dialog.title("🎉 Level Up!")
+        dialog.geometry("1200x800")
+        dialog.transient(self)
+        dialog.grab_set()
+        dialog.attributes("-topmost", True)
+
+        main_frame = ctk.CTkFrame(dialog, fg_color="transparent")
+        main_frame.pack(expand=True, fill="both", padx=20, pady=20)
+        
+        message_text = f"Congratulations!\n\nYou've mastered level {old_level} and have now reached:"
+        
+        message_label = ctk.CTkLabel(main_frame, text=message_text,
+                                     font=ctk.CTkFont(size=16))
+        message_label.pack(pady=(0,10))
+        
+        new_level_label = ctk.CTkLabel(main_frame, text=new_level,
+                                     font=ctk.CTkFont(size=32, weight="bold"), text_color="#FFD700")
+        new_level_label.pack(pady=10)
+
+        ok_button = ctk.CTkButton(main_frame, text="Awesome!", command=dialog.destroy, width=120)
+        ok_button.pack(pady=10)
+        
+    def change_scaling_event(self, new_scaling: str):
+        new_scaling_float = int(new_scaling.replace("%", "")) / 100
+        ctk.set_widget_scaling(new_scaling_float)
 
 
 if __name__ == "__main__":

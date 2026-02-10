@@ -1,0 +1,7 @@
+py -m pip install pyinstaller
+
+# Then install pyinstaller there:
+pip install pyinstaller
+
+# Then run pyinstaller:
+pyinstaller --name "Progress with Italian" --onefile --windowed --add-data "italian_quiz.db;." italian_app.py
