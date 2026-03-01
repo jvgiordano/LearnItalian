@@ -368,74 +368,89 @@ class ImprovedAdaptiveLearningEngine:
         conn.close()
         return current_level
 
-    def get_level_distribution(self, user_level, total_questions=10, user_assessment=None):
+    def get_level_distribution(self, target_level, total_questions=10, user_assessment=None):
         """
-        Determine how many questions should come from each level.
-        UPDATED: Only introduce next level questions once 25% mastery achieved.
+        Determine how many questions should come from each level based on
+        mastery at the target (working) level.
+        
+        Bands (non-C1):
+            0–5%   mastery → Review: 4, Target: 6, Preview: 0
+            5–10%  mastery → Review: 3, Target: 7, Preview: 0
+            10–15% mastery → Review: 2, Target: 8, Preview: 0
+            15–20% mastery → Review: 1, Target: 9, Preview: 0
+            20–40% mastery → Review: 0 (5% chance of 1), Target: rest, Preview: 0
+            40–45% mastery → Review: 0 (5% chance of 1), Target: rest, Preview: 1
+            45%+   mastery → Review: 0 (5% chance of 1), Target: rest, Preview: 2
+        
+        C1 (no preview):
+            0–15%  mastery → Review: 4, Target: 6
+            15%+   mastery → Review: 3, Target: 7
+        
+        Review questions are drawn from ANY previous level (randomly selected).
         """
-        user_level_index = self.levels.index(user_level) if user_level in self.levels else 0
+        mastery = self.get_level_mastery_score(target_level)
+        level_index = self.levels.index(target_level)
         distribution = {level: 0 for level in self.levels if level != 'A0'}
 
-        current_mastery = self.get_level_mastery_score(user_level)
-        can_introduce_next_level = current_mastery >= 0.25
-
-        if user_level == 'C1':
-            user_level_count = random.randint(3, 6)
-        else:
-            coverage = user_assessment['coverage_percentages'].get(user_level, 0)
-            if coverage < 0.3:
-                user_level_count = random.randint(8, 9)
-            elif coverage < 0.7:
-                user_level_count = random.randint(6, 7)
+        # --- Determine review, target, and preview counts ---
+        if target_level == 'C1':
+            # C1: no preview level exists, heavier review always
+            if mastery < 0.15:
+                review_count, preview_count = 4, 0
             else:
-                user_level_count = random.randint(5, 6)
+                review_count, preview_count = 3, 0
+            target_count = total_questions - review_count
 
-        distribution[user_level] = min(total_questions, user_level_count)
-        remaining = total_questions - distribution[user_level]
+        else:
+            # Standard mastery bands
+            if mastery < 0.05:
+                review_count, preview_count = 4, 0
+            elif mastery < 0.10:
+                review_count, preview_count = 3, 0
+            elif mastery < 0.15:
+                review_count, preview_count = 2, 0
+            elif mastery < 0.20:
+                review_count, preview_count = 1, 0
+            elif mastery < 0.40:
+                # 5% per question → 50% chance of 1 review per quiz (~1 per 20 questions)
+                review_count = 1 if random.random() < 0.50 else 0
+                preview_count = 0
+            elif mastery < 0.45:
+                review_count = 1 if random.random() < 0.50 else 0
+                preview_count = 1
+            else:  # 45%+
+                review_count = 1 if random.random() < 0.50 else 0
+                preview_count = 2
 
-        if remaining > 0:
-            if user_level == 'A1':
-                if can_introduce_next_level:
-                    distribution['A2'] = min(remaining, random.randint(1, 2))
-                    if remaining > distribution['A2']:
-                        distribution['A1'] += remaining - distribution['A2']
-                else:
-                    distribution['A1'] += remaining
-                    
-            elif user_level == 'A2':
-                if can_introduce_next_level:
-                    distribution['A1'] += max(1, int(remaining * 0.3))
-                    distribution['B1'] = remaining - distribution['A1']
-                else:
-                    distribution['A1'] += remaining
-                    
-            elif user_level == 'B1':
-                if can_introduce_next_level:
-                    distribution['A2'] += max(1, int(remaining * 0.3))
-                    distribution['B2'] = remaining - distribution['A2']
-                else:
-                    distribution['A2'] += remaining
-                    
-            elif user_level == 'B2':
-                if can_introduce_next_level:
-                    distribution['B1'] += max(1, int(remaining * 0.4))
-                    distribution['C1'] = remaining - distribution['B1']
-                else:
-                    distribution['B1'] += remaining
-                    
-            elif user_level == 'C1':
-                if can_introduce_next_level:
-                    distribution['B2'] += max(1, int(remaining * 0.5))
-                    distribution['B1'] += max(1, int(remaining * 0.3))
-                    distribution['A2'] += remaining - (distribution['B2'] + distribution['B1'])
-                else:
-                    distribution['B2'] += max(1, int(remaining * 0.6))
-                    distribution['B1'] += remaining - distribution['B2']
-        
+            target_count = total_questions - review_count - preview_count
+
+        # --- Assign target level questions ---
+        distribution[target_level] = target_count
+
+        # --- Assign preview questions (next level up) ---
+        if preview_count > 0:
+            next_level = self.get_next_level(target_level)
+            if next_level != target_level:
+                distribution[next_level] = preview_count
+            else:
+                # Shouldn't happen for non-C1, but safety fallback
+                distribution[target_level] += preview_count
+
+        # --- Assign review questions across previous levels ---
+        previous_levels = [self.levels[i] for i in range(1, level_index) if self.levels[i] != 'A0']
+
+        if review_count > 0 and previous_levels:
+            for _ in range(review_count):
+                review_level = random.choice(previous_levels)
+                distribution[review_level] += 1
+        elif review_count > 0:
+            # A1 target has no previous levels — give slots back to target
+            distribution[target_level] += review_count
+
+        # --- Safety: ensure total matches ---
         current_total = sum(distribution.values())
         if current_total != total_questions:
-            diff = total_questions - current_total
-            distribution[user_level] += diff
+            distribution[target_level] += total_questions - current_total
 
         return distribution
     
@@ -2508,19 +2523,42 @@ class QuizScreen(ctk.CTkFrame):
                     is_correct = False
                     is_partial = False
                 elif item["is_freeform"]:
-                    is_correct, is_partial, partial_feedback = self.controller.adaptive_engine.check_freeform_answer(user_answer_text, correct_answer_text)
-                    
-                    if not is_correct and q_data.get('alternate_correct_responses'):
+                    # Collect all valid answers (primary + alternates)
+                    all_valid_answers = [correct_answer_text]
+                    if q_data.get('alternate_correct_responses'):
                         alt_responses = q_data['alternate_correct_responses'].split(';')
-                        for alt_answer in alt_responses:
-                            alt_answer = alt_answer.strip()
-                            if alt_answer:
-                                alt_correct, alt_partial, alt_feedback = self.controller.adaptive_engine.check_freeform_answer(user_answer_text, alt_answer)
-                                if alt_correct:
-                                    is_correct = alt_correct
-                                    is_partial = alt_partial
-                                    partial_feedback = alt_feedback
-                                    break
+                        all_valid_answers.extend([a.strip() for a in alt_responses if a.strip()])
+                    
+                    # Check against ALL valid answers, keeping the BEST result.
+                    # Priority: full correct > partial correct > incorrect
+                    best_correct = False
+                    best_partial = False
+                    best_feedback = None
+                    
+                    for valid_answer in all_valid_answers:
+                        check_correct, check_partial, check_feedback = (
+                            self.controller.adaptive_engine.check_freeform_answer(
+                                user_answer_text, valid_answer
+                            )
+                        )
+                        
+                        if check_correct and not check_partial:
+                            # Full match found — best possible result, stop looking
+                            best_correct = True
+                            best_partial = False
+                            best_feedback = None
+                            break
+                        elif check_correct and check_partial and not best_correct:
+                            # Partial match — record it but keep looking for a full match
+                            best_correct = True
+                            best_partial = True
+                            best_feedback = check_feedback
+                        # If check_correct and check_partial but we already have a partial,
+                        # keep the first partial feedback (doesn't matter much)
+                    
+                    is_correct = best_correct
+                    is_partial = best_partial
+                    partial_feedback = best_feedback
                 
                 else:
                     is_correct = (user_answer_text == correct_answer_text)
