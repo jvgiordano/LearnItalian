@@ -1562,117 +1562,183 @@ Welcome to Progress with Italian! (by jvgiordano - December, 2025)
 
 ## Introduction ##
 
-The goal of this application is to help you internalize Italian grammar so that it becomes second nature for everyday use. That is, you'll develop an intuitive grasp for the architecture of Italian grammar.
+The goal of this application is to help you internalize Italian grammar - unconsciously. You'll develop an intuitive grasp for the architecture of Italian, without having to consciously study the rules.
 
-Instead of explicitly teaching the grammar rules, this program provides use-case repetition to ingrain these patterns in your brain. For example, if you answer a particular grammar question incorrectly, that specific question will be delayed from repeating. Instead, other questions targeting the same grammatical concept will be promoted and appear more frequently to help familiarize the concept. 
+Instead of explicitly teaching the grammar rules, this program provides use-case repetition to ingrain these patterns. Topics are presented by level, and repeated. The algorithm is intelligent. 
+
+For example, if you answer a particular question incorrectly, that question will be delayed from repeating again. Consequently, questions for the same grammatical concept will be promoted and appear more frequently to help familiarize the concept.
 
 The goal is to learn the rule, not the answer to specific questions.
 
-So, how does "Progress with Italian" achieve this?
 
-The program works by "intelligently" testing you with 10 question quizzes. This format secures a balance between creating stress and providing timely feedback, both necessary for optimized learning. 
+## How does "Progress with Italian" achieve this unconscious learning exactly? ##
 
-You should always strive to get 100% on each lesson. Take the time to struggle with questions you don't know!
+1) Quizzes with Select length and timed feedback
 
-Even testing yourself on questions you have no experience with is great for learning!
+First, the program works through quizes, each 10 questions in length. This format strikes an optimized balance for learning - maximizing stress and feedback. 
 
-The 10 question format creates just enough psychological tension to promote focus and engagement, while the batch feedback maintains the productive stress and avoids instant gratification. Striving for perfect scores generates beneficial stress that strengthens memory formation during learning. While short-term feedback is essential for effective learning, providing it too quickly eliminates that productive tension. The minor pause between quiz responses and feedback also encourages retrieval practice, beneficial for memory consolidation.
+A length of 10 questions creates strong psychological tension to promote focus and engagement, while the batch feedback maintains the productive stress and avoids instant gratification.
 
-An after quiz report is always provided. Slight explanations are given for wrong answers, such as the correct conjugation type. However, for rules you can't seem to grasp or aren't sticking, you may need to do additional research to gain conscious understanding to get that *click*.
+While short-term feedback is essential for effective learning, providing it too quickly eliminates that productive tension. The minor pause between quiz responses and feedback also encourages memory retrieval practice, beneficial for memory consolidation. If a quiz is too short (i.e. too few questions), the level of stress is not raised enough. If a quiz is too long, the feedback is too disconnected to the experience (i.e. to temporally far).
 
-## Theory of Work ##
+Always strive to get 100% on each lesson. Take the time to struggle with questions you don't know!
 
-Here's a grammatical example of how the program works (in theory):
+Testing yourself on questions for topics you have no experience with is great for learning! (Scientific evidence says so).
 
-You will be asked to fill in blanks in Italian sentences:
+2) Repetition of Select Grammar Topics
 
-Question (Translation) => Answer
-___ caffè non ha zucchero (My coffee doesn't have sugar.) => *Il mio* caffè non ha zucchero.
-___ gatto è nero (My cat is black) => *Il mio* gatto è nero.
-___ cane è piccolo (My dog is small) => *Il mio* cane è piccolo.
-___ fratello è alto (My brother is tall) => *Mio* fratello è alto
+This is best explained with an example of a specific grammar topic. 
 
-You go through these examples one by one (probably not during the same quiz but over time), and begin to realize that when you want to show possession of something (a singular masculine word here), you say "Il mio." 
+During quizzes, you will be asked to fill in blanks for Italian sentences. In this example, the questions are all related to possesion terms( i.e. my, your, his, her, our, their)
+
+Question in  Italian ( English Translation) => Answer
+___ caffè non ha zucchero (My coffee doesn't have sugar.)
+___ gatto è nero (My cat is black) 
+___ cane è piccolo (My dog is small) 
+___ fratello è alto (My brother is tall) 
+
+
+=> *Il mio* caffè non ha zucchero.
+=> *Il mio* gatto è nero.
+=> *Il mio* cane è piccolo.
+=> *Mio* fratello è alto
+
+You go through these examples one by one (not all in one quiz), and begin to realize that when you want to show possession of something (a singular masculine word here), you say "Il mio." 
 
 Il mio caffè (My coffee)
 Il mio gatto (My cat)
 Il mio cane (My dog)
 
-Pretty simple. But then you come to "fratello" (brother) and suddenly there is only "Mio". The "Il" has gone away. Huh.
+Pretty simple. But then you come to "fratello" (brother) and suddenly there is only "Mio". The "Il" has gone away. Huh?
 
-You might struggle with this a bit longer. Everything seems to be "Il Mio" or "La mia" (for feminine words). Except for certain people. You might not even realize the exception is certain people because my friend (il mio amico) also requires "Il" or "la" (la mia amica). 
+You will struggle with this a bit longer. Everything seems to be "Il Mio" (or "La mia" for feminine words). Except for certain people. You might not even realize the exception is certain people because "my friend" also requires "Il" (il mio amico) or "la" (la mia amica). 
 
 The general rule in Italian when showing possession is you must use an article and a possessive: 
 
 "My cat" => "Il mio gatto". "Il" is the article, "mio" is the possessive. Literally, "The my cat."
 
-The exception to this is singular family members: 
+So why isn' t this always the case? There is an exception - singular family members: 
 
 "My brother" => "Mio fratello"
  
 This program strives to teach you these rules without explaining them, but sometimes, a little conscious knowledge can make the unconscious *click*. 
 
-Hopefully, the hints provided after the quizzes should help if you get stuck. But should you need a little conscious enlightenment, you might need to do some research (try an LLM - Gemini, Claude, Grok, etc.)
+So, after each quiz a basic explanation is provided for each question with a resource link to find more information.
 
-The difference now besides teaching you the lesson explicitly is your brain has already realized there is a rule there, somewhere, somehow related to this, it just wasn't able to tease the arbitrariness out. 
+Hopefully, these hints provided after the quizzes should help if you get stuck. But should you need a little conscious enlightenment, you might need to do some research (try an LLM - Gemini, Claude, Grok, etc.)
+
+The difference now besides teaching you the lesson explicitly is your brain has already begun to subconsciously realize there is a rule there, somewhere, somehow related to this - it just maye not have been yet able to tease the arbitrariness out. 
+
+
 
 ## Depth, Difficulty, and Progression ##
 
-Concerning the depth and difficulty: 
-
 There are 5 levels of Italian provided, based on the CEFR framework. A1 and A2 are for beginners, B1 and B2 are intermediate, and C1 is advanced. 
 
-**NEW IN V1.5.0 - SIMPLIFIED PROGRESSION:**
-Level progression is now based purely on mastery scores:
+Level progression is based purely on "mastery scores":
 - **Advancement:** Achieve 50% mastery in the next level to advance
-- **Regression:** Only if your mastery drops below 48% in your current level
-- **All new users start at A0** (there are no A0 questions)
+- **Regression:** If your mastery drops below 48% in your current level
+- **All new users start at A0** (there are no A0 questions, you work on the next CEFR level)
 
 The mastery score already accounts for:
 - Topic coverage (unseen topics = 0%, which lowers your mastery)
 - Recent performance (rolling 5-attempt window per question)
-- Question difficulty (wrong answers are heavily penalized)
+- Question difficulty (multiple choice vs freeform)
 - Confidence weighting (requires multiple attempts for full confidence)
 
 THIS PROGRAM AIMS TO BE CONSERVATIVE IN ITS CEFR ESTIMATION. DO NOT BE DISCOURAGED.
 
 The system also allows non-sequential progression - if you start practicing B1 and demonstrate mastery, you'll be recognized as B1 even without completing A1/A2. You can also select to only cover grammar or vocabulary topics which interest you, and you can even select specific topics across CEFR levels you want to practice (like present tense conjugations and futuro semplice).
 
-**NEW:** Questions from the next CEFR level will only be introduced once you achieve 25% mastery of your current level. This ensures you build a solid foundation before being challenged with more advanced material.
+Review questions (from earlier levels) and Preview questions (from the next level) will occur in quizzes depending on your current mastery level:
 
-The program has two response formats: Multiple Choice and Free Form (fill in). By default, the program uses a mix of these. As you advance, more questions will become free-form, including those you may have previously answered as multiple choice. But the program offers other response modes.
+Next Level: A1 (no Review)
+    0–5%   mastery → Review: 0, Target: 10, Preview: 0
+    5–10%  mastery → Review: 0, Target: 10, Preview: 0
+    10–15% mastery → Review: 0, Target: 10, Preview: 0
+    15–20% mastery → Review: 0, Target: 10, Preview: 0
+    20–40% mastery → Review: 0 (5% chance of 1), Target: rest, Preview: 0
+    40–45% mastery → Review: 0 (5% chance of 1), Target: rest, Preview: 1
+    45%+   mastery → Review: 0 (5% chance of 1), Target: rest, Preview: 2
 
-The app includes three response modes:
-- **Adaptive Free Form Responses (Default):** Questions become free form (type your answer) based on your mastery level. Higher coverage = more free form questions. This prevents memorization and increases challenge as you improve.
-- **Only Free Form Responses:** All questions require typing the correct answer.
-- **No Free Form Responses:** Traditional multiple choice only.
 
-## TOPIC-BASED MASTERY SYSTEM (V1.4.0) ##
+Next level: A2-B2
+    0–5%   mastery → Review: 4, Target: 6, Preview: 0
+    5–10%  mastery → Review: 3, Target: 7, Preview: 0
+    10–15% mastery → Review: 2, Target: 8, Preview: 0
+    15–20% mastery → Review: 1, Target: 9, Preview: 0
+    20–40% mastery → Review: 0 (5% chance of 1), Target: rest, Preview: 0
+    40–45% mastery → Review: 0 (5% chance of 1), Target: rest, Preview: 1
+    45%+   mastery → Review: 0 (5% chance of 1), Target: rest, Preview: 2
 
-**How It Works:**
-1. **Topic Mastery:** Each topic (e.g., "Present Tense", "Possessive Adjectives") gets its own mastery score
-2. **Question Scores:** Your last 5 attempts per question are scored (range: -1.5 to +1.2), then normalized to 0-1
-3. **Topic Confidence:** A multiplier is applied based on how many questions you've answered in that topic:
-   - 1-3 questions: 15% confidence
-   - 4 questions: 30% confidence
-   - 6 questions: 50% confidence
-   - 8 questions: 70% confidence
-   - 10 questions: 85% confidence
-   - 12 questions: 95% confidence
-   - 14+ questions: 100% confidence
-4. **Level Mastery:** Average of ALL topic masteries in that level (unseen topics = 0%)
-5. **Global Mastery:** Average of all 5 CEFR levels (A1-C1)
+Next Level: C1 (no preview):
+    0–15%  mastery → Review: 4, Target: 6
+    15%+   mastery → Review: 3, Target: 7
 
-**Why This Is Better:**
-- A1 (1,500 questions) vs A2 (2,500 questions) now progress equally - both have ~15-20 topics
-- You can't "grind" a few topics and claim mastery - all topics matter
-- Early mistakes fade away with the rolling 5-attempt window
-- Topic confidence prevents shallow learning from 2-3 lucky correct answers
+The program has two response formats: Multiple Choice and Free Form (fill in). By default, the program uses a mix of these. As you advance, more questions will become free-form, including those you may have previously answered as multiple choice. But the program offers manually selected response modes.
 
-**Example:**
-- If A2 has 18 topics and you've mastered 9 of them (50% each) but haven't touched the other 9:
-  - Your A2 mastery = (9 topics × 50% + 9 topics × 0%) / 18 = 25%
-- This is honest - you've learned half the curriculum, which is 25% mastery toward the full level
+The app includes three selectable response modes:
+- **Adaptive Free Form Responses (Default):** Questions become free form (type your answer) based on your level. Higher coverage = more free form questions. This prevents memorization and increases challenge as you improve.
+- **Only Free Form Responses:** All questions require typing the correct answer. Provides more mastery points for correct answers, less punishing for wrong answers.
+- **No Free Form Responses:** Traditional multiple choice only. Providing less mastery points for correct answers, more punishing for wrong answers.
+
+## Topic-Based Mastery System ##
+
+How do Mastery Scores work?
+
+1. **Question Scores:** Your last 5 attempts per question are scored based on response type (free-form vs multiple choice):
+
+Response modes provide different points (per attempt):
+- Free-form correct: +1.65 
+- Multiple choice correct: +0.6 
+- Free-form (partially correct): +0.9 
+- Free-form wrong: -1.8 
+- Multiple choice wrong: -2.2 
+- Unanswered questions: -0.25 
+
+
+Your score is averaged across your last 5 attempts per question, with a confidence multiplier applied:
+- 1 attempt: 60% confidence
+- 2 attempts: 75% confidence
+- 3 attempts: 90% confidence
+- 4 attempts: 98% confidence
+- 5+ attempts: 100% confidence
+
+This score is then clamped to a range of -1.5 to +1.2.
+
+Then, negative question scores are floored to 0 and positive scores are kept as-is (up to the 1.2 cap), giving a per-question range of 0.0 to 1.2.
+
+Example: You answer the same question 4 times: complete 1 free-form correct, 1 multiple choice correct, 1 free-form partially correct, 1 multiple choice wrong.
+
+Average: 
+1.65 + 0.6 + 0.9 - 2.2 + 0 = 0.95
+
+Confidence Multipler for 4 attempts: 0.98 
+=> 0.95 * 0.98 = 0.931
+
+Final Question Score = 0.931
+
+
+2. **Topic Mastery:** To get topic mastery, all question scores within a topic are averaged, then multiplied by a confidence value. This confidence multiplier is determined by how many questions you've answered in that topic.
+
+The multipler follows a square root curve — early questions build confidence quickly, then gains taper off:
+
+   - 1 question: 27% 
+   - 2 questions: 38%
+   - 4 questions: 54% 
+   - 6 questions: 65% 
+   - 8 questions: 76% 
+   - 10 questions: 85% 
+   - 12 questions: 93% 
+   - 14+ questions: 100% 
+   
+3. **Level Mastery:** Average of ALL topic masteries in that level (unseen topics count as 0%), with a sigmoid coverage multiplier applied.
+
+Low coverage pulls mastery down, high coverage lets it through.
+
+4. **Global Mastery:** Average of all 5 CEFR level masteries (A1–C1).
+
+## Question Scores and Checking ##
 
 **Rolling Window System:**
 The system uses only your last 5 attempts per question. This means:
@@ -1681,7 +1747,8 @@ The system uses only your last 5 attempts per question. This means:
 - You can't "grind" old questions for false mastery
 - Taking a break and forgetting material will accurately reflect in your score
 
-Free form answers are worth more points! The system uses intelligent matching with the following rules:
+** Free-form Character Checking ##
+Free form answers are worth more points! The system uses intelligent character matching with the following rules:
 - **Accents:** Not required but recommended (marked as partial if missing)
 - **Spelling:** Single non-vowel letter mistakes are accepted (marked as partial)
 - **Case:** Not case-sensitive
@@ -1694,28 +1761,8 @@ Examples of Partial Credit:
 ✗ "bella" instead of "bello" (vowel difference is not allowed)
 ✗ "cafe" instead of "caffè" (multiple errors)
 
-Response modes provide different points (per attempt):
-- Free-form correct: +1.65 points
-- Multiple choice correct: +0.6 points
-- Free-form (partially correct): +0.9 points
-- Free-form wrong: -1.8 points
-- Multiple choice wrong: -2.2 points
-- Unanswered questions: -0.2 points
 
-Your score is averaged across your last 5 attempts per question, with a confidence multiplier applied:
-- 1 attempt: 60% confidence
-- 2 attempts: 75% confidence
-- 3 attempts: 90% confidence
-- 4 attempts: 98% confidence
-- 5+ attempts: 100% confidence
-
-Each question's score is capped at +1.2 to -1.5, ensuring fairness.
-
-There is an "Adaptive" algorithm which adjusts the difficulty and level of questions based on your usage and competency.
-
-The "Adaptive" algorithm gives you 5-9 questions per quiz from your next CEFR level estimate, with the number decreasing as you approach mastery. So, A0 level users (newbies) will mostly get A1 questions. 
-
-For C1 users (advanced), this changes to 3-6 questions to ensure a broader review of previous levels. The remainder of the quiz is filled with questions from nearby levels - but only once you've achieved 25% mastery of your current working level.
+## Other Notes ##
 
 The Progress section will show your progress in each section. The CEFR bar chart will show you coverage and mastery. The blue bars represent coverage (topics you've attempted), and the gold bars show your mastery (average topic mastery weighted by confidence). You can clear all your progress here as well.
 
