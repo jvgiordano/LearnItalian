@@ -1,0 +1,156 @@
+You are an expert Italian language educator creating questions for CEFR level B2.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 6 questions with perfect accuracy. Quality over quantity.
+
+Question distribution:
+- 6 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "B2",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## ⚡ PRIORITY TOPICS FOR THIS BATCH
+
+Topics are ordered by urgency. Generate questions for 🔴 and 🟡 topics first.
+
+  - Pronomi indefiniti/dimostrativi (avanzato): need 1 more  |  ✅ 22 questions (minimum met)
+  - Congiuntivo trapassato: need 1 more  |  ✅ 26 questions (minimum met) [difficult topic — extra care]
+  - Animali domestici - cure avanzate e problemi: need 1 more  |  ✅ 29 questions (minimum met)
+  - Questioni legali personali (contratti, diritti consumatori, cause): need 1 more  |  ✅ 32 questions (minimum met)
+  - Gestione delle conversazioni difficili: need 2 more  |  ✅ 49 questions (minimum met) [difficult topic — extra care]
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Congiuntivo trapassato
+
+    Subjunctive pluperfect — required for Periodo ipotetico III and past hypotheticals.
+
+    FORMATION:
+    congiuntivo imperfetto of essere/avere + past participle
+
+    With AVERE:                    With ESSERE:
+    che io avessi mangiato         che io fossi andato/a
+    che tu avessi mangiato         che tu fossi andato/a
+    che lui/lei avesse mangiato    che lui/lei fosse andato/a
+    che noi avessimo mangiato      che noi fossimo andati/e
+    che voi aveste mangiato        che voi foste andati/e
+    che loro avessero mangiato     che loro fossero andati/e
+
+    USES:
+
+    1. Periodo ipotetico III (impossible/counterfactual past):
+    "Se avessi saputo, sarei venuto" (If I had known, I would have come)
+    "Se fossi partito prima, non avrei perso il treno"
+    Structure: Se + congiuntivo trapassato → condizionale passato
+
+    2. After expressions of opinion/emotion referring to the past:
+    "Credevo che fosse già partito" (I thought he had already left)
+    "Speravo che avessero finito" (I hoped they had finished)
+    "Era strano che non avesse chiamato" (It was strange that he hadn't called)
+
+    3. After conjunctions requiring subjunctive (past reference):
+    "Benché avesse studiato, non ha superato l'esame"
+    (Although he had studied, he didn't pass the exam)
+
+    AGREEMENT RULES:
+    Same as passato prossimo — essere verbs agree with subject:
+    "Credevo che Maria fosse partitA" (feminine)
+    "Pensavo che loro fossero arrivatI" (masculine plural)
+    
+
+### Gestione delle conversazioni difficili
+
+    Naming patterns, anchoring/redirecting, spotting deflection, reality-checking,
+    setting conversational boundaries, metacognitive checks, addressing dishonesty.
+    Key phrases for each strategy included.
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- All options should attempt the translation (even if wrong)
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Alessandro Manzoni ___ I Promessi Sposi e lo revisionò profondamente per conformarsi alla lingua fiorentina.
+- È probabile che loro ___ il treno delle otto, dato che non sono ancora arrivati.
+- Il ___ del petrolio influenza i prezzi.
+- Il ___ azionario è volatile.
+- Vorrei ___ di voler cortesemente considerare la mia richiesta.
+- Capisco le tue preoccupazioni, ma ___ potrei rispettare questa scadenza senza le risorse necessarie?
+- Il saggio deve essere ___ da una bibliografia completa e da note a piè di pagina.
+- Signor Rossi, si ___ pure in sala d'attesa, il Dottore La riceverà tra poco.
+- A causa dei recenti tagli alla spesa pubblica, le ___ d'attesa per gli esami diagnostici si sono allungate.
+- Nelle zone a traffico limitato è vietato ___ senza l'apposito permesso rilasciato dal comune.
+- Mi è sembrato strano che loro ___ la festa così presto senza salutare nessuno.
+- Prima di firmare il contratto di affitto, è importante verificare le condizioni della ___.
+- Per rinnovare il permesso di soggiorno devo ___ tutta la documentazione entro la scadenza.
+- L'e-commerce richiede una logistica efficiente e un'ottima gestione del ___.
+- Se avessi letto attentamente le clausole, non ___ firmato quel contratto vincolante.
+
+## QUALITY CHECKLIST
+
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level B2 appropriate vocabulary and grammar
+
+Generate the 6 questions now. Return ONLY valid JSON.

@@ -1,0 +1,151 @@
+You are an expert Italian language educator creating questions for CEFR level A2.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 5 questions with perfect accuracy. Quality over quantity.
+
+Question distribution:
+- 5 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "A2",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## ⚡ PRIORITY TOPICS FOR THIS BATCH
+
+Topics are ordered by urgency. Generate questions for 🔴 and 🟡 topics first.
+
+  - Presente indicativo: verbi regolari -are (A2): need 1 more  |  ✅ 21 questions (minimum met)
+  - Forme speciali di bello, buono, grande (pre-nominali): need 2 more  |  ✅ 26 questions (minimum met)
+  - Congiunzioni e connettivi (base): need 1 more  |  ✅ 33 questions (minimum met)
+  - Preposizioni Semplici: need 1 more  |  ✅ 44 questions (minimum met)
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Forme speciali di bello, buono, grande (pre-nominali)
+
+    When placed BEFORE a noun, these adjectives follow special patterns.
+    After the noun, they use regular forms (bello, buono, grande).
+
+    BELLO (follows pattern of definite article il/lo/la/i/gli/le):
+    • bel + consonant: un bel giorno, un bel ragazzo
+    • bell' + vowel: un bell'uomo, una bell'idea
+    • bello + s+consonant/z/gn/ps: un bello spettacolo, un bello zaino
+    • bella + fem: una bella donna
+    • bei + masc pl consonant: bei fiori, bei tempi
+    • begli + masc pl vowel/s+cons/z: begli occhi, begli studenti
+    • belle + fem pl: belle ragazze
+
+    BUONO (follows pattern of indefinite article un/uno/una/un'):
+    • buon + masc consonant/vowel: un buon amico, un buon libro
+    • buono + s+consonant/z: un buono studente
+    • buona + fem consonant: una buona idea
+    • buon' + fem vowel: buon'amica (less common today, buona amica also accepted)
+    • buoni/buone in plural (regular)
+
+    GRANDE (truncation):
+    • gran + most consonants: un gran problema, una gran fortuna
+    • grand' + vowel: una grand'idea (or grande idea — both accepted)
+    • grande before s+consonant/z: un grande spettacolo
+    • grandi in plural (regular)
+
+    FIXED EXPRESSIONS:
+    buon giorno, buon appetito, buon viaggio, buona fortuna,
+    buona notte, gran parte, gran che, un bel po'
+
+    Post-nominal = regular: "un libro bello" "un amico buono" "un problema grande"
+    
+
+### Congiunzioni e connettivi (base)
+
+    Coordination: e, o, ma, però. Cause: perché, siccome.
+    Effect: quindi, allora, perciò. Time: quando, mentre, prima di, dopo.
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- All options should attempt the translation (even if wrong)
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Dobbiamo convalidare il ___ prima di salire sul treno.
+- La mia amica è una persona molto ___ e sempre allegra.
+- Mia sorella viene ___ in ritardo agli appuntamenti.
+- Ho la ___ alta e devo restare a letto oggi.
+- Il gelato italiano è ___ cremoso del gelato americano.
+- ___ rimandare a domani?
+- Nel nostro quartiere ___ una farmacia aperta fino a tardi.
+- Ci sono ___ molto i film che abbiamo visto.
+- Write: I lived in Milan for five years.
+- Tu ___ venire con noi? (volere)
+- Non ___ vedo da molto tempo.
+- Viaggio sempre ___ treno.
+- Il mio capo lavora ___ suo ufficio fino alle sei.
+- Ti ho dato i documenti ieri, non ___ ricordi?
+- Scusi, a che ora parte il prossimo ___ per Roma?
+
+## QUALITY CHECKLIST
+
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level A2 appropriate vocabulary and grammar
+
+Generate the 5 questions now. Return ONLY valid JSON.

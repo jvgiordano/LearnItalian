@@ -1,0 +1,117 @@
+You are an expert Italian language educator creating questions for CEFR level A2.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 5 questions with perfect accuracy. Quality over quantity.
+
+Question distribution:
+- 5 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "A2",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## ⚡ PRIORITY TOPICS FOR THIS BATCH
+
+Topics are ordered by urgency. Generate questions for 🔴 and 🟡 topics first.
+
+  - Lavoro/ufficio (base): need 1 more  |  ✅ 16 questions (minimum met)
+  - Verbi modali + infinito: need 2 more  |  ✅ 17 questions (minimum met)
+  - Ristorante (menu/prenotare/conti): need 1 more  |  ✅ 18 questions (minimum met)
+  - Volerci vs. Metterci: need 1 more  |  ✅ 26 questions (minimum met) [difficult topic — extra care]
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Volerci vs. Metterci
+
+    Volerci = impersonal (time/things needed): "Ci vuole un'ora".
+    Metterci = personal (time someone takes): "Ci metto un'ora".
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- All options should attempt the translation (even if wrong)
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Per andare in spiaggia a piedi, ___ circa un'ora.
+- Non ___ nervoso!
+- Dottore, non si ___ per il ritardo!
+- Ho ___ la finestra perché faceva troppo caldo.
+- Si è alzato, ___ colazione e è uscito.
+- ___ bene, ragazzi!
+- ___ ho parlato al telefono
+- Bambini, non ___ in casa e fate piano, per favore!
+- Lui ___ molto bene la chitarra. (suonare)
+- Tre anni ___ abitavo in Francia.
+- La ___ dell'università è aperta fino alle dieci di sera.
+- La mia macchina è costata ___ euro.
+- Ho comprato un libro nuovo e ___ ho dato subito un'occhiata.
+- Ragazzi, ___ la vostra camera prima di uscire!
+- A Giulia non ___ piaciuti i compiti di matematica.
+
+## QUALITY CHECKLIST
+
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level A2 appropriate vocabulary and grammar
+
+Generate the 5 questions now. Return ONLY valid JSON.

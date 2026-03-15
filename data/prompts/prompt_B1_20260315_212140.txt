@@ -1,0 +1,124 @@
+You are an expert Italian language educator creating questions for CEFR level B1.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 5 questions with perfect accuracy. Quality over quantity.
+
+Question distribution:
+- 5 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "B1",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## ⚡ PRIORITY TOPICS FOR THIS BATCH
+
+Topics are ordered by urgency. Generate questions for 🔴 and 🟡 topics first.
+
+  - Cucina (base): need 1 more  |  ✅ 20 questions (minimum met)
+  - Musica e cinema (vocabolario): need 2 more  |  ✅ 21 questions (minimum met)
+  - Infinito passato (dopo aver/essere + participio): need 1 more  |  ✅ 24 questions (minimum met)
+  - Trapassato prossimo: need 1 more  |  ✅ 36 questions (minimum met) [difficult topic — extra care]
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Infinito passato (dopo aver/essere + participio)
+
+    avere/essere (infinitive) + past participle. "Dopo aver mangiato, sono uscito."
+    Agreement with essere subject. Same subject required as main clause.
+    
+
+### Trapassato prossimo
+
+    Formation: imperfetto of essere/avere + past participle.
+    Sequence: "Quando sono arrivato, Maria era già partita."
+    Agreement rules same as passato prossimo.
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- All options should attempt the translation (even if wrong)
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Se studi di più, ___ un bel voto all'esame.
+- ___ ogni giorno, i ragazzi hanno migliorato i loro voti.
+- Ieri sera ___ la televisione quando è suonato il telefono.
+- La città è circondata da colline verdi e ___ di fiori in primavera.
+- Mi domando perché la gente ___ così tanto
+- Chiamo i miei genitori ___ giorno per sapere come stanno.
+- Quando sono arrivato in ufficio, mi sono accorto che ___ i documenti a casa.
+- L'ho sentita ___ al telefono.
+- ___ tanto visitare il Giappone l'anno prossimo.
+- Il mio hobby preferito ___ suonare la chitarra.
+- Dopo aver studiato per tre mesi, sono riuscita a ___ l'esame di certificazione CILS B1.
+- Di verdura ___ mangio poca, preferisco la carne.
+- Durante l'esame di matematica ero così nervoso che ho ___ anche i calcoli più semplici.
+- Dopo aver valutato tutti i rischi, ho finalmente preso la mia ___.
+- ___ vogliono dieci minuti per arrivare alla stazione.
+
+## QUALITY CHECKLIST
+
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level B1 appropriate vocabulary and grammar
+
+Generate the 5 questions now. Return ONLY valid JSON.

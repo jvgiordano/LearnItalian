@@ -1,0 +1,111 @@
+You are an expert Italian language educator creating questions for CEFR level B2.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 5 questions with perfect accuracy. Quality over quantity.
+
+Question distribution:
+- 5 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "B2",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## ⚡ PRIORITY TOPICS FOR THIS BATCH
+
+Topics are ordered by urgency. Generate questions for 🔴 and 🟡 topics first.
+
+  - Pronomi indefiniti/dimostrativi (avanzato): need 1 more  |  ✅ 15 questions (minimum met)
+  - Negoziazione e persuasione: need 1 more  |  ✅ 19 questions (minimum met)
+  - Forme implicite (infinito, gerundio, participio con valore temporale/causale): need 1 more  |  ✅ 24 questions (minimum met)
+  - Immobili (comprare, affittare, mutui, contratti): need 1 more  |  ✅ 27 questions (minimum met)
+  - Concordanza dei tempi (casi tipici): need 1 more  |  ✅ 39 questions (minimum met)
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- All options should attempt the translation (even if wrong)
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Senza quel guasto tecnico, l'aereo ___ perfettamente in orario.
+- Sebbene ___ molti carboidrati, non riesce a prendere peso perché ha un metabolismo molto veloce.
+- Le richieste di rimborso ___ elaborate dall'amministrazione entro tre giorni lavorativi.
+- L'___ della popolazione è un fenomeno globale.
+- ___ preferito che mi avesse chiamato prima.
+- Nonostante la crisi, la piattaforma ___ ha registrato un notevole incremento del volume d'affari nel secondo trimestre.
+- Can che ___ non morde.
+- Prima di trarre conclusioni, è indispensabile verificare che il campione sia ___ della popolazione di riferimento.
+- Prima di acquistare casa, è consigliabile richiedere un ___ preapprovato dalla banca.
+- Ho fatto una domanda precisa, quindi ti prego di non ___ il problema cambiando discorso.
+- Nonostante le sfide, se la ___ sempre egregiamente.
+- Tutti si sono lamentati ___ ritardo del treno.
+- Capisco che tu la ___ così, ma dobbiamo trovare un compromesso.
+- Se ___ ricco, comprerei una casa al mare e viaggerei per tutto il mondo.
+- ___ che ti spieghi come funziona, così non farai errori.
+
+## QUALITY CHECKLIST
+
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level B2 appropriate vocabulary and grammar
+
+Generate the 5 questions now. Return ONLY valid JSON.

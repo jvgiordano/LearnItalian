@@ -1,0 +1,130 @@
+You are an expert Italian language educator creating questions for CEFR level B1.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 6 questions with perfect accuracy. Quality over quantity.
+
+Question distribution:
+- 6 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "B1",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## ⚡ PRIORITY TOPICS FOR THIS BATCH
+
+Topics are ordered by urgency. Generate questions for 🔴 and 🟡 topics first.
+
+  - Decisioni: need 1 more  |  ✅ 20 questions (minimum met)
+  - Gusti (vocabolario): need 1 more  |  ✅ 23 questions (minimum met)
+  - Sapere vs. Conoscere: need 1 more  |  ✅ 42 questions (minimum met) [difficult topic — extra care]
+  - Si impersonale / si passivante (base): need 2 more  |  ✅ 46 questions (minimum met) [difficult topic — extra care]
+  - Periodo ipotetico I tipo: need 1 more  |  ✅ 64 questions (minimum met) [difficult topic — extra care]
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Periodo ipotetico I tipo
+
+    Se + presente indicativo → futuro/imperativo/presente.
+    Real/likely conditions. "Se piove, resterò a casa."
+    
+
+### Sapere vs. Conoscere
+
+    SAPERE: facts, information, skills (+ infinitive). so, sai, sa, sappiamo, sapete, sanno.
+    CONOSCERE: people, places, familiarity (+ noun only). Never with infinitive.
+    
+
+### Si impersonale / si passivante (base)
+
+    Impersonale: active focus, si + 3rd sg. "Si mangia bene qui."
+    Passivante: passive focus, agrees with noun. "Si vendono case."
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- All options should attempt the translation (even if wrong)
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Con più soldi, la gente ___ più felice? (essere)
+- Per completare la procedura, è necessario che lei ___ questo modulo in stampatello.
+- Quando avrò finito gli esami, finalmente ___ riposarmi un po'.
+- La decisione ___ dal direttore ieri mattina.
+- Il ___ globale è un problema serio.
+- Questo ristorante è famoso per la sua pizza, è veramente ___.
+- Scusi, non ho capito ___ di quello che ha detto.
+- Penso che lui ___ molto intelligente.
+- Ieri mattina ___ quando sono uscito di casa.
+- ___ la mia migliore amica da quando avevamo cinque anni.
+- Da piccola ___ francobolli e li tenevo in un album speciale.
+- Di solito, il sabato sera ___ con i miei amici per andare a bere qualcosa.
+- Non posso aiutarti adesso, ma ___ spiegherò domani mattina.
+- Non ___ la tua fidanzata, ma ho saputo che è molto simpatica.
+- Puoi invitare ___ tu voglia alla festa
+
+## QUALITY CHECKLIST
+
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level B1 appropriate vocabulary and grammar
+
+Generate the 6 questions now. Return ONLY valid JSON.

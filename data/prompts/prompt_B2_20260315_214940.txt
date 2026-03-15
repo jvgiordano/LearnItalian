@@ -1,0 +1,119 @@
+You are an expert Italian language educator creating questions for CEFR level B2.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 5 questions with perfect accuracy. Quality over quantity.
+
+Question distribution:
+- 5 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "B2",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## ⚡ PRIORITY TOPICS FOR THIS BATCH
+
+Topics are ordered by urgency. Generate questions for 🔴 and 🟡 topics first.
+
+  - Verbi fraseologici (stare per, finire per, ecc.): need 1 more  |  ✅ 25 questions (minimum met)
+  - Cucina e gastronomia (ricette, tecniche, ingredienti, vino): need 1 more  |  ✅ 32 questions (minimum met)
+  - Verbi causativi: lasciare (permettere): need 1 more  |  ✅ 34 questions (minimum met)
+  - Verbi pronominali (andarsene, cavarsela, farcela, ecc.): need 1 more  |  ✅ 35 questions (minimum met)
+  - Trasporti (norme/sostenibilità): need 1 more  |  ✅ 37 questions (minimum met)
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Verbi causativi: lasciare (permettere)
+
+    LASCIARE = let/allow (person chooses). FARE = make/have (caused to do).
+    Lasciare + inf: "Lasciami parlare." Lasciare che + subj: "Lascio che vadano."
+    Expressions: "Lascia perdere", "Lascia stare", "Lasciami in pace."
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- All options should attempt the translation (even if wrong)
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Tu ___ potuto evitarlo.
+- Bisogna evitare di ___ conclusioni affrettate.
+- Marco è una persona molto ___ e riesce sempre a cogliere sfumature che sfuggono agli altri.
+- Non si può avere la botte piena e la moglie ___: devi scegliere tra carriera e tempo libero.
+- Il Presidente della Repubblica ha il compito di ___ le leggi approvate dal Parlamento.
+- Per rinnovare il passaporto, è necessario presentare la ___ in questura almeno tre mesi prima della scadenza.
+- ___ perso il treno delle sette, sono arrivato in ufficio con un'ora di ritardo.
+- Possiamo ricominciare? Non volevo che ___ così.
+- Il medico ha sottolineato che affrontare lo stress quotidiano è essenziale purché ci si ___ almeno un momento di pausa ogni giorno.
+- L'aumento del debito ___ rischia di frenare la crescita economica nei prossimi anni.
+- ___ tu arrivi in orario, potremo iniziare la riunione.
+- Write: Are we solving the problem or are we just complaining?
+- Vorrei ___ di voler cortesemente considerare la mia richiesta.
+- Capisco che tu ___ deluso, ma questo non cambia quello che è giusto per me.
+- ___ dovrei fare a rispettare questa scadenza con le scarse risorse che abbiamo attualmente?
+
+## QUALITY CHECKLIST
+
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level B2 appropriate vocabulary and grammar
+
+Generate the 5 questions now. Return ONLY valid JSON.

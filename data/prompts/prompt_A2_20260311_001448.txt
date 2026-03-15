@@ -1,0 +1,150 @@
+You are an expert Italian language educator creating questions for CEFR level A2.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 5 questions with perfect accuracy. Quality over quantity - every question must be 100% correct.
+
+Question distribution:
+- 5 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "A2",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+Good hints:
+- "feminine speaker" (for agreement)
+- "formal" (for Lei forms)
+- "herbal tea, not tè" (for word choice)
+- "motion verb" (for auxiliary selection)
+
+Bad hints:
+- Hints that just repeat grammar rules
+- Hints that reveal the answer
+- Unnecessary hints when context is clear
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Condizionale Presente
+
+    Cover:
+    - Formation: future stem + conditional endings (-ei, -esti, -ebbe, -emmo, -este, -ebbero)
+    - Polite requests: Vorrei un caffè, Potrebbe aiutarmi?
+    - Hypothetical situations: Sarebbe bello, Andrei volentieri
+    - Advice and suggestions: Dovresti studiare di più
+    - Irregular stems same as future: essere → sarei, avere → avrei, fare → farei
+    
+
+### Volerci vs. Metterci
+
+    Distinguish between:
+    - Volerci (impersonal - time/things needed, always 3rd person)
+      • Ci vuole un'ora (It takes an hour)
+      • Ci vogliono due ore (It takes two hours)
+    - Metterci (personal - time someone/something takes)
+      • Ci metto un'ora (I take an hour)
+      • Ci mettiamo due ore (We take two hours)
+    Key: volerci = "be necessary", metterci = "take (time)" with agent
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- Focus on: common phrases, idiomatic expressions, grammar patterns
+- "complete_sentence" contains the perfect Italian translation
+- "alternate_correct_responses" lists other acceptable versions
+- All options should attempt the translation (even if wrong)
+
+## TOPICS TO COVER
+
+Create AT LEAST the specified number for each topic:
+- Volerci vs. Metterci: minimum 1 question(s)
+- Confronto articoli (def/indef/partitivi): minimum 1 question(s)
+- Routine quotidiana dettagliata: minimum 1 question(s)
+- Stare per + infinito: minimum 1 question(s)
+- Condizionale Presente: minimum 1 question(s)
+
+Note: Some topics are marked as challenging and may receive bonus questions.
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Domani è il compleanno di Maria, ___ telefono per farle gli auguri.
+- Signora, ___ attenzione al gradino.
+- I ragazzi ___ a casa tardi ieri sera.
+- Signora, ___ pure dentro, prego.
+- Domani ___ alla festa di compleanno di Giulia, vieni anche tu?
+- Il treno per Milano parte dal ___ numero quattro.
+- Sabato prossimo ___ al mare con i miei amici.
+- Nel nostro ___ c'è una bella piazza con i negozi intorno.
+- Non vado ___ al supermercato il lunedì.
+- Ho dimenticato il portafoglio; mi ___ cinque euro per il caffè?
+- Mi ___ il suo nome, per favore.
+- Quante pizze avete ordinato? ___ abbiamo ordinate tre.
+- Il nostro nuovo appartamento ha un ___ molto grande e pieno di fiori.
+- La mattina mi ___ i denti prima di uscire.
+- Ho cercato le chiavi ovunque ma non ho trovato ___.
+
+## QUALITY CHECKLIST
+
+Before including each question, verify:
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level A2 appropriate vocabulary and grammar
+
+Generate the 5 questions now. Return ONLY valid JSON.

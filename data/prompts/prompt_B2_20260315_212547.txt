@@ -1,0 +1,189 @@
+You are an expert Italian language educator creating questions for CEFR level B2.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 7 questions with perfect accuracy. Quality over quantity.
+
+Question distribution:
+- 7 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "B2",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## ⚡ PRIORITY TOPICS FOR THIS BATCH
+
+Topics are ordered by urgency. Generate questions for 🔴 and 🟡 topics first.
+
+  - Congiuntivo trapassato: need 4 more  |  🔴 MISSING — needs 15 questions [difficult topic — extra care]
+  - Passato remoto (introduzione): need 3 more  |  🔴 MISSING — needs 15 questions [difficult topic — extra care]
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Congiuntivo trapassato
+
+    Subjunctive pluperfect — required for Periodo ipotetico III and past hypotheticals.
+
+    FORMATION:
+    congiuntivo imperfetto of essere/avere + past participle
+
+    With AVERE:                    With ESSERE:
+    che io avessi mangiato         che io fossi andato/a
+    che tu avessi mangiato         che tu fossi andato/a
+    che lui/lei avesse mangiato    che lui/lei fosse andato/a
+    che noi avessimo mangiato      che noi fossimo andati/e
+    che voi aveste mangiato        che voi foste andati/e
+    che loro avessero mangiato     che loro fossero andati/e
+
+    USES:
+
+    1. Periodo ipotetico III (impossible/counterfactual past):
+    "Se avessi saputo, sarei venuto" (If I had known, I would have come)
+    "Se fossi partito prima, non avrei perso il treno"
+    Structure: Se + congiuntivo trapassato → condizionale passato
+
+    2. After expressions of opinion/emotion referring to the past:
+    "Credevo che fosse già partito" (I thought he had already left)
+    "Speravo che avessero finito" (I hoped they had finished)
+    "Era strano che non avesse chiamato" (It was strange that he hadn't called)
+
+    3. After conjunctions requiring subjunctive (past reference):
+    "Benché avesse studiato, non ha superato l'esame"
+    (Although he had studied, he didn't pass the exam)
+
+    AGREEMENT RULES:
+    Same as passato prossimo — essere verbs agree with subject:
+    "Credevo che Maria fosse partitA" (feminine)
+    "Pensavo che loro fossero arrivatI" (masculine plural)
+    
+
+### Passato remoto (introduzione)
+
+    Simple past — the standard narrative past tense in written Italian
+    and spoken Italian in central/southern Italy.
+
+    REGULAR CONJUGATION:
+
+    -ARE (parlare):        -ERE (credere):       -IRE (dormire):
+    parlai                 credei (credetti)      dormii
+    parlasti               credesti               dormisti
+    parlò                  credé (credette)       dormì
+    parlammo               credemmo               dormimmo
+    parlaste               credeste               dormiste
+    parlarono              crederono (credettero) dormirono
+
+    Note: -ere verbs often have alternative forms (credei/credetti).
+
+    MOST COMMON IRREGULAR FORMS (must memorise):
+    essere: fui, fosti, fu, fummo, foste, furono
+    avere: ebbi, avesti, ebbe, avemmo, aveste, ebbero
+    fare: feci, facesti, fece, facemmo, faceste, fecero
+    dire: dissi, dicesti, disse, dicemmo, diceste, dissero
+    venire: venni, venisti, venne, venimmo, veniste, vennero
+    vedere: vidi, vedesti, vide, vedemmo, vedeste, videro
+    scrivere: scrissi, scrivesti, scrisse, scrivemmo, scriveste, scrissero
+    prendere: presi, prendesti, prese, prendemmo, prendeste, presero
+    mettere: misi, mettesti, mise, mettemmo, metteste, misero
+    chiedere: chiesi, chiedesti, chiese, chiedemmo, chiedeste, chiesero
+    rispondere: risposi, rispondesti, rispose, rispondemmo, rispondeste, risposero
+    nascere: nacqui, nascesti, nacque, nascemmo, nasceste, nacquero
+    vivere: vissi, vivesti, visse, vivemmo, viveste, vissero
+
+    USAGE vs PASSATO PROSSIMO:
+    • Passato remoto: events felt as distant/completed, narrative, historical,
+      literary. Standard in writing. Dominant in central/southern speech.
+    • Passato prossimo: events felt as recent or relevant to present.
+      Dominant in northern spoken Italian.
+    • Regional variation: a Roman says "Ieri andai" where a Milanese says
+      "Ieri sono andato" — both correct.
+    • Written Italian: passato remoto is standard for narration
+      (novels, history, journalism, biographies).
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- All options should attempt the translation (even if wrong)
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Prima di trarre conclusioni affrettate, è necessario ___ ulteriori dati per confermare l'ipotesi iniziale.
+- Dopo un allenamento intenso, il corpo ha bisogno di riposo per favorire il ___ muscolare.
+- ___ il loro atteggiamento arrogante e supponente, non riuscirono a negoziare un accordo equo.
+- Dopo ___ esaminato attentamente il dossier, il comitato ha approvato il progetto.
+- L'___ non fa il monaco.
+- Il chirurgo ha spiegato che l'intervento richiede un'___ generale e un ricovero di tre giorni.
+- Non ___ la risposta, ho preferito tacere.
+- Malgrado ___ esaurito tutti i fondi, i dirigenti si sono presi la responsabilità del fallimento dell'investimento.
+- Il meccanico mi ha fatto ___ i freni prima del viaggio.
+- Benché si ___ male, ha finito il suo lavoro prima di chiedere di uscire.
+- Prima di firmare il contratto d'affitto, è importante leggere attentamente tutte le ___ sulla caparra.
+- ___ chiedo gentilmente di volermi inviare i documenti entro domani.
+- Write: I need you to listen without interrupting.
+- Se ___ alla lotteria, farei il giro del mondo.
+- Sembra che ___ a casa presto.
+
+## QUALITY CHECKLIST
+
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level B2 appropriate vocabulary and grammar
+
+Generate the 7 questions now. Return ONLY valid JSON.

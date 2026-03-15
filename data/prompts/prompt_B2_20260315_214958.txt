@@ -1,0 +1,111 @@
+You are an expert Italian language educator creating questions for CEFR level B2.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 5 questions with perfect accuracy. Quality over quantity.
+
+Question distribution:
+- 5 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "B2",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## ⚡ PRIORITY TOPICS FOR THIS BATCH
+
+Topics are ordered by urgency. Generate questions for 🔴 and 🟡 topics first.
+
+  - Automobile (manutenzione, riparazioni, assicurazioni, guasti): need 1 more  |  ✅ 30 questions (minimum met)
+  - Discorso indiretto (avanzato): need 1 more  |  ✅ 32 questions (minimum met)
+  - Cucina e gastronomia (ricette, tecniche, ingredienti, vino): need 1 more  |  ✅ 32 questions (minimum met)
+  - Carattere e personalità (avanzato): need 1 more  |  ✅ 37 questions (minimum met)
+  - Questioni legali personali (contratti, diritti consumatori, cause): need 1 more  |  ✅ 39 questions (minimum met)
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- All options should attempt the translation (even if wrong)
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- ___ uscire quando ha squillato il telefono.
+- Dopo mesi di tentativi falliti per salvare l'azienda, i soci hanno deciso di gettare la ___ e dichiarare fallimento.
+- Per rinnovare il passaporto, è necessario presentare la ___ in questura almeno tre mesi prima della scadenza.
+- Quando fai X, mi sento Y. Non voglio che tu ti senta ___ da queste mie parole.
+- Nel 1861, il Regno d'Italia ___ finalmente forma grazie all'opera instancabile di Cavour e Garibaldi.
+- Benché ___ già firmato il contratto, decise di consultare un avvocato per verificare le clausole.
+- In ___ alla Sua richiesta, Le inviamo il catalogo.
+- Dopo aver completato un lungo ___ in ospedale, finalmente è riuscita a ottenere l'abilitazione alla professione medica.
+- Caso mai ___ bisogno, chiamami.
+- Dubito che ___ l'intero rapporto prima di esprimere un parere così negativo sul progetto.
+- È strano che non ___ ancora.
+- La situazione è più complessa di ___ sembri.
+- L'imprenditore ___ una decisione coraggiosa che cambiò per sempre il destino dell'azienda.
+- Il parlamento ha approvato una legge che ___ i diritti delle minoranze linguistiche.
+- Per migliorare la viabilità urbana, il comune ha introdotto nuove ___ preferenziali per gli autobus.
+
+## QUALITY CHECKLIST
+
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level B2 appropriate vocabulary and grammar
+
+Generate the 5 questions now. Return ONLY valid JSON.

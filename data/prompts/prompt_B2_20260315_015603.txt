@@ -1,0 +1,111 @@
+You are an expert Italian language educator creating questions for CEFR level B2.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 5 questions with perfect accuracy. Quality over quantity.
+
+Question distribution:
+- 5 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "B2",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## ⚡ PRIORITY TOPICS FOR THIS BATCH
+
+Topics are ordered by urgency. Generate questions for 🔴 and 🟡 topics first.
+
+  - Ricerca e analisi: need 1 more  |  ✅ 20 questions (minimum met)
+  - Professioni (carriere): need 1 more  |  ✅ 21 questions (minimum met)
+  - Si passivante (avanzato): need 1 more  |  ✅ 21 questions (minimum met)
+  - Cultura: need 1 more  |  ✅ 27 questions (minimum met)
+  - Congiuntivo imperfetto: need 1 more  |  ✅ 36 questions (minimum met) [difficult topic — extra care]
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- All options should attempt the translation (even if wrong)
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Prima di piantare le rose, è importante preparare il ___ con del concime organico.
+- ___ meglio se facessimo una pausa e ne riparlassimo quando saremo più calmi.
+- Prima di iniziare a correre, è importante fare un po' di ___ per preparare i muscoli.
+- Le chiedo ___ di volermi concedere un colloquio.
+- Se la taglia non è corretta, puoi effettuare il ___ gratuito entro trenta giorni dall'acquisto.
+- Non ce la ___ più a sopportare questo caldo estivo.
+- Siamo disposti a venire ___ alle vostre esigenze, a patto che ci sia reciprocità.
+- Da grande, ___ l'architetto.
+- L'ipotesi avanzata dagli autori risulta ___ da un'ampia mole di dati empirici.
+- Prima di completare l'ordine online, leggo sempre le ___ degli altri utenti per verificare la qualità del prodotto.
+- Sono sicuro che ___ usato solo veicoli elettrici per il trasporto delle merci, rispettando l'accordo sulla sostenibilità.
+- La cultura del rispetto impone di mantenere un tono ___ quando si indirizza un discorso a un'autorità.
+- Il ___ ha rappresentato una rinascita artistica e culturale senza precedenti.
+- Dovresti consultare un esperto finanziario per ___ i tuoi investimenti e pianificare la tua pensione.
+- Prima di poter acquistare la casa, è necessario ottenere un prestito ___ dalla banca.
+
+## QUALITY CHECKLIST
+
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level B2 appropriate vocabulary and grammar
+
+Generate the 5 questions now. Return ONLY valid JSON.

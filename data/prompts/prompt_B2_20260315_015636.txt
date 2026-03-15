@@ -1,0 +1,111 @@
+You are an expert Italian language educator creating questions for CEFR level B2.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 5 questions with perfect accuracy. Quality over quantity.
+
+Question distribution:
+- 5 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "B2",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## ⚡ PRIORITY TOPICS FOR THIS BATCH
+
+Topics are ordered by urgency. Generate questions for 🔴 and 🟡 topics first.
+
+  - Casa e giardinaggio (fai-da-te, piante, ristrutturazioni, elettrodomestici): need 1 more  |  ✅ 22 questions (minimum met)
+  - Forme implicite (infinito, gerundio, participio con valore temporale/causale): need 1 more  |  ✅ 24 questions (minimum met)
+  - Tecnologia (privacy/AI/social): need 1 more  |  ✅ 28 questions (minimum met)
+  - Trasporti (norme/sostenibilità): need 1 more  |  ✅ 29 questions (minimum met)
+  - Congiuntivo passato: need 1 more  |  ✅ 51 questions (minimum met) [difficult topic — extra care]
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- All options should attempt the translation (even if wrong)
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Per ottenere il rimborso dei danni causati dalla grandine, bisogna aver sottoscritto una ___ accessoria specifica.
+- Per condurre una ricerca affidabile, è fondamentale definire con precisione la ___ del campione.
+- Per convalidare il documento presso l'ufficio pubblico, devi acquistare una ___ da 16 euro in tabaccheria.
+- Prima di firmare il contratto di assicurazione, controlla bene a quanto ammonta la ___ in caso di incidente.
+- Ti ___ volentieri la mia auto, ma purtroppo ieri si è rotta.
+- Suppongo che ___ trasferiti in un'altra città per motivi di lavoro.
+- Il riscaldamento globale rappresenta una delle ___ più urgenti del nostro tempo.
+- La cultura del rispetto impone di mantenere un tono ___ quando si indirizza un discorso a un'autorità.
+- È una persona molto egoista che pensa sempre e solo a ___.
+- Nell'assicurazione sulla vita, ___ contributi mensili per garantire la copertura.
+- I documenti ___ archiviati dal segretario ogni venerdì.
+- ___ dall'ufficio, ho dimenticato di spegnere il computer.
+- Prima di andare avanti, ho bisogno di una risposta ___ a questa domanda specifica.
+- Non ___ va mai prima delle otto di sera.
+- Il ___ è il periodo più importante dell'arte italiana.
+
+## QUALITY CHECKLIST
+
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level B2 appropriate vocabulary and grammar
+
+Generate the 5 questions now. Return ONLY valid JSON.

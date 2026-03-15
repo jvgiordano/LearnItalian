@@ -1,0 +1,124 @@
+You are an expert Italian language educator creating questions for CEFR level A2.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 5 questions with perfect accuracy. Quality over quantity.
+
+Question distribution:
+- 5 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "A2",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## ⚡ PRIORITY TOPICS FOR THIS BATCH
+
+Topics are ordered by urgency. Generate questions for 🔴 and 🟡 topics first.
+
+  - Sport e Hobby (vocabolario): need 1 more  |  ✅ 18 questions (minimum met)
+  - Presente indicativo: verbi regolari -are (A2): need 1 more  |  ✅ 19 questions (minimum met)
+  - Sentire (hear vs. smell vs. feel): need 1 more  |  ✅ 24 questions (minimum met)
+  - Congiunzioni e connettivi (base): need 1 more  |  ✅ 32 questions (minimum met)
+  - Forme negative composte (non...mai, non...niente, ecc.): need 1 more  |  ✅ 52 questions (minimum met) [difficult topic — extra care]
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Forme negative composte (non...mai, non...niente, ecc.)
+
+    Italian REQUIRES double negatives. mai, niente/nulla, nessuno, più, ancora.
+    Emphatic: "Mai vado al cinema" (rare, literary/emphatic).
+    
+
+### Congiunzioni e connettivi (base)
+
+    Coordination: e, o, ma, però. Cause: perché, siccome.
+    Effect: quindi, allora, perciò. Time: quando, mentre, prima di, dopo.
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- All options should attempt the translation (even if wrong)
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Sei mai stato a Venezia? Sì, ___ sono andato l'anno scorso.
+- Vado in palestra ___ il lunedì e il mercoledì.
+- Ieri ho visto Anna e ___ ho regalato un mazzo di fiori.
+- Il problema ___ ti parlavo è stato risolto.
+- Esco ___ comprare il pane.
+- Non mangio ___ carne, sono vegetariano.
+- Ho comprato ___ formaggio e della carne per la cena.
+- Il libro è ___ tavolo vicino alla finestra.
+- Domani ___ al cinema con Giulia, vuoi venire anche tu?
+- Il mio ufficio è al ___ piano di questo palazzo.
+- Domani sera ___ al cinema a vedere un film d'azione.
+- Lei ___ una bellissima poesia. (scrivere)
+- Marco ___ alle sette ogni mattina per andare al lavoro.
+- Hai visto le chiavi? Le ho ___ sul tavolo stamattina.
+- Quante pizze avete ordinato? ___ abbiamo ordinate tre.
+
+## QUALITY CHECKLIST
+
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level A2 appropriate vocabulary and grammar
+
+Generate the 5 questions now. Return ONLY valid JSON.

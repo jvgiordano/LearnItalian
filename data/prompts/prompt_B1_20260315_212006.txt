@@ -1,0 +1,459 @@
+You are an expert Italian language educator creating questions for CEFR level B1.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 6 questions with perfect accuracy. Quality over quantity.
+
+Question distribution:
+- 6 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "B1",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## ⚡ PRIORITY TOPICS FOR THIS BATCH
+
+Topics are ordered by urgency. Generate questions for 🔴 and 🟡 topics first.
+
+  - Comunicazione efficace e influenza sociale: need 4 more  |  🟡 LOW — 13 questions (needs 2 more to reach minimum) [difficult topic — extra care]
+  - Decisioni: need 1 more  |  ✅ 16 questions (minimum met)
+  - Memoria e cambiamento: need 1 more  |  ✅ 18 questions (minimum met)
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Comunicazione efficace e influenza sociale
+
+    Effective communication and social influence — the foundations of
+    persuasion, rapport, and social intelligence expressed in Italian.
+    B1 grammar: condizionale for politeness, basic congiuntivo for
+    opinions, connectors for cause/effect, comparatives, indirect speech.
+
+    ═══════════════════════════════════════════════════════════════
+    PART 1: GENUINE INTEREST AND LISTENING (Carnegie)
+    ═══════════════════════════════════════════════════════════════
+
+    Carnegie's core insight: people care most about themselves and
+    their own problems. The most influential skill is making others
+    feel heard, valued, and important — sincerely, not manipulatively.
+
+    1A. SHOWING GENUINE INTEREST IN OTHERS
+    The fastest way to connect is to be genuinely curious about
+    the other person rather than trying to be interesting yourself.
+
+    • "Mi piacerebbe sapere cosa ne pensi tu"
+      (I'd like to know what you think about it)
+    • "Come hai cominciato a interessarti di questo?"
+      (How did you start getting interested in this?)
+    • "Che cosa ti ha spinto a fare questa scelta?"
+      (What drove you to make this choice?)
+    • "Raccontami di più — mi interessa davvero"
+      (Tell me more — I'm really interested)
+    • "Com'è stato per te?"
+      (What was that like for you?)
+    • "Cosa ti piace di più del tuo lavoro?"
+      (What do you like most about your work?)
+
+    Principle: Ask questions that let people talk about what
+    matters to them. Then actually listen to the answer.
+
+    1B. ACTIVE LISTENING AND MAKING OTHERS FEEL HEARD
+    Listening is not waiting for your turn to speak.
+    Reflect back what you hear to show understanding.
+
+    • "Se ho capito bene, stai dicendo che..."
+      (If I understand correctly, you're saying that...)
+    • "Quindi per te la cosa più importante è..."
+      (So for you the most important thing is...)
+    • "Mi sembra che questo ti stia molto a cuore"
+      (It seems like this is very close to your heart)
+    • "Capisco perché la pensi così"
+      (I understand why you think that way)
+    • "È interessante — non ci avevo mai pensato da questo punto di vista"
+      (That's interesting — I'd never thought about it from that angle)
+    • "Quello che dici ha molto senso"
+      (What you're saying makes a lot of sense)
+
+    Principle: Paraphrase and validate before responding.
+    People don't listen to those who haven't first listened to them.
+
+    1C. REMEMBERING AND USING NAMES
+    A person's name is, to that person, the most important
+    sound in any language.
+
+    • "Piacere di conoscerti, Marco — Marco, vero?"
+      (Nice to meet you, Marco — Marco, right?)
+    • "Come hai detto che ti chiami? Voglio ricordarmelo"
+      (What did you say your name was? I want to remember it)
+    • "Marco, volevo chiederti una cosa"
+      (Marco, I wanted to ask you something)
+
+    Principle: Use the person's name naturally in conversation.
+    It signals respect and creates instant connection.
+
+    ═══════════════════════════════════════════════════════════════
+    PART 2: HONEST APPRECIATION VS FLATTERY (Carnegie)
+    ═══════════════════════════════════════════════════════════════
+
+    Flattery is cheap and people detect it. Honest appreciation
+    is specific, sincere, and focused on something real.
+
+    2A. GIVING SINCERE APPRECIATION
+    Be specific about what you admire. Vague praise sounds hollow.
+
+    • "Ammiro il modo in cui hai gestito quella situazione"
+      (I admire the way you handled that situation)
+    • "Hai un talento vero per spiegare le cose in modo semplice"
+      (You have a real talent for explaining things simply)
+    • "Si vede che ci hai messo molto impegno — il risultato è ottimo"
+      (You can tell you put a lot of effort in — the result is excellent)
+    • "Quello che hai fatto non era facile, e l'hai fatto bene"
+      (What you did wasn't easy, and you did it well)
+    • "Ho imparato molto da come hai affrontato il problema"
+      (I learned a lot from how you approached the problem)
+
+    Bad (flattery): "Sei bravissimo!" (generic, sounds hollow)
+    Good (appreciation): "Il modo in cui hai risolto quel conflitto
+    con il cliente è stato davvero efficace" (specific, sincere)
+
+    2B. GIVING PEOPLE A REPUTATION TO LIVE UP TO
+    When you attribute a quality to someone, they work to prove
+    you right. This is not manipulation — it is seeing the best
+    in people and telling them you see it.
+
+    • "So che sei una persona corretta, quindi sono sicuro che
+       troveremo una soluzione giusta"
+      (I know you're a fair person, so I'm sure we'll find a fair solution)
+    • "Tu sei sempre stato uno che mantiene la parola"
+      (You've always been someone who keeps their word)
+    • "Conosco la tua attenzione ai dettagli — per questo
+       ti chiedo questo favore"
+      (I know your attention to detail — that's why I'm asking you this favour)
+
+    Principle: People rise to meet the expectations set for them.
+
+    ═══════════════════════════════════════════════════════════════
+    PART 3: DISAGREEING WITHOUT CREATING ENEMIES (Carnegie)
+    ═══════════════════════════════════════════════════════════════
+
+    You cannot win an argument. Even if you prove someone wrong,
+    they will resent you. The goal is to influence, not to "win."
+
+    3A. AVOIDING DIRECT CONTRADICTION
+    Never say "Hai torto" (You're wrong). Instead, show respect
+    for their view while introducing your own.
+
+    • "Capisco il tuo punto di vista, ma forse potremmo
+       considerare anche un altro aspetto"
+      (I understand your point of view, but maybe we could
+       also consider another aspect)
+    • "Hai ragione su molte cose — c'è solo un punto
+       su cui la penso diversamente"
+      (You're right about many things — there's just one point
+       where I think differently)
+    • "Non ci avevo pensato così. Allo stesso tempo, mi chiedo se..."
+      (I hadn't thought of it that way. At the same time, I wonder if...)
+    • "È un'opinione interessante. Io ho avuto un'esperienza
+       un po' diversa..."
+      (That's an interesting opinion. I've had a somewhat
+       different experience...)
+    • "Potrebbe essere come dici tu. Ho letto però che..."
+      (It could be as you say. However, I've read that...)
+
+    3B. ADMITTING WHEN YOU'RE WRONG
+    Admitting mistakes quickly and emphatically disarms criticism
+    and earns respect.
+
+    • "Hai assolutamente ragione — avevo torto io"
+      (You're absolutely right — I was wrong)
+    • "Mi sono sbagliato/a e me ne scuso"
+      (I was mistaken and I apologize for it)
+    • "Devo ammettere che non ci avevo pensato bene"
+      (I have to admit I hadn't thought it through)
+    • "È colpa mia — avrei dovuto fare diversamente"
+      (It's my fault — I should have done it differently)
+
+    Principle: When wrong, say so immediately. It takes the
+    wind out of the other person's sails and builds trust.
+
+    3C. THE SOCRATIC METHOD — GUIDING WITH QUESTIONS
+    Instead of telling someone they're wrong, ask questions
+    that let them discover the problem themselves.
+
+    • "Cosa succederebbe se facessimo così?"
+      (What would happen if we did it this way?)
+    • "Come potremmo verificare se è vero?"
+      (How could we verify if that's true?)
+    • "Quali sarebbero i rischi di questa scelta?"
+      (What would the risks of this choice be?)
+    • "Hai pensato a cosa potrebbe andare storto?"
+      (Have you thought about what could go wrong?)
+    • "Secondo te, qual è il modo migliore per risolvere questo?"
+      (In your opinion, what's the best way to solve this?)
+
+    Principle: A conclusion people reach themselves is far more
+    powerful than one you hand to them.
+
+    ═══════════════════════════════════════════════════════════════
+    PART 4: BASIC SOCIAL PROOF AND RECIPROCITY (Cialdini)
+    ═══════════════════════════════════════════════════════════════
+
+    4A. SOCIAL PROOF (what others do influences what we do)
+
+    • "Molte persone in questa situazione scelgono di..."
+      (Many people in this situation choose to...)
+    • "La maggior parte dei miei colleghi fa così"
+      (Most of my colleagues do it this way)
+    • "Chi ha provato questo metodo dice che funziona bene"
+      (People who have tried this method say it works well)
+    • "È una scelta molto comune per chi ha le tue esigenze"
+      (It's a very common choice for people with your needs)
+
+    4B. RECIPROCITY (we feel obligated to return what we receive)
+
+    • "Ti mando quelle informazioni intanto — con calma, poi
+       ne parliamo"
+      (I'll send you that information in the meantime — no rush,
+       then we'll talk about it)
+    • "Io sono disposto/a a fare questo passo — spero che
+       anche tu possa venirmi incontro"
+      (I'm willing to take this step — I hope you can also
+       meet me halfway)
+    • "Ti faccio volentieri questo favore"
+      (I'm happy to do you this favour)
+
+    Principle: Genuine generosity — not transactional favours —
+    builds influence over time.
+
+    4C. TALKING IN TERMS OF THE OTHER PERSON'S INTERESTS
+
+    • "Questo potrebbe essere utile per il tuo progetto"
+      (This could be useful for your project)
+    • "Se ti interessa risparmiare tempo, potresti provare..."
+      (If you're interested in saving time, you could try...)
+    • "Pensavo a te quando ho visto questa opportunità"
+      (I was thinking of you when I saw this opportunity)
+    • "Come posso aiutarti a raggiungere il tuo obiettivo?"
+      (How can I help you reach your goal?)
+    • "Cosa ci guadagni tu?" (What do you get out of it?)
+      — Always have a clear answer to this from their perspective.
+
+    Principle: People don't care what you want. They care what
+    they want. Show them how your idea serves their interests.
+
+    ═══════════════════════════════════════════════════════════════
+    PART 5: LETTING THE IDEA BE THEIRS (Carnegie)
+    ═══════════════════════════════════════════════════════════════
+
+    Nobody likes being told what to do. If you plant a seed and
+    let someone water it, they'll defend the flower as their own.
+
+    • "Tu cosa faresti al mio posto?"
+      (What would you do in my place?)
+    • "Mi è venuta un'idea partendo da quello che hai detto tu..."
+      (I got an idea starting from what you said...)
+    • "Forse la tua proposta di prima potrebbe funzionare
+       anche per questo problema"
+      (Maybe your earlier suggestion could work for this problem too)
+    • "Come svilupperesti questa idea?"
+      (How would you develop this idea?)
+    • "La tua esperienza in questo campo è preziosa —
+       come la vedi tu?"
+      (Your experience in this area is valuable — how do you see it?)
+
+    Principle: Give credit generously. The person who takes
+    credit gets the ego boost. The person who gives credit
+    gets the influence.
+
+    ═══════════════════════════════════════════════════════════════
+    PART 6: INDIRECT INFLUENCE AND SUGGESTIONS (Carnegie)
+    ═══════════════════════════════════════════════════════════════
+
+    When correcting someone or suggesting changes, indirectness
+    preserves dignity and openness.
+
+    6A. CALLING ATTENTION TO MISTAKES INDIRECTLY
+
+    • "Il lavoro è ottimo nel complesso. C'è solo un punto
+       che potremmo migliorare insieme"
+      (The work is excellent overall. There's just one point
+       we could improve together)
+    • "Ho notato una cosa — probabilmente è una svista"
+      (I noticed something — it's probably an oversight)
+    • "Anch'io facevo lo stesso errore all'inizio"
+      (I used to make the same mistake at the beginning too)
+
+    6B. ASKING INSTEAD OF ORDERING
+
+    • "Ti andrebbe di occuparti di questo?"
+      (Would you feel like taking care of this?)
+    • "Che ne dici se provassimo un altro approccio?"
+      (What do you say if we tried a different approach?)
+    • "Potremmo forse considerare di..."
+      (Could we perhaps consider...)
+    • "Sarebbe utile se qualcuno si occupasse di..."
+      (It would be helpful if someone took care of...)
+
+    6C. MAKING THE OTHER PERSON HAPPY ABOUT THE SUGGESTION
+
+    • "Sei l'unico/a che potrebbe fare bene questo lavoro"
+      (You're the only one who could do this job well)
+    • "So che è una sfida, ma credo che tu sia
+       la persona giusta"
+      (I know it's a challenge, but I believe you're
+       the right person)
+    • "Questo compito richiede qualcuno con la tua esperienza"
+      (This task requires someone with your experience)
+
+    Principle: Praise first, then suggest. Ask, don't order.
+    Make the task feel like an opportunity, not a burden.
+
+    ═══════════════════════════════════════════════════════════════
+    PART 7: BEGINNING IN A FRIENDLY WAY / THE YES LADDER
+    ═══════════════════════════════════════════════════════════════
+
+    Start conversations with warmth and agreement. Get the other
+    person saying "sì" early and often — it creates psychological
+    momentum toward agreement.
+
+    • "Siamo d'accordo che il progetto è importante, vero?"
+      (We agree that the project is important, right?)
+    • "Anche tu vuoi trovare la soluzione migliore, no?"
+      (You also want to find the best solution, right?)
+    • "Penso che possiamo essere d'accordo su questo punto..."
+      (I think we can agree on this point...)
+    • "Prima di tutto, voglio dirti che apprezzo il tuo tempo"
+      (First of all, I want to tell you I appreciate your time)
+
+    Principle: A person who has said "sì" three times is
+    psychologically primed to say "sì" a fourth time.
+
+    ═══════════════════════════════════════════════════════════════
+    PART 8: APPEALING TO NOBLER MOTIVES (Carnegie)
+    ═══════════════════════════════════════════════════════════════
+
+    People like to think of themselves as fair, generous, and
+    principled. Appeal to that self-image.
+
+    • "So che per te la correttezza è importante"
+      (I know that fairness is important to you)
+    • "Tu sei una persona che fa la cosa giusta"
+      (You're a person who does the right thing)
+    • "Sono sicuro/a che vorrai fare la scelta più equa"
+      (I'm sure you'll want to make the fairest choice)
+    • "Conto sulla tua onestà"
+      (I'm counting on your honesty)
+
+    Principle: Give people a noble reason and they will often
+    live up to it, even if their original motive was selfish.
+
+    ═══════════════════════════════════════════════════════════════
+    PART 9: SAVING FACE (Carnegie)
+    ═══════════════════════════════════════════════════════════════
+
+    Never back someone into a corner. Always leave them a
+    dignified way out, even when you're right.
+
+    • "Capisco che la situazione era difficile"
+      (I understand the situation was difficult)
+    • "Chiunque avrebbe potuto fare lo stesso errore"
+      (Anyone could have made the same mistake)
+    • "Non è colpa tua — le informazioni non erano chiare"
+      (It's not your fault — the information wasn't clear)
+    • "L'importante è come risolviamo il problema adesso"
+      (The important thing is how we solve the problem now)
+    • "Non parliamo più di chi ha sbagliato — parliamo
+       di come andare avanti"
+      (Let's stop talking about who made a mistake — let's
+       talk about how to move forward)
+
+    Principle: A person who loses face becomes your enemy.
+    A person whose dignity you protect becomes your ally.
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- All options should attempt the translation (even if wrong)
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Marta ha inviato il suo curriculum e spera di ottenere un ___.
+- La finestra ___ dal vento.
+- ___ fosse molto stanco, è rimasto fino alla fine della riunione.
+- ___ che era tardi, abbiamo deciso di tornare. (vedere)
+- Quando ha saputo la notizia, era visibilmente ___.
+- Signora, se ha freddo, ___ pure la finestra.
+- La persona con ___ lavoro è molto professionale e competente.
+- Hai portato i documenti a Marco? Sì, ___ ho consegnati stamattina.
+- ___ tutti gli esercizi, ho chiuso il libro.
+- Paolo mi ha prestato la sua macchina, ma devo ___ entro stasera.
+- Il ___ ha girato il film in bianco e nero per dargli un'atmosfera d'altri tempi.
+- Il giornale di oggi ha pubblicato un interessante articolo sull'emergenza ___.
+- Il cameriere ci ha ___ un vino locale che era davvero eccellente.
+- Ragazzi, la torta è pronta. ___ un po'!
+- Devo comprare il pane. ___ posso prendere dal fornaio.
+
+## QUALITY CHECKLIST
+
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level B1 appropriate vocabulary and grammar
+
+Generate the 6 questions now. Return ONLY valid JSON.

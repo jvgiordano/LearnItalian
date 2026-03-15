@@ -1,0 +1,168 @@
+You are an expert Italian language educator creating questions for CEFR level A2.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 6 questions with perfect accuracy. Quality over quantity.
+
+Question distribution:
+- 6 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "A2",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## ⚡ PRIORITY TOPICS FOR THIS BATCH
+
+Topics are ordered by urgency. Generate questions for 🔴 and 🟡 topics first.
+
+  - Presente indicativo: verbi regolari -are (A2): need 1 more  |  ✅ 20 questions (minimum met)
+  - Plurali irregolari (nomi con plurale irregolare): need 1 more  |  ✅ 27 questions (minimum met) [difficult topic — extra care]
+  - Pronomi Relativi: need 1 more  |  ✅ 44 questions (minimum met) [difficult topic — extra care]
+  - Piacere (con pronomi; passato): need 1 more  |  ✅ 78 questions (minimum met)
+  - Passato prossimo (reg/irr; essere/avere; accordo): need 2 more  |  ✅ 95 questions (minimum met) [difficult topic — extra care]
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Passato prossimo (reg/irr; essere/avere; accordo)
+
+    Focus: auxiliary selection, agreement with essere, common irregular participles
+    (fatto, stato, detto, visto, scritto), motion verbs → essere, reflexives → essere.
+    No agreement with avere unless direct object pronoun precedes.
+    
+
+### Pronomi Relativi
+
+    che (subject/direct object), cui (after prepositions), il quale (formal),
+    chi (those who). Examples: "il libro che leggo", "la persona di cui parlo".
+    
+
+### Plurali irregolari (nomi con plurale irregolare)
+
+    Many high-frequency Italian nouns have irregular plurals.
+
+    MASCULINE SINGULAR → FEMININE PLURAL (body parts & others):
+    • il braccio → le braccia (arms)
+    • il dito → le dita (fingers)
+    • il ginocchio → le ginocchia (knees)
+    • il labbro → le labbra (lips)
+    • l'uovo → le uova (eggs)
+    • il paio → le paia (pairs)
+    • il miglio → le miglia (miles)
+    • il lenzuolo → le lenzuola (sheets)
+    Pattern: many body-part nouns follow this masc-sg → fem-pl rule.
+
+    INVARIABLE NOUNS (same form singular and plural):
+    • Truncated words: la foto → le foto, la radio → le radio, l'auto → le auto,
+      la moto → le moto, il cinema → i cinema
+    • Words ending in accented vowel: la città → le città, l'università → le università,
+      il caffè → i caffè
+    • Foreign loans: il bar → i bar, il film → i film, lo sport → gli sport,
+      il computer → i computer
+
+    SPELLING CHANGES (preserving pronunciation):
+    • l'amico → gli amici (hard /k/ preserved)
+    • il medico → i medici
+    • l'amica → le amiche (hard /k/ preserved with -he)
+
+    IRREGULAR MASCULINE PLURALS:
+    • l'uomo → gli uomini
+    • il dio → gli dèi
+
+    ALWAYS PLURAL / ALWAYS SINGULAR:
+    • Always plural: le forbici (scissors), gli occhiali (glasses),
+      i pantaloni (trousers), le nozze (wedding)
+    • Always singular: la gente (people — collective, takes singular verb)
+
+    TRICKY GENDER:
+    • la mano → le mani (feminine despite -o ending!)
+    • la chiave → le chiavi (feminine)
+    • l'acqua → le acque (feminine; plural used in: acque minerali, le acque del fiume)
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- All options should attempt the translation (even if wrong)
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- ___ parte della gente preferisce il mare alla montagna.
+- I ragazzi? ___ vedo spesso al parco.
+- Marco è più alto ___ Luca.
+- Mi sono svegliato solo dieci minuti ___.
+- La donna ___ ho visto ieri è un'attrice famosa.
+- Ho ___ una lettera alla mia amica.
+- Ci ___ pazienza con i bambini.
+- Ogni domenica, loro ___ a calcio con gli amici.
+- Il professore spiega la lezione ___ grande al primo piano.
+- Da bambino ___ a tennis, ma ieri ho giocato a calcio.
+- Da bambina ___ sempre al mare con i nonni.
+- ___ studenti sono partiti presto dalla lezione.
+- Ho telefonato a Luca e ___ ho detto di venire alla festa.
+- Di solito mi ___ i denti subito dopo pranzo.
+- Quanti dolci hai comprato? ___ ho presi quattro alla pasticceria.
+
+## QUALITY CHECKLIST
+
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level A2 appropriate vocabulary and grammar
+
+Generate the 6 questions now. Return ONLY valid JSON.

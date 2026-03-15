@@ -1,0 +1,111 @@
+You are an expert Italian language educator creating questions for CEFR level B2.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 5 questions with perfect accuracy. Quality over quantity.
+
+Question distribution:
+- 5 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "B2",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## ⚡ PRIORITY TOPICS FOR THIS BATCH
+
+Topics are ordered by urgency. Generate questions for 🔴 and 🟡 topics first.
+
+  - Linguaggio accademico: need 1 more  |  🟡 LOW — 5 questions (needs 10 more to reach minimum)
+  - Verbi fraseologici (stare per, finire per, ecc.): need 1 more  |  🟡 LOW — 6 questions (needs 9 more to reach minimum)
+  - Riconoscere e rispondere a manipolazioni: need 1 more  |  🟡 LOW — 6 questions (needs 9 more to reach minimum)
+  - Negoziazione e persuasione: need 1 more  |  🟡 LOW — 7 questions (needs 8 more to reach minimum)
+  - Ricerca e analisi: need 1 more  |  🟡 LOW — 8 questions (needs 7 more to reach minimum)
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- All options should attempt the translation (even if wrong)
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Prima di firmare qualsiasi cosa, è cruciale leggere attentamente le ___ del contratto per tutelare i propri diritti.
+- Ha ___ orecchie da mercante.
+- Questi dolci ___ venduti a peso.
+- Il consumatore ha il diritto di recedere dall'acquisto entro quattordici giorni senza fornire alcuna ___.
+- In molte città europee, l'uso dei mezzi pubblici è incentivato da tariffe ___ per studenti e anziani.
+- Anche se la situazione era difficile, ho deciso di lasciar ___ e non rispondere alle provocazioni.
+- L'adozione di misure di trasporto ___ è cruciale per ridurre l'inquinamento atmosferico nelle città.
+- L'___ ha difeso il cliente con grande competenza durante il processo.
+- Il governo ha introdotto nuove misure per ridurre le ___ di gas serra.
+- Per il trattamento dell'ansia cronica, il medico mi ha indirizzato da uno ___ della salute mentale.
+- Le ___ grati se potesse fornirci maggiori dettagli.
+- È inutile discutere con lui, ___ perdere e non pensarci più.
+- ___ prego di considerare la mia richiesta con la massima attenzione.
+- Nonostante le mie raccomandazioni, il governo ha deciso di ridurre ulteriormente la spesa pubblica per evitare di superare il limite di ___ imposto dall'Unione Europea.
+- Nonostante l'esame fosse molto difficile, Giulia se l'è ___ con un voto discreto.
+
+## QUALITY CHECKLIST
+
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level B2 appropriate vocabulary and grammar
+
+Generate the 5 questions now. Return ONLY valid JSON.

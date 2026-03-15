@@ -1,0 +1,149 @@
+You are an expert Italian language educator creating questions for CEFR level B2.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 6 questions with perfect accuracy. Quality over quantity.
+
+Question distribution:
+- 6 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "B2",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## ⚡ PRIORITY TOPICS FOR THIS BATCH
+
+Topics are ordered by urgency. Generate questions for 🔴 and 🟡 topics first.
+
+  - Linguaggio accademico: need 1 more  |  ✅ 27 questions (minimum met)
+  - Salute avanzata (procedure mediche, malattie croniche, specialisti, salute mentale): need 1 more  |  ✅ 29 questions (minimum met)
+  - Congiuntivo trapassato: need 2 more  |  ✅ 29 questions (minimum met) [difficult topic — extra care]
+  - Business & e-commerce: need 1 more  |  ✅ 31 questions (minimum met)
+  - Periodo ipotetico II e III: need 1 more  |  ✅ 43 questions (minimum met) [difficult topic — extra care]
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Congiuntivo trapassato
+
+    Subjunctive pluperfect — required for Periodo ipotetico III and past hypotheticals.
+
+    FORMATION:
+    congiuntivo imperfetto of essere/avere + past participle
+
+    With AVERE:                    With ESSERE:
+    che io avessi mangiato         che io fossi andato/a
+    che tu avessi mangiato         che tu fossi andato/a
+    che lui/lei avesse mangiato    che lui/lei fosse andato/a
+    che noi avessimo mangiato      che noi fossimo andati/e
+    che voi aveste mangiato        che voi foste andati/e
+    che loro avessero mangiato     che loro fossero andati/e
+
+    USES:
+
+    1. Periodo ipotetico III (impossible/counterfactual past):
+    "Se avessi saputo, sarei venuto" (If I had known, I would have come)
+    "Se fossi partito prima, non avrei perso il treno"
+    Structure: Se + congiuntivo trapassato → condizionale passato
+
+    2. After expressions of opinion/emotion referring to the past:
+    "Credevo che fosse già partito" (I thought he had already left)
+    "Speravo che avessero finito" (I hoped they had finished)
+    "Era strano che non avesse chiamato" (It was strange that he hadn't called)
+
+    3. After conjunctions requiring subjunctive (past reference):
+    "Benché avesse studiato, non ha superato l'esame"
+    (Although he had studied, he didn't pass the exam)
+
+    AGREEMENT RULES:
+    Same as passato prossimo — essere verbs agree with subject:
+    "Credevo che Maria fosse partitA" (feminine)
+    "Pensavo che loro fossero arrivatI" (masculine plural)
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- All options should attempt the translation (even if wrong)
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Il Consiglio Direttivo si riunirà per discutere le misure di ___ necessarie per contrastare la deflazione.
+- La tesi di laurea deve essere corredata da un'ampia bibliografia e da un apparato critico ___.
+- Devi risolvere il problema da te ___, senza aiuto esterno.
+- Prima di sottoscrivere la ___, è importante leggere attentamente tutte le clausole del contratto assicurativo.
+- Alcuni erano d'accordo con la proposta, ___ invece si sono opposti fermamente.
+- L'adozione di misure di trasporto ___ è cruciale per ridurre l'inquinamento atmosferico nelle città.
+- Se mi ___ avvisato prima, non sarei uscito di casa così presto.
+- Il fatto che lo facciano tutti non significa che ___ la scelta giusta per me.
+- Senza un'assicurazione sanitaria, un ricovero ospedaliero può rivelarsi un ___ economico.
+- Penso che ___ una buona scelta.
+- La ___ italiana è famosa in tutto il mondo.
+- L'idraulico ha detto che bisogna sostituire la guarnizione del ___ perché perde acqua di continuo.
+- Se avessi studiato di più, ___ superato l'esame senza problemi.
+- Mi sembra che tu stia cercando di far leva sulla mia ___ per costringermi ad accettare termini che non mi convincono.
+- Tutti ___ che desiderano partecipare alla conferenza devono registrarsi entro venerdì.
+
+## QUALITY CHECKLIST
+
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level B2 appropriate vocabulary and grammar
+
+Generate the 6 questions now. Return ONLY valid JSON.

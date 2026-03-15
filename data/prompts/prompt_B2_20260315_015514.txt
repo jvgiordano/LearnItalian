@@ -1,0 +1,111 @@
+You are an expert Italian language educator creating questions for CEFR level B2.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 5 questions with perfect accuracy. Quality over quantity.
+
+Question distribution:
+- 5 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "B2",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## ⚡ PRIORITY TOPICS FOR THIS BATCH
+
+Topics are ordered by urgency. Generate questions for 🔴 and 🟡 topics first.
+
+  - Si passivante (avanzato): need 1 more  |  ✅ 17 questions (minimum met)
+  - Lessico metaforico e figurato: need 1 more  |  ✅ 18 questions (minimum met)
+  - Negoziazione e persuasione: need 1 more  |  ✅ 18 questions (minimum met)
+  - Professioni (carriere): need 1 more  |  ✅ 20 questions (minimum met)
+  - Cucina e gastronomia (ricette, tecniche, ingredienti, vino): need 1 more  |  ✅ 24 questions (minimum met)
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- All options should attempt the translation (even if wrong)
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- La casa ___ costruita l'anno scorso.
+- La ___ si è rotta e dobbiamo chiamare un tecnico per ripararla.
+- Luigi mi aveva promesso che mi ___ aiutato con il trasloco, ma poi non si è fatto vivo.
+- Seppure ___ tardi, abbiamo deciso di guardare l'ultima parte del film d'autore in lingua originale.
+- Per rinnovare il passaporto, devo presentare tutti i documenti ___ in questura.
+- Quando arriverai alla stazione, io ___ già finito di preparare la cena.
+- Me ne ___ subito, se non ti dispiace.
+- Non fare troppe battute su di lui; è molto ___ e potrebbe prenderla male.
+- Giulia è molto autocritica e spesso non è soddisfatta di ___.
+- I risultati ottenuti suggeriscono che esiste una ___ significativa tra i due fenomeni esaminati.
+- Prima di firmare il contratto d’affitto, voglio assicurarmi che il proprietario ___ chi è responsabile delle riparazioni straordinarie.
+- Marco è una persona molto riservata e tende a tenere tutto per ___.
+- Pensavo che ___ più estroverso, ma è in realtà introverso.
+- Dopo anni di sacrifici, finalmente se la ___ da solo economicamente.
+- Per sviluppare la ___ muscolare, è fondamentale seguire un allenamento di resistenza costante.
+
+## QUALITY CHECKLIST
+
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level B2 appropriate vocabulary and grammar
+
+Generate the 5 questions now. Return ONLY valid JSON.

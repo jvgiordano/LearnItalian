@@ -1,0 +1,118 @@
+You are an expert Italian language educator creating questions for CEFR level B2.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 5 questions with perfect accuracy. Quality over quantity.
+
+Question distribution:
+- 5 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "B2",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## ⚡ PRIORITY TOPICS FOR THIS BATCH
+
+Topics are ordered by urgency. Generate questions for 🔴 and 🟡 topics first.
+
+  - Casa e giardinaggio (fai-da-te, piante, ristrutturazioni, elettrodomestici): need 1 more  |  ✅ 23 questions (minimum met)
+  - Cucina e gastronomia (ricette, tecniche, ingredienti, vino): need 1 more  |  ✅ 26 questions (minimum met)
+  - Verbi pronominali (andarsene, cavarsela, farcela, ecc.): need 1 more  |  ✅ 29 questions (minimum met)
+  - Carattere e personalità (avanzato): need 1 more  |  ✅ 35 questions (minimum met)
+  - Pronomi tonici (me stesso, te stesso, sé stesso, ecc.): need 1 more  |  ✅ 51 questions (minimum met) [difficult topic — extra care]
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Pronomi tonici (me stesso, te stesso, sé stesso, ecc.)
+
+    Emphasis: "L'ho fatto io stesso." Reflexive: "Pensa solo a se stesso."
+    By oneself: "da solo" vs "da me stesso". sé (accented) = stressed form.
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- All options should attempt the translation (even if wrong)
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Questi dolci ___ venduti a peso.
+- Senza che nessuno se ne ___, è scappato.
+- Il Presidente della Repubblica ha il compito di ___ le leggi approvate dal Parlamento.
+- Cerco una persona che ___ parlare cinese.
+- ___ dovuto prenotare in anticipo; ora il ristorante è tutto esaurito.
+- La casa era ___ da un grande giardino.
+- Se tu mi ___ la verità, potrei aiutarti a risolvere questo problema.
+- In questo laboratorio si ___ solo strumenti certificati e aggiornati.
+- In questa regione ___ vini pregiati che vengono esportati in tutto il mondo.
+- ___ fosse stanco, continuò a lavorare fino a tardi.
+- Prima di acquistare casa, è consigliabile richiedere un ___ preapprovato dalla banca.
+- Credevo che lei ___ fluentemente l'italiano, ma non era così.
+- Ovunque tu ___, ti seguirò.
+- Me ne ___ subito, se non ti dispiace.
+- Per condurre una ricerca affidabile, è fondamentale definire con precisione la ___ del campione.
+
+## QUALITY CHECKLIST
+
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level B2 appropriate vocabulary and grammar
+
+Generate the 5 questions now. Return ONLY valid JSON.

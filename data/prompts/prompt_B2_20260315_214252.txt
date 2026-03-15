@@ -1,0 +1,578 @@
+You are an expert Italian language educator creating questions for CEFR level B2.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 5 questions with perfect accuracy. Quality over quantity.
+
+Question distribution:
+- 5 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "B2",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## ⚡ PRIORITY TOPICS FOR THIS BATCH
+
+Topics are ordered by urgency. Generate questions for 🔴 and 🟡 topics first.
+
+  - Verbi fraseologici (stare per, finire per, ecc.): need 1 more  |  ✅ 22 questions (minimum met)
+  - Espressioni idiomatiche (comuni): need 1 more  |  ✅ 34 questions (minimum met)
+  - Periodo ipotetico II e III: need 1 more  |  ✅ 40 questions (minimum met) [difficult topic — extra care]
+  - Negoziazione e persuasione: need 2 more  |  ✅ 63 questions (minimum met)
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Negoziazione e persuasione
+
+    Advanced negotiation and persuasion — professional, personal,
+    and social contexts. B2 grammar: full subjunctive, hypotheticals,
+    complex connectors, implicit forms, nuanced register.
+
+    ═══════════════════════════════════════════════════════════════
+    PART 1: TACTICAL EMPATHY (Voss)
+    ═══════════════════════════════════════════════════════════════
+
+    Tactical empathy is understanding someone's feelings AND
+    demonstrating that understanding. It's not agreeing — it's
+    showing you see their world. This disarms defensiveness.
+
+    1A. LABELING EMOTIONS
+    Name the emotion you observe. Start with "Sembra che..."
+    or "Ho l'impressione che..." — never "Tu sei..."
+
+    • "Sembra che questa situazione ti preoccupi molto"
+      (It seems like this situation worries you a lot)
+    • "Ho l'impressione che tu non ti senta ascoltato/a"
+      (I get the impression you don't feel heard)
+    • "Pare che ci sia una certa frustrazione riguardo ai tempi"
+      (It seems there's some frustration about the timeline)
+    • "Mi sembra che per te questo punto sia fondamentale"
+      (It seems to me that this point is fundamental for you)
+    • "Si direbbe che tu abbia dei dubbi su questa proposta"
+      (It would seem you have some doubts about this proposal)
+    • "Ho la sensazione che ci sia qualcosa che non mi
+       stai dicendo"
+      (I have the feeling there's something you're not telling me)
+
+    Principle: Labeling an emotion reduces its intensity.
+    When people feel understood, their defences drop.
+
+    1B. MIRRORING (Voss)
+    Repeat the last 1-3 critical words of what someone said,
+    with an upward inflection. Then go silent. They will expand.
+
+    Person: "Non possiamo accettare queste condizioni."
+    You: "...queste condizioni?" [then silence]
+    → They will explain WHY, giving you critical information.
+
+    Person: "Il problema è che non abbiamo abbastanza tempo."
+    You: "Non abbastanza tempo...?" [silence]
+    → Forces them to elaborate without you asking a question.
+
+    • "...non è possibile?"  (repeating their statement)
+    • "...troppo rischioso?"
+    • "...entro venerdì?"
+
+    Principle: Mirroring makes the other person feel heard and
+    compels them to elaborate. It buys you time to think. It
+    works because the brain craves completion — a mirror
+    creates a gap that must be filled.
+
+    1C. THE ACCUSATION AUDIT (Voss)
+    Before they can accuse you of something, accuse yourself
+    first. List every negative thing they might think or feel.
+    This defuses the negatives before they can weaponise them.
+
+    • "Probabilmente penserai che sono irragionevole..."
+      (You'll probably think I'm being unreasonable...)
+    • "So che potrebbe sembrare che io stia chiedendo troppo..."
+      (I know it might seem like I'm asking too much...)
+    • "Potresti pensare che non mi importi della tua
+       situazione — non è così"
+      (You might think I don't care about your situation
+       — that's not the case)
+    • "Questo ti sembrerà ingiusto, e capisco perché..."
+      (This will seem unfair to you, and I understand why...)
+    • "So di non essere nella posizione migliore per chiedere
+       questo, ma..."
+      (I know I'm not in the best position to ask this, but...)
+
+    Principle: When you say the negative before they do, it
+    loses its power. If you say "You'll think I'm greedy" and
+    they were thinking it, now they can't say it without seeming
+    predictable. Often they'll say "No, non è così" and soften.
+
+    ═══════════════════════════════════════════════════════════════
+    PART 2: CALIBRATED QUESTIONS (Voss)
+    ═══════════════════════════════════════════════════════════════
+
+    Questions starting with "Come" and "Cosa" give the other
+    person the illusion of control while you steer the conversation.
+    Avoid "Perché" — it sounds accusatory in Italian.
+
+    • "Come potremmo risolvere questo problema insieme?"
+      (How could we solve this problem together?)
+    • "Cosa servirebbe per farti sentire più tranquillo/a?"
+      (What would it take to make you feel more comfortable?)
+    • "Come vorresti procedere?"
+      (How would you like to proceed?)
+    • "Cosa ti impedisce di accettare questa proposta?"
+      (What's preventing you from accepting this proposal?)
+    • "Come posso rendere le cose più facili per te?"
+      (How can I make things easier for you?)
+    • "Cosa succederebbe se non trovassimo un accordo?"
+      (What would happen if we didn't reach an agreement?)
+    • "Come dovrei interpretare questa risposta?"
+      (How should I interpret this response?)
+    • "In che modo questo influisce sui tuoi piani?"
+      (In what way does this affect your plans?)
+
+    THE POWER OF "COME DOVREI FARE?":
+    When someone makes an unreasonable demand, don't say no.
+    Ask them how you're supposed to do it.
+
+    • "Come potrei farlo con le risorse che ho?"
+      (How could I do that with the resources I have?)
+    • "Come sarebbe possibile rispettare questi tempi?"
+      (How would it be possible to meet this timeline?)
+
+    Principle: "Come" questions force the other side to solve
+    your problem for you. They feel in control. You get solutions.
+
+    ═══════════════════════════════════════════════════════════════
+    PART 3: "È VERO" vs "HAI RAGIONE" (Voss)
+    ═══════════════════════════════════════════════════════════════
+
+    The two most dangerous words in negotiation are "hai ragione"
+    (you're right). When someone says this, they're usually just
+    trying to make you stop talking. What you want to hear is
+    "è vero" (that's right / that's true) — this means they
+    genuinely agree with your summary of their position.
+
+    How to get "è vero":
+    1. Listen and absorb their position
+    2. Summarise it back to them with a label:
+       "Quindi, se ho capito bene, la tua preoccupazione
+        principale è... e ti sembra che..."
+       (So, if I understand correctly, your main concern is...
+        and it seems to you that...)
+    3. When they say "Esatto" / "È proprio così" / "È vero" —
+       you have broken through.
+
+    • "Fammi vedere se ho capito bene la tua posizione..."
+      (Let me see if I've understood your position correctly...)
+    • "Se non sbaglio, quello che ti preoccupa di più è..."
+      (If I'm not mistaken, what worries you most is...)
+    • "Ricapitolando: tu vorresti X, ma temi che Y..."
+      (To summarise: you'd like X, but you fear that Y...)
+
+    Principle: People need to feel understood before they will
+    move. "È vero" is the signal that you have earned the right
+    to propose solutions.
+
+    ═══════════════════════════════════════════════════════════════
+    PART 4: THE POWER OF "NO" (Voss)
+    ═══════════════════════════════════════════════════════════════
+
+    "Sì" makes people nervous — it feels like commitment.
+    "No" makes people feel safe — it feels like control.
+    Design your questions so they can say "no" and still
+    move toward your goal.
+
+    Instead of: "Ti va bene venerdì?" (Is Friday okay?)
+    Ask: "Sarebbe un problema per te se ci vedessimo venerdì?"
+      (Would it be a problem for you if we met Friday?)
+    → "No, nessun problema" achieves the same result.
+
+    Instead of: "Sei d'accordo?" (Do you agree?)
+    Ask: "Hai qualcosa in contrario?" (Do you have any objection?)
+    → "No, nessuna obiezione" = agreement without pressure.
+
+    • "C'è qualche motivo per cui non potremmo procedere?"
+      (Is there any reason we couldn't proceed?)
+    • "Ti dispiacerebbe se provassi un approccio diverso?"
+      (Would you mind if I tried a different approach?)
+    • "Sarebbe assurdo se ti proponessi...?"
+      (Would it be crazy if I proposed...?)
+    • "Hai rinunciato a questo progetto?"
+      (Have you given up on this project?)
+      → A "no" reaffirms their commitment.
+
+    Principle: "No" is not the end of a negotiation. It's the
+    beginning. Let people say "no" and they become more open.
+
+    ═══════════════════════════════════════════════════════════════
+    PART 5: FAIRNESS AND LOSS AVERSION (Voss + Cialdini)
+    ═══════════════════════════════════════════════════════════════
+
+    "Giusto" / "equo" is one of the most powerful words in Italian
+    negotiation. People will fight harder to avoid a loss than to
+    gain something of equal value.
+
+    5A. USING FAIRNESS
+
+    • "Voglio essere giusto/a con te"
+      (I want to be fair with you)
+    • "Dimmi se in qualsiasi momento senti che non sono
+       giusto/a con te"
+      (Tell me if at any point you feel I'm not being fair to you)
+    • "Cerchiamo una soluzione che sia equa per entrambi"
+      (Let's look for a solution that's fair for both of us)
+    • "Non vorrei che pensassi che sto approfittando
+       della situazione"
+      (I wouldn't want you to think I'm taking advantage
+       of the situation)
+
+    5B. FRAMING LOSS vs GAIN
+
+    Weak (gain frame): "Se accetti, risparmierai il 20%"
+    Strong (loss frame): "Se non accetti entro venerdì,
+    perderai il 20% di sconto"
+
+    • "Ogni giorno che aspettiamo, rischiamo di perdere..."
+      (Every day we wait, we risk losing...)
+    • "Se non agiamo adesso, potremmo non avere
+       un'altra occasione"
+      (If we don't act now, we might not get another chance)
+    • "Non vorrei che ti sfuggisse questa opportunità"
+      (I wouldn't want you to miss this opportunity)
+
+    Principle: The fear of losing something is roughly twice
+    as powerful as the pleasure of gaining the same thing.
+
+    ═══════════════════════════════════════════════════════════════
+    PART 6: FRAME CONTROL (Klaff)
+    ═══════════════════════════════════════════════════════════════
+
+    Whoever sets the frame controls the conversation. A frame
+    is the lens through which someone interprets a situation.
+    When frames collide, only one survives.
+
+    6A. THE PRIZE FRAME
+    Position yourself or your offer as the prize.
+
+    Instead of: "Spero che accettiate la mia proposta"
+      (I hope you'll accept my proposal) — supplicant frame
+    Use: "Non sono sicuro/a che questo progetto sia adatto
+      a tutti — devo capire se siamo compatibili"
+      (I'm not sure this project is right for everyone —
+       I need to understand if we're compatible)
+
+    • "Lavoriamo solo con chi condivide i nostri valori"
+      (We only work with those who share our values)
+    • "Prima di procedere, devo capire se questo
+       è il progetto giusto per noi"
+      (Before proceeding, I need to understand if this
+       is the right project for us)
+    • "Il mio tempo è limitato, quindi devo scegliere
+       con cura i progetti su cui investire"
+      (My time is limited, so I need to choose carefully
+       which projects to invest in)
+
+    6B. BREAKING THE ANALYST FRAME
+    When someone retreats into cold analysis to delay or dismiss,
+    use intrigue or novelty to re-engage the emotional brain.
+
+    • "Lascia stare i numeri per un momento — lasciami
+       raccontarti cosa è successo quando abbiamo provato
+       questo la prima volta"
+      (Forget the numbers for a moment — let me tell you
+       what happened when we tried this the first time)
+    • "I dati li puoi leggere dopo — adesso voglio farti
+       capire perché questo è diverso da tutto il resto"
+      (You can read the data later — right now I want you
+       to understand why this is different from everything else)
+
+    6C. CONTROLLING TIME FRAMES
+
+    • "Devo prendere una decisione entro la settimana"
+      (I need to make a decision by the end of the week)
+    • "Ho un'altra proposta sul tavolo, ma volevo
+       parlarne prima con te"
+      (I have another proposal on the table, but I wanted
+       to discuss it with you first)
+    • "Questa offerta è valida fino a venerdì"
+      (This offer is valid until Friday)
+
+    Principle: Status, time, and framing are not about
+    arrogance — they are about not being in a position where
+    the other person controls all three by default.
+
+    ═══════════════════════════════════════════════════════════════
+    PART 7: PUSH-PULL AND CREATING TENSION (Klaff)
+    ═══════════════════════════════════════════════════════════════
+
+    Give something positive (pull), then take something away
+    or qualify it (push). This creates engagement.
+
+    • "Questa potrebbe essere un'ottima opportunità per te —
+       ma non so se i tempi siano giusti dalla tua parte"
+      (This could be a great opportunity for you — but I'm
+       not sure if the timing is right on your end)
+    • "Mi piace molto la tua idea, anche se ho qualche
+       dubbio sull'esecuzione"
+      (I really like your idea, although I have some doubts
+       about the execution)
+    • "Potremmo lavorare insieme — dipende da quanto
+       sei disposto/a a investire"
+      (We could work together — it depends on how much
+       you're willing to invest)
+
+    Principle: Constant agreement bores. Constant disagreement
+    alienates. The oscillation between the two creates the
+    tension that keeps people engaged and attentive.
+
+    ═══════════════════════════════════════════════════════════════
+    PART 8: STATUS ALIGNMENT (Klaff)
+    ═══════════════════════════════════════════════════════════════
+
+    In any encounter, status is negotiated in the first seconds.
+    You don't need to dominate — you need parity.
+
+    8A. ESTABLISHING PARITY
+
+    • "Il mio tempo è prezioso quanto il tuo, quindi
+       usiamolo bene"
+      (My time is as valuable as yours, so let's use it well)
+    • "Sono qui perché credo di poter offrire qualcosa
+       di valore — non per chiedere un favore"
+      (I'm here because I believe I can offer something
+       of value — not to ask for a favour)
+
+    8B. REFUSING TO ACCEPT LOW STATUS
+
+    • "Preferisco che ci parliamo da pari a pari"
+      (I'd prefer that we speak as equals)
+    • "Non sono venuto/a a supplicare — sono venuto/a
+       a proporre qualcosa di reciproco interesse"
+      (I didn't come to beg — I came to propose something
+       of mutual interest)
+
+    8C. SMALL ACTS OF INDEPENDENCE
+
+    • "Grazie, ma non ho molto tempo — possiamo iniziare?"
+      (Thanks, but I don't have much time — shall we start?)
+
+    Principle: Status is not arrogance. It is the refusal to
+    enter a conversation from a position of weakness.
+
+    ═══════════════════════════════════════════════════════════════
+    PART 9: ANCHORING AND THE ACKERMAN MODEL (Voss)
+    ═══════════════════════════════════════════════════════════════
+
+    9A. ANCHORING
+    The first number or proposal sets the reference point.
+
+    • "Per un lavoro di questo livello, il compenso standard
+       si aggira intorno a..."
+      (For work of this level, the standard compensation
+       is around...)
+    • "Per dare un'idea del valore, progetti simili vengono
+       valutati intorno a..."
+      (To give an idea of the value, similar projects are
+       valued at around...)
+
+    9B. THE ACKERMAN MODEL (for price negotiation)
+    Set your target. First offer = 65% of target.
+    Increase to 85%, then 95%, then 100% — with decreasing
+    increments to signal you're reaching your limit.
+    On the final amount, use a non-round number and throw in
+    something non-monetary.
+
+    • "Il massimo che posso arrivare è 4.850 — e includo
+       anche la consulenza iniziale"
+      (The most I can go is 4,850 — and I'll include
+       the initial consultation as well)
+
+    Principle: Non-round numbers (4.850 not 5.000) signal
+    that you've calculated carefully and reached a real limit.
+
+    ═══════════════════════════════════════════════════════════════
+    PART 10: THE RULE OF THREE (Voss)
+    ═══════════════════════════════════════════════════════════════
+
+    Get the other person to agree to something three times in
+    the same conversation. Each confirmation reduces the chance
+    they're lying or will back out later.
+
+    1st: Direct agreement: "Quindi siamo d'accordo su X?"
+    2nd: Label + confirm: "Mi sembra che X sia importante
+         per te — è così?"
+    3rd: Calibrated question: "Come vorresti procedere con X?"
+
+    If their answer changes or becomes vague by the third time,
+    they may not be genuinely committed.
+
+    Principle: Liars and uncommitted people have difficulty
+    maintaining consistency across three different framings
+    of the same commitment.
+
+    ═══════════════════════════════════════════════════════════════
+    PART 11: ADVANCED CARNEGIE IN NEGOTIATION
+    ═══════════════════════════════════════════════════════════════
+
+    11A. LETTING THE IDEA BE THEIRS
+
+    • "Tu cosa proporresti?" (What would you propose?)
+    • "Come la risolveresti tu questa situazione?"
+      (How would you solve this situation?)
+    • "Partendo dalla tua idea di prima, potremmo..."
+      (Starting from your earlier idea, we could...)
+
+    11B. BEGINNING WITH COMMON GROUND
+
+    • "Su questo punto siamo già d'accordo, giusto?"
+      (We already agree on this point, right?)
+    • "Entrambi vogliamo la stessa cosa —
+       troviamo il modo migliore per arrivarci"
+      (We both want the same thing — let's find
+       the best way to get there)
+
+    11C. DRAMATISING YOUR IDEAS
+
+    • "Immagina di essere un cliente che apre questa pagina
+       per la prima volta..."
+      (Imagine being a customer who opens this page
+       for the first time...)
+    • "Ti faccio un esempio concreto di quello
+       che intendo..."
+      (Let me give you a concrete example of what I mean...)
+    • "Lascia che ti racconti cosa è successo a un mio
+       collega nella stessa situazione..."
+      (Let me tell you what happened to a colleague of mine
+       in the same situation...)
+
+    ═══════════════════════════════════════════════════════════════
+    PART 12: LATE-NIGHT FM DJ VOICE (Voss)
+    ═══════════════════════════════════════════════════════════════
+
+    Tone of voice matters more than words. Three voices:
+    1. Assertive (use rarely): direct, confident
+    2. Playful/positive (default): smile in your voice
+    3. Late-night FM DJ (for difficult moments): slow, calm,
+       downward-inflecting, soothing
+
+    In Italian, this voice uses:
+    • Longer sentences with subjunctive softening
+    • Conditional tense for politeness
+    • Low, calm register
+    • Strategic pauses
+
+    "Capisco... e mi chiedo se potremmo trovare un modo
+     per andare incontro a entrambi..." (slow, calm, low)
+
+    Principle: When tension rises, slow down. Lower your voice.
+    Speak as if you have all the time in the world.
+
+    ═══════════════════════════════════════════════════════════════
+    PART 13: BLACK SWANS (Voss)
+    ═══════════════════════════════════════════════════════════════
+
+    Black Swans are the unknown unknowns — the hidden pieces
+    of information that, if discovered, completely change
+    the negotiation. Every negotiation has at least three.
+
+    Questions to uncover Black Swans:
+
+    • "C'è qualcosa che non sto considerando?"
+      (Is there something I'm not considering?)
+    • "Cosa ti ha portato a questa posizione?"
+      (What led you to this position?)
+    • "Cosa cambierebbe tutto per te?"
+      (What would change everything for you?)
+    • "C'è qualcun altro coinvolto nella decisione?"
+      (Is there someone else involved in the decision?)
+    • "Cosa succederebbe se non raggiungessimo un accordo?"
+      (What would happen if we didn't reach an agreement?)
+
+    Principle: The person with the most information wins.
+    Never assume you know everything. Keep asking.
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- All options should attempt the translation (even if wrong)
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Non sono sicuro che ___ la decisione giusta.
+- Se potessi scegliere qualsiasi destinazione, ___ le vacanze in Giappone.
+- La polizia sta conducendo ___ approfondite.
+- Questa torta ___ preparata con ingredienti biologici.
+- Prima di comprare la casa, dobbiamo andare in banca per richiedere un ___ trentennale.
+- I ___ per la richiesta di cittadinanza devono essere compilati in triplice copia e inoltrati all'ufficio di competenza entro la fine del mese.
+- Il contratto prevede che il ___ d'affitto venga pagato entro il cinque di ogni mese.
+- Quando l'auto ha iniziato a perdere colpi, ho capito che c'era un problema con le ___ di accensione.
+- Il ___ mi ha consigliato di aumentare gradualmente l'intensità degli esercizi.
+- Preferirei che questa conversazione ___ in presenza di tutti gli interessati, non solo tra noi due.
+- Prima di aggiungere il riso, è fondamentale far ___ la cipolla a fuoco lento fino a quando non diventa trasparente.
+- Write: What would it take to solve this?
+- È fondamentale ridurre le emissioni di ___ per combattere il cambiamento climatico.
+- Quella che hai fatto è una grossa imprudenza, ma ___ avrebbe potuto fare altrettanto in quella situazione.
+- Preferisco valutare questa decisione indipendentemente dai favori ___ che mi hai fatto.
+
+## QUALITY CHECKLIST
+
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level B2 appropriate vocabulary and grammar
+
+Generate the 5 questions now. Return ONLY valid JSON.

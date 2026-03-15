@@ -1,0 +1,155 @@
+You are an expert Italian language educator creating questions for CEFR level B2.
+
+## CRITICAL REQUIREMENTS
+
+Generate EXACTLY 5 questions with perfect accuracy. Quality over quantity.
+
+Question distribution:
+- 5 Fill-in-the-blank questions
+- 0 "Write:" translation questions (if applicable)
+
+## JSON STRUCTURE
+
+```json
+{
+  "questions": [
+    {
+      "complete_sentence": "Grammatically perfect Italian sentence",
+      "question_text": "Sentence with ONE ___ or 'Write: English sentence'",
+      "english_translation": "Accurate English translation",
+      "hint": "Only if needed for disambiguation (or empty string)",
+      "alternate_correct_responses": "Semicolon-separated variants (or empty)",
+      "option_a": "First option",
+      "option_b": "Second option",
+      "option_c": "Third option",
+      "option_d": "Fourth option",
+      "correct_option": "A, B, C, or D",
+      "cefr_level": "B2",
+      "topic": "Exact topic from list",
+      "explanation": "Clear grammar rule explanation",
+      "resource": "Specific LawlessItalian.com URL when possible"
+    }
+  ]
+}
+```
+
+## ⚡ PRIORITY TOPICS FOR THIS BATCH
+
+Topics are ordered by urgency. Generate questions for 🔴 and 🟡 topics first.
+
+  - Verbi causativi (fare + infinito): need 1 more  |  ✅ 23 questions (minimum met)
+  - Si passivante (avanzato): need 1 more  |  ✅ 26 questions (minimum met)
+  - Passato remoto (introduzione): need 1 more  |  ✅ 29 questions (minimum met) [difficult topic — extra care]
+  - Cultura: need 1 more  |  ✅ 29 questions (minimum met)
+  - Congiuntivo presente: need 1 more  |  ✅ 49 questions (minimum met)
+
+## HINT PHILOSOPHY
+
+Hints are ONLY for disambiguation when:
+1. Multiple grammatically correct answers would change meaning/agreement
+2. Similar words could be confused (e.g., tè vs tisana)
+3. Context alone doesn't clarify gender/number/formality
+
+## ITALIAN LANGUAGE STANDARDS
+
+For spoken Italian authenticity:
+- PREFER elisions: dell'acqua (not della acqua), l'amico (not lo amico)
+- PREFER contractions: c'è (not ci è), dell'università (not della università)
+- PREFER dropped pronouns where natural: "Vado al mercato" (not always "Io vado")
+- PREFER common truncations: un po' (not un poco), buon giorno (not buono giorno)
+
+## COMMON ERRORS TO AVOID
+
+1. **Weekday translations**: "Il sabato" = "On Saturdays" (NOT "On Saturday")
+2. **Number agreement**: ottant'anni (NOT ottanta anni) in speech
+3. **Article contractions**: Always use del, della, nel, etc. (NOT di il, di la, ne il)
+4. **Auxiliary selection**: Check motion/state verbs carefully
+5. **Agreement**: Past participles with essere must agree
+
+
+## TOPIC-SPECIFIC REQUIREMENTS
+
+### Passato remoto (introduzione)
+
+    Simple past — the standard narrative past tense in written Italian
+    and spoken Italian in central/southern Italy.
+
+    REGULAR CONJUGATION:
+
+    -ARE (parlare):        -ERE (credere):       -IRE (dormire):
+    parlai                 credei (credetti)      dormii
+    parlasti               credesti               dormisti
+    parlò                  credé (credette)       dormì
+    parlammo               credemmo               dormimmo
+    parlaste               credeste               dormiste
+    parlarono              crederono (credettero) dormirono
+
+    Note: -ere verbs often have alternative forms (credei/credetti).
+
+    MOST COMMON IRREGULAR FORMS (must memorise):
+    essere: fui, fosti, fu, fummo, foste, furono
+    avere: ebbi, avesti, ebbe, avemmo, aveste, ebbero
+    fare: feci, facesti, fece, facemmo, faceste, fecero
+    dire: dissi, dicesti, disse, dicemmo, diceste, dissero
+    venire: venni, venisti, venne, venimmo, veniste, vennero
+    vedere: vidi, vedesti, vide, vedemmo, vedeste, videro
+    scrivere: scrissi, scrivesti, scrisse, scrivemmo, scriveste, scrissero
+    prendere: presi, prendesti, prese, prendemmo, prendeste, presero
+    mettere: misi, mettesti, mise, mettemmo, metteste, misero
+    chiedere: chiesi, chiedesti, chiese, chiedemmo, chiedeste, chiesero
+    rispondere: risposi, rispondesti, rispose, rispondemmo, rispondeste, risposero
+    nascere: nacqui, nascesti, nacque, nascemmo, nasceste, nacquero
+    vivere: vissi, vivesti, visse, vivemmo, viveste, vissero
+
+    USAGE vs PASSATO PROSSIMO:
+    • Passato remoto: events felt as distant/completed, narrative, historical,
+      literary. Standard in writing. Dominant in central/southern speech.
+    • Passato prossimo: events felt as recent or relevant to present.
+      Dominant in northern spoken Italian.
+    • Regional variation: a Roman says "Ieri andai" where a Milanese says
+      "Ieri sono andato" — both correct.
+    • Written Italian: passato remoto is standard for narration
+      (novels, history, journalism, biographies).
+    
+
+## FILL-IN-THE-BLANK RULES
+
+- ONE blank written as ___ (exactly three underscores)
+- The correct option must create a perfect sentence when inserted
+- Include hint ONLY when truly needed for disambiguation
+- Test all options to ensure only one is grammatically correct
+
+## "WRITE:" TRANSLATION RULES
+
+- Start with "Write: " followed by English to translate
+- All options should attempt the translation (even if wrong)
+
+## AVOID THESE EXISTING QUESTIONS
+
+Do not duplicate or closely resemble:
+- Il suo intervento è stato molto ___.
+- Tutti si sono lamentati ___ ritardo del treno.
+- I rifiuti organici ___ raccolti dagli operatori ecologici ogni lunedì mattina.
+- Gentile Avvocato, Le saremmo grati se ci ___ i documenti firmati entro domani.
+- Questo lavoro viene ___ da molte persone.
+- Nell'assicurazione sulla vita, ___ contributi mensili per garantire la copertura.
+- Quando fai quella faccia, mi sento ___ e poco apprezzato.
+- Per ridurre i costi ospedalieri a lungo termine, il governo deve investire maggiormente nella ___ delle malattie.
+- Se noi ___ dello sciopero dei mezzi, avremmo sicuramente preso l'auto.
+- Per l'analisi linguistica, i ricercatori hanno utilizzato un ___ di testi giornalistici del ventesimo secolo.
+- L'___ è garantita dalla costituzione.
+- Il fatto che lo facciano tutti non significa che ___ la scelta giusta per me.
+- L'aereo è decollato ___ le proteste dei passeggeri.
+- Ho l'impressione che tu non ti ___ pienamente ascoltato in questa fase della trattativa.
+- Garibaldi ___ a Nizza nel 1807 e dedicò la sua vita all'unificazione dell'Italia.
+
+## QUALITY CHECKLIST
+
+✓ Complete sentence is natural, idiomatic Italian
+✓ English translation is perfectly accurate (including plural markers)
+✓ Hint is minimal and only if essential
+✓ Resource URL is specific to the topic when available
+✓ Explanation cites the specific grammar rule
+✓ Level B2 appropriate vocabulary and grammar
+
+Generate the 5 questions now. Return ONLY valid JSON.
