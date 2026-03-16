@@ -24,7 +24,7 @@ from pathlib import Path
 DB_FILE = "italian_quiz.db"
 BACKUP_DIR = "backups"
 DATA_DIR = "data"
-LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1']
+LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'extra']
 REPORT_FILE = "UPDATE_REPORT.txt"
 
 def generate_hash(level: str, question_text: str) -> str:
