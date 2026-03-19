@@ -328,8 +328,8 @@ class ImprovedAdaptiveLearningEngine:
     def calculate_estimated_level(self):
         """
         Calculates user's CEFR level based purely on mastery score.
-        - Advancement: Achieve 50% mastery in the next level
-        - Regression: Mastery drops below 48% in current level
+        - Advancement: Achieve 60% mastery in the next level
+        - Regression: Mastery drops below 58% in current level
         """
         conn = sqlite3.connect('italian_quiz.db')
         conn.row_factory = sqlite3.Row
@@ -340,10 +340,10 @@ class ImprovedAdaptiveLearningEngine:
         result = cursor.fetchone()
         current_level = result['achieved_level'] if result else 'A0'
         
-        # Check for regression (mastery < 48% for current level)
+        # Check for regression (mastery < 58% for current level)
         if current_level != 'A0':
             current_mastery_score = self.get_level_mastery_score(current_level)
-            if current_mastery_score < 0.48:  # Dropped below 48%
+            if current_mastery_score < 0.58:  # Dropped below 58%
                 # Regress one level
                 current_index = self.levels.index(current_level)
                 if current_index > 0:
@@ -352,14 +352,14 @@ class ImprovedAdaptiveLearningEngine:
                                  (current_level, datetime.now().isoformat()))
                     conn.commit()
         
-        # Check for advancement (50% mastery in next level)
+        # Check for advancement (60% mastery in next level)
         current_index = self.levels.index(current_level)
         if current_index < len(self.levels) - 1:
             next_level = self.levels[current_index + 1]
             
             if next_level != 'A0':
                 next_level_mastery = self.get_level_mastery_score(next_level)
-                if next_level_mastery >= 0.50:  # Achieved 50% mastery in next level
+                if next_level_mastery >= 0.60:  # Achieved 60% mastery in next level
                     current_level = next_level
                     cursor.execute('UPDATE user_progress SET achieved_level = ?, last_updated = ? WHERE id = 1',
                                  (current_level, datetime.now().isoformat()))
@@ -885,7 +885,7 @@ class ImprovedAdaptiveLearningEngine:
             elif correct and freeform and partial:
                 total_score += 0.9
             elif correct and freeform:
-                total_score += 1.65
+                total_score += 1.5
             else:
                 total_score += 0.6
         
@@ -959,7 +959,7 @@ class ImprovedAdaptiveLearningEngine:
                 elif correct and freeform and partial:
                     total_score += 0.9
                 elif correct and freeform:
-                    total_score += 1.65
+                    total_score += 1.5
                 else:
                     total_score += 0.6
             
@@ -1533,11 +1533,14 @@ class HomeScreen(ctk.CTkFrame):
         self.level_label.configure(text=f"Your Estimated Level: {new_level}")
         self.working_on_label.configure(text=f"Working on: {working_on_level}")
 
-        mastery_score = self.controller.adaptive_engine.get_level_mastery_score(working_on_level)
-        coverage_percentage = self.controller.adaptive_engine.get_coverage_percentage(working_on_level)
+        conn = sqlite3.connect('italian_quiz.db')
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        level_stats = self.controller.adaptive_engine._calculate_mastery_for_level(working_on_level, cursor)
+        conn.close()
 
-        self.mastery_label.configure(text=f"{working_on_level} Mastery: {mastery_score:.1%}")
-        self.coverage_label.configure(text=f"{working_on_level} Coverage: {coverage_percentage:.1%}")
+        self.mastery_label.configure(text=f"{working_on_level} Mastery: {level_stats['mastery_value']:.1%}")
+        self.coverage_label.configure(text=f"{working_on_level} Coverage: {level_stats['coverage_value']:.1%}")
 
 
 class HowToUseScreen(ctk.CTkFrame):
@@ -1636,8 +1639,8 @@ The difference now besides teaching you the lesson explicitly is your brain has 
 There are 5 levels of Italian provided, based on the CEFR framework. A1 and A2 are for beginners, B1 and B2 are intermediate, and C1 is advanced. 
 
 Level progression is based purely on "mastery scores":
-- **Advancement:** Achieve 50% mastery in the next level to advance
-- **Regression:** If your mastery drops below 48% in your current level
+- **Advancement:** Achieve 60% mastery in the next level to advance
+- **Regression:** If your mastery drops below 58% in your current level
 - **All new users start at A0** (there are no A0 questions, you work on the next CEFR level)
 
 The mastery score already accounts for:
@@ -1689,7 +1692,7 @@ How do Mastery Scores work?
 1. **Question Scores:** Your last 5 attempts per question are scored based on response type (free-form vs multiple choice):
 
 Response modes provide different points (per attempt):
-- Free-form correct: +1.65 
+- Free-form correct: +1.5 
 - Multiple choice correct: +0.6 
 - Free-form (partially correct): +0.9 
 - Free-form wrong: -1.8 
@@ -1711,12 +1714,12 @@ Then, negative question scores are floored to 0 and positive scores are kept as-
 Example: You answer the same question 4 times: complete 1 free-form correct, 1 multiple choice correct, 1 free-form partially correct, 1 multiple choice wrong.
 
 Average: 
-1.65 + 0.6 + 0.9 - 2.2 + 0 = 0.95
+1.5 + 0.6 + 0.9 - 2.2 + 0 = 0.8
 
 Confidence Multipler for 4 attempts: 0.98 
 => 0.95 * 0.98 = 0.931
 
-Final Question Score = 0.931
+Final Question Score = 0.784
 
 
 2. **Topic Mastery:** To get topic mastery, all question scores within a topic are averaged, then multiplied by a confidence value. This confidence multiplier is determined by how many questions you've answered in that topic.
@@ -1953,120 +1956,123 @@ class TopicProgressScreen(ctk.CTkFrame):
         
         self.create_topic_voronoi_chart(self.chart_frame, level)
 
+
     def create_topic_voronoi_chart(self, parent_frame, level):
         """Create interactive Voronoi diagram showing topic mastery."""
         from scipy.spatial import Voronoi
         import matplotlib.patches as mpatches
-        
+
         if hasattr(self, '_voronoi_fig'):
             plt.close(self._voronoi_fig)
         if hasattr(self, '_voronoi_canvas'):
             self._voronoi_canvas.get_tk_widget().destroy()
-        
+
         topic_data = self.controller.adaptive_engine.get_topic_masteries_for_level(level)
-        
+
         if not topic_data:
-            no_data_label = ctk.CTkLabel(parent_frame, 
+            no_data_label = ctk.CTkLabel(parent_frame,
                                          text=f"No topics found for level {level}",
                                          font=ctk.CTkFont(size=14))
             no_data_label.pack(expand=True, pady=30)
             return
-        
+
         min_area = 0.5
         areas = {}
         for topic, data in topic_data.items():
             q_count = data['question_count']
             areas[topic] = max(min_area, np.sqrt(q_count))
-        
+
         num_topics = len(topic_data)
+        topic_names = list(topic_data.keys())
         points = self._generate_voronoi_points(topic_data, areas, num_topics)
-        
-        vor = Voronoi(points)
-        
+
+        # ── FIX: add 8 far-away boundary points so every real topic region
+        # is fully bounded (no -1 / infinite-vertex regions are skipped).
+        BOUNDS_X, BOUNDS_Y = 25, 10
+        far = max(BOUNDS_X, BOUNDS_Y) * 10          # well outside the canvas
+        boundary_pts = np.array([
+            [-far, -far], [far, -far], [-far, far], [far, far],
+            [BOUNDS_X / 2, -far], [BOUNDS_X / 2, far],
+            [-far, BOUNDS_Y / 2], [far,  BOUNDS_Y / 2],
+        ])
+        all_pts = np.vstack([points, boundary_pts])
+        vor = Voronoi(all_pts)
+        # ─────────────────────────────────────────────────────────────────
+
         fig, ax = plt.subplots(figsize=(30, 9), facecolor="#F0F0F0", dpi=100)
         ax.set_aspect('equal')
-        ax.set_xlim(0, 25)
-        ax.set_ylim(0, 10)
+        ax.set_xlim(0, BOUNDS_X)
+        ax.set_ylim(0, BOUNDS_Y)
         ax.axis('off')
-        
+
         def get_color_for_mastery(mastery):
-            # 4 shades of red (negative mastery - needs work)
-            if mastery < -1.0:
-                return '#8B0000'  # Dark Maroon - Very bad
-            elif mastery < -0.6:
-                return '#B22222'  # Firebrick - Bad
-            elif mastery < -0.3:
-                return '#DC143C'  # Crimson - Poor
-            elif mastery < -0.1:
-                return '#FF6B6B'  # Salmon Red - Slightly weak
-            # Grey (neutral zone - minimal exposure)
-            elif mastery <= 0.1:
-                return '#808080'  # Grey - Neutral
-            # 4 shades of blue (positive mastery - learning to mastered)
-            elif mastery <= 0.4:
-                return '#6EA4D5'  # Light Blue - Starting to learn
-            elif mastery <= 0.7:
-                return '#3D7EBF'  # Medium Blue - Progressing well
-            elif mastery <= 1.0:
-                return '#1F5A8E'  # Dark Blue - Strong mastery
-            else:  # > 1.0
-                return '#0D3D66'  # Navy Blue - Complete mastery
-        
+            if mastery < -1.0:   return '#8B0000'
+            elif mastery < -0.6: return '#B22222'
+            elif mastery < -0.3: return '#DC143C'
+            elif mastery < -0.1: return '#FF6B6B'
+            elif mastery <= 0.1: return '#808080'
+            elif mastery <= 0.4: return '#6EA4D5'
+            elif mastery <= 0.7: return '#3D7EBF'
+            elif mastery <= 1.0: return '#1F5A8E'
+            else:                return '#0D3D66'
+
         self.voronoi_polygons = []
-        topic_names = list(topic_data.keys())
-        
-        for i, region_index in enumerate(vor.point_region):
-            if i >= len(topic_names):
-                break
-                
+
+        # Only iterate over the original topic points (not the boundary dummies)
+        for i in range(len(topic_names)):
+            region_index = vor.point_region[i]
             region = vor.regions[region_index]
-            
+
+            # With boundary points present, -1 entries should never appear for
+            # real topics — but keep the guard just in case of degenerate input.
             if not region or -1 in region:
                 continue
-            
+
             polygon_vertices = [vor.vertices[j] for j in region]
-            polygon_vertices = self._clip_polygon_to_bounds(polygon_vertices, 0, 25, 0, 10)
-            
+            polygon_vertices = self._clip_polygon_to_bounds(
+                polygon_vertices, 0, BOUNDS_X, 0, BOUNDS_Y
+            )
+
             if len(polygon_vertices) < 3:
                 continue
-            
+
             topic_name = topic_names[i]
-            mastery = topic_data[topic_name]['mastery']
-            color = get_color_for_mastery(mastery)
-            
-            polygon = mpatches.Polygon(polygon_vertices, closed=True, 
-                                       facecolor=color, edgecolor='white', 
+            mastery    = topic_data[topic_name]['mastery']
+            color      = get_color_for_mastery(mastery)
+
+            polygon = mpatches.Polygon(polygon_vertices, closed=True,
+                                       facecolor=color, edgecolor='white',
                                        linewidth=2, alpha=0.8)
             ax.add_patch(polygon)
-            
+
             self.voronoi_polygons.append({
-                'polygon': polygon,
-                'topic': topic_name,
-                'mastery': mastery,
-                'vertices': polygon_vertices
+                'polygon':  polygon,
+                'topic':    topic_name,
+                'mastery':  mastery,
+                'vertices': polygon_vertices,
             })
-            
+
             centroid_x = np.mean([v[0] for v in polygon_vertices])
             centroid_y = np.mean([v[1] for v in polygon_vertices])
-            
+
             display_name = topic_name if len(topic_name) <= 25 else topic_name[:10] + "..."
-            
+
             ax.text(centroid_x, centroid_y, display_name,
-                    ha='center', va='center', fontsize=12, 
+                    ha='center', va='center', fontsize=12,
                     fontweight='bold', color='white',
                     bbox=dict(boxstyle='round,pad=0.4', facecolor='black', alpha=0.3))
-        
+
         fig.tight_layout(pad=0.2)
-        
+
         canvas = FigureCanvasTkAgg(fig, master=parent_frame)
         canvas.draw()
-        canvas_widget = canvas.get_tk_widget()
-        canvas_widget.pack(side="top", pady=10)
-        
+        canvas.get_tk_widget().pack(side="top", pady=10)
+
         self._setup_voronoi_interactivity(fig, ax, canvas, level)
-        
+
         self._voronoi_canvas = canvas
-        self._voronoi_fig = fig
+        self._voronoi_fig    = fig
+
 
     def _generate_voronoi_points(self, topic_data, areas, num_topics):
         """Generate points for Voronoi tessellation weighted by topic areas."""
@@ -3308,7 +3314,7 @@ class StatsScreen(ctk.CTkFrame):
         progression_title.pack(anchor="w")
         
         progression_text = ctk.CTkLabel(progression_frame, 
-                                       text="SIMPLIFIED! Progression is now based purely on mastery scores:\n• Advance: Achieve 50% mastery in the next level\n• Regress: Only if mastery drops below 48% in your current level\n\nThe mastery score already accounts for topic coverage, recent performance, and confidence weighting, making additional criteria redundant.",
+                                       text="SIMPLIFIED! Progression is now based purely on mastery scores:\n• Advance: Achieve 60% mastery in the next level\n• Regress: Only if mastery drops below 58% in your current level\n\nThe mastery score already accounts for topic coverage, recent performance, and confidence weighting, making additional criteria redundant.",
                                        font=ctk.CTkFont(size=12), wraplength=400, justify="left")
         progression_text.pack(anchor="w", pady=(2, 0))
         
@@ -3354,9 +3360,8 @@ class StatsScreen(ctk.CTkFrame):
     def confirm_clear_progress(self):
         dialog = ctk.CTkToplevel(self)
         dialog.title("Confirm Clear Progress")
-        dialog.geometry("400x200")
+        dialog.geometry("450x250")
         dialog.transient(self.controller)
-        dialog.grab_set()
 
         label = ctk.CTkLabel(dialog, text="Are you sure you want to delete ALL your progress?\nThis action cannot be undone.",
                              font=ctk.CTkFont(size=16), wraplength=350)
@@ -3376,6 +3381,8 @@ class StatsScreen(ctk.CTkFrame):
 
         cancel_btn = ctk.CTkButton(button_frame, text="Cancel", command=dialog.destroy)
         cancel_btn.pack(side="left", padx=10)
+
+        dialog.after(100, lambda: dialog.grab_set())
 
     def clear_all_progress(self):
         conn = sqlite3.connect('italian_quiz.db')
